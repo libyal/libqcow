@@ -1,0 +1,156 @@
+TODO
+* add file IO handle opened in library check
+* add snapshot support
+  - backing filename
+  - in-image snapshots
+* update man pages
+* pyqcow
+  - add function to set the keys
+* add write support ?
+
+File format:
+* reference count support
+
+Tools:
+* qcowmount dokan version
+  - have it run in background (using CreateProcess)?
+  - what about unmount?
+  - fix volume size hints
+  - create compatible dokan lib
+
+20130922
+* updated msvscpp files
+* removed unused libfvalue
+
+20130916
+* worked on libcthreads build support
+
+20130831
+* updated dependencies
+* bug fixes in libqcow and pyqcow
+* added libqcow_io_handle_clear
+* worked on tests
+
+20130512
+* updated dependencies
+* worked on Python bindings
+* worked on tests
+
+20130501
+* worked on compressed images
+* updated msvscpp files
+* changed libqcow_file_get_size to libqcow_file_get_media_size
+* qcowmount:
+  - worked on snapshot support
+  - worked on dokan support
+* QCOW 2 added support for image with last cluster block smaller
+  than cluster block size
+
+20130430
+* worked on QCOW 1 support
+
+20130428
+* worked on encrypted images
+* worked on tests
+* worked on QCOW 1 support
+* worked on snapshots
+* worked on compressed images
+
+20130427
+* updated dependencies
+* worked on tests
+
+20130422
+* updated dependencies
+* added python bindings
+* added PackageMaker files
+* added libqcow_file_get_size
+
+20130330
+* updated dependencies
+* code clean up
+
+20130310
+* 2013 update
+
+20120929
+* updated msvscpp files
+
+20120924
+* qcowmount added -X option
+
+20120922
+* code clean up
+
+20120917
+* fix in dpkg files
+
+20120915
+* code clean up
+
+20120913
+* applied updates
+* changes for libcdata update
+
+20120821
+* applied updates
+
+20120630
+* applied updates
+
+20120522
+* fix in dpkg files
+
+20120517
+* updated msvscpp files
+
+20120516
+* applied updates
+* added qcowmount destroy
+
+20120225
+* 2012 update
+* preparations for handling encrypted and/or compressed cluster blocks
+
+20111012
+* update for Cygwin static executable support
+* update for libfuse detection
+
+20111009
+* updated configure.ac and m4 files
+* updated common, libuna, libbfio, libfvalue, libcaes
+* implemented info handle
+* worked on qcowmount
+* updated msvscpp files
+* changes to pc and spec file
+
+20110918
+* updated configure, array type, list type
+* updated libcstring, libsystem, libuna, libbfio, libfdata, libfvalue
+* added libcaes
+
+20110304
+* updated common, libcstring, libsystem, libuna, libbfio, libfdata, libfvalue
+* update for mingw compilation
+* added msvscpp files
+* qcowinfo: included libintl for Cygwin
+
+20110111
+* updated libsystem
+
+20110110
+* updated libcstring, libuna, libbfio, libfvalue
+* worked on read_buffer
+* added seek and read tests
+
+20110109
+* updated configure.ac
+* synced local libraries
+* worked on read_buffer
+
+20110102
+* worked on level 1 table support
+
+20101231
+* initial version
+

@@ -1,0 +1,36 @@
+Source: libqcow
+Section: unknown
+Priority: extra
+Maintainer: Joachim Metz <joachim.metz@gmail.com>
+Build-Depends: debhelper (>= 7), autotools-dev
+Standards-Version: 3.8.3
+Homepage: http://code.google.com/p/libqcow/
+
+Package: libqcow
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Library to access the QEMU Copy-On-Write (QCOW) image file format
+ libqcow is a library to access the QEMU Copy-On-Write (QCOW) image file format.
+
+Package: libqcow-dev
+Section: libdevel
+Architecture: any
+Depends: libqcow (= ${Source-Version})
+Description: Header files and libraries for developing applications for libqcow
+ Header files and libraries for developing applications for libqcow.
+
+Package: libqcow-tools
+Section: utils
+Architecture: any
+Depends: libqcow (= ${Source-Version}), ${shlibs:Depends}
+Description: Several tools for reading QEMU Copy-On-Write (QCOW) image files
+ Several tools for reading QEMU Copy-On-Write (QCOW) image files.
+
+Package: libqcow-python
+Section: python
+Architecture: any
+Depends: libqcow (= ${Source-Version}), ${shlibs:Depends}, ${python:Depends}
+Description: Python bindings for libqcow
+ Python bindings for libqcow.
+

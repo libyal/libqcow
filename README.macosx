@@ -1,0 +1,17 @@
+Mac OS X
+* missing libtoolize
+* building multiple architure binaries
+* building qcowmount
+
+
+Missing libtoolize
+Use glibtoolize instead
+
+
+Building multiple architecture binaries
+See: http://code.google.com/p/libqcow/wiki/Building
+
+
+Building qcowmount
+See: http://code.google.com/p/libqcow/wiki/Mounting
+
