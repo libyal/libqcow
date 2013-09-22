@@ -1,6 +1,6 @@
 # Files to ignore by git
 #
-# Version: 20130831
+# Version: 20130922
 
 # Generic auto-generated build files
 *~
@@ -108,6 +108,7 @@ stamp-h1
 /macosx/libqcow.pmdoc/04share.xml
 /macosx/libqcow.pmdoc/05python.xml
 /macosx/libqcow.pmdoc/index.xml
+/tests/input
 /tests/qcow_test_open_close
 /tests/qcow_test_read
 /tests/qcow_test_seek
