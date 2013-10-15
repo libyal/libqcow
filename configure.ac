@@ -2,7 +2,7 @@ AC_PREREQ( 2.59 )
 
 AC_INIT(
  [libqcow],
- [20130922],
+ [20131013],
  [joachim.metz@gmail.com])
 
 AC_CONFIG_SRCDIR(
@@ -218,6 +218,7 @@ AC_CONFIG_FILES([macosx/libqcow.pmdoc/04share.xml])
 AC_CONFIG_FILES([macosx/libqcow.pmdoc/05python.xml])
 AC_CONFIG_FILES([macosx/libqcow.pmdoc/index.xml])
 AC_CONFIG_FILES([macosx/Introduction.rtf])
+AC_CONFIG_FILES([pyqcow/setup.py])
 AC_CONFIG_FILES([libqcow.pc])
 AC_CONFIG_FILES([libqcow.spec])
 dnl Have configure write its configuration

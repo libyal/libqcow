@@ -18,6 +18,7 @@ pyqcow_la_SOURCES = \
 	pyqcow.c pyqcow.h \
 	pyqcow_file.c pyqcow_file.h \
 	pyqcow_file_object_io_handle.c pyqcow_file_object_io_handle.h \
+	pyqcow_integer.c pyqcow_integer.h \
 	pyqcow_libbfio.h \
 	pyqcow_libcerror.h \
 	pyqcow_libclocale.h \
@@ -43,9 +44,14 @@ pyqcow_la_LDFLAGS  = -module -avoid-version $(PYTHON_LDFLAGS)
 
 endif
 
+EXTRA_DIST = \
+	setup.py \
+	setup.py.in
+
 MAINTAINERCLEANFILES = \
 	Makefile.in
 
 distclean: clean
+	/bin/rm -f setup.py
 	/bin/rm -f Makefile
 

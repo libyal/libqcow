@@ -28,6 +28,7 @@
 
 #include "pyqcow.h"
 #include "pyqcow_file_object_io_handle.h"
+#include "pyqcow_integer.h"
 #include "pyqcow_libbfio.h"
 #include "pyqcow_libcerror.h"
 #include "pyqcow_libclocale.h"
@@ -102,7 +103,7 @@ PyMethodDef pyqcow_file_object_methods[] = {
 	{ "get_offset",
 	  (PyCFunction) pyqcow_file_get_offset,
 	  METH_NOARGS,
-	  "get_offset() -> Long\n"
+	  "get_offset() -> Integer\n"
 	  "\n"
 	  "Retrieved the current offset within the data." },
 
@@ -125,7 +126,7 @@ PyMethodDef pyqcow_file_object_methods[] = {
 	{ "tell",
 	  (PyCFunction) pyqcow_file_get_offset,
 	  METH_NOARGS,
-	  "tell() -> Long\n"
+	  "tell() -> Integer\n"
 	  "\n"
 	  "Retrieves the current offset within the data." },
 
@@ -134,7 +135,7 @@ PyMethodDef pyqcow_file_object_methods[] = {
 	{ "get_media_size",
 	  (PyCFunction) pyqcow_file_get_media_size,
 	  METH_NOARGS,
-	  "get_media_size() -> Long\n"
+	  "get_media_size() -> Integer\n"
 	  "\n"
 	  "Retrieves the media size of the data." },
 
@@ -1117,6 +1118,7 @@ PyObject *pyqcow_file_get_offset(
 	char error_string[ PYQCOW_ERROR_STRING_SIZE ];
 
 	libcerror_error_t *error = NULL;
+	PyObject *integer_object = NULL;
 	static char *function    = "pyqcow_file_get_offset";
 	off64_t current_offset   = 0;
 	int result               = 0;
@@ -1166,31 +1168,10 @@ PyObject *pyqcow_file_get_offset(
 
 		return( NULL );
 	}
-#if defined( HAVE_LONG_LONG )
-	if( current_offset > (off64_t) LLONG_MAX )
-	{
-		PyErr_Format(
-		 PyExc_OverflowError,
-		 "%s: offset value exceeds maximum.",
-		 function );
+	integer_object = pyqcow_integer_signed_new_from_64bit(
+	                  (int64_t) current_offset );
 
-		return( NULL );
-	}
-	return( PyLong_FromLongLong(
-	         (long long) current_offset ) );
-#else
-	if( current_offset > (off64_t) LONG_MAX )
-	{
-		PyErr_Format(
-		 PyExc_OverflowError,
-		 "%s: offset value exceeds maximum.",
-		 function );
-
-		return( NULL );
-	}
-	return( PyLong_FromLong(
-	         (long) current_offset ) );
-#endif
+	return( integer_object );
 }
 
 /* Retrieves the media size
@@ -1203,6 +1184,7 @@ PyObject *pyqcow_file_get_media_size(
 	char error_string[ PYQCOW_ERROR_STRING_SIZE ];
 
 	libcerror_error_t *error = NULL;
+	PyObject *integer_object = NULL;
 	static char *function    = "pyqcow_file_get_media_size";
 	size64_t media_size      = 0;
 	int result               = 0;
@@ -1252,31 +1234,10 @@ PyObject *pyqcow_file_get_media_size(
 
 		return( NULL );
 	}
-#if defined( HAVE_LONG_LONG )
-	if( media_size > (size64_t) LLONG_MAX )
-	{
-		PyErr_Format(
-		 PyExc_OverflowError,
-		 "%s: media size value exceeds maximum.",
-		 function );
+	integer_object = pyqcow_integer_unsigned_new_from_64bit(
+	                  (uint64_t) media_size );
 
-		return( NULL );
-	}
-	return( PyLong_FromLongLong(
-	         (long long) media_size ) );
-#else
-	if( media_size > (size64_t) LONG_MAX )
-	{
-		PyErr_Format(
-		 PyExc_OverflowError,
-		 "%s: media size value exceeds maximum.",
-		 function );
-
-		return( NULL );
-	}
-	return( PyLong_FromLong(
-	         (long) media_size ) );
-#endif
+	return( integer_object );
 }
 
 /* Sets the password

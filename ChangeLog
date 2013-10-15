@@ -18,6 +18,9 @@ Tools:
   - fix volume size hints
   - create compatible dokan lib
 
+20131013
+* updated dependencies
+
 20130922
 * updated msvscpp files
 * removed unused libfvalue

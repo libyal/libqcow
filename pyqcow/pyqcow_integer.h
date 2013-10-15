@@ -1,5 +1,5 @@
 /*
- * The python header wrapper
+ * Integer functions
  *
  * Copyright (c) 2010-2013, Joachim Metz <joachim.metz@gmail.com>
  *
@@ -19,27 +19,27 @@
  * along with this software.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !defined( _PYQCOW_PYTHON_H )
-#define _PYQCOW_PYTHON_H
+#if !defined( _PYQCOW_INTEGER_H )
+#define _PYQCOW_INTEGER_H
 
 #include <common.h>
+#include <types.h>
 
-/* Fix defines in pyconfig.h
- */
-#undef _POSIX_C_SOURCE
-#undef _XOPEN_SOURCE
+#include "pyqcow_python.h"
 
-/* Fix defines in pyport.h
- */
-#undef HAVE_FSTAT
-#undef HAVE_STAT
-#undef HAVE_SSIZE_T
-#undef HAVE_INT32_T
-#undef HAVE_UINT32_T
-#undef HAVE_INT64_T
-#undef HAVE_UINT64_T
+#if defined( __cplusplus )
+extern "C" {
+#endif
 
-#include <Python.h>
+PyObject *pyqcow_integer_signed_new_from_64bit(
+           int64_t value_64bit );
+
+PyObject *pyqcow_integer_unsigned_new_from_64bit(
+           uint64_t value_64bit );
+
+#if defined( __cplusplus )
+}
+#endif
 
 #endif
 
