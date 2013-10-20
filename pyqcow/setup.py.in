@@ -25,7 +25,7 @@ class custom_sdist(sdist):
 		sys.exit(1)
 
 
-LIBRARY_NAME = "libolecf"
+LIBRARY_NAME = "libqcow"
 LIBRARY_VERSION = "@VERSION@"
 MODULE_NAME = "py%s" % (LIBRARY_NAME[3:])
 # bdist_msi does not support the library version, neither a date as a version.
