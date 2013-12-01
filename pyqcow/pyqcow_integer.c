@@ -95,7 +95,7 @@ PyObject *pyqcow_integer_unsigned_new_from_64bit(
 
 		return( NULL );
 	}
-	integer_object = PyLong_FromUnsingedLong(
+	integer_object = PyLong_FromUnsignedLong(
 	                  (long) value_64bit );
 #endif
 	return( integer_object );

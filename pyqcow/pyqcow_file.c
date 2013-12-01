@@ -27,6 +27,7 @@
 #endif
 
 #include "pyqcow.h"
+#include "pyqcow_error.h"
 #include "pyqcow_file_object_io_handle.h"
 #include "pyqcow_integer.h"
 #include "pyqcow_libbfio.h"
@@ -352,8 +353,6 @@ PyObject *pyqcow_file_new_open_file_object(
 int pyqcow_file_init(
      pyqcow_file_t *pyqcow_file )
 {
-	char error_string[ PYQCOW_ERROR_STRING_SIZE ];
-
 	static char *function    = "pyqcow_file_init";
 	libcerror_error_t *error = NULL;
 
@@ -374,24 +373,12 @@ int pyqcow_file_init(
 	     &( pyqcow_file->file ),
 	     &error ) != 1 )
 	{
-		if( libcerror_error_backtrace_sprint(
-		     error,
-		     error_string,
-		     PYQCOW_ERROR_STRING_SIZE ) == -1 )
-                {
-			PyErr_Format(
-			 PyExc_MemoryError,
-			 "%s: unable to initialize file.",
-			 function );
-		}
-		else
-		{
-			PyErr_Format(
-			 PyExc_MemoryError,
-			 "%s: unable to initialize file.\n%s",
-			 function,
-			 error_string );
-		}
+		pyqcow_error_raise(
+		 PyExc_MemoryError,
+		 "%s: unable to initialize file.",
+		 function,
+		 error );
+
 		libcerror_error_free(
 		 &error );
 
@@ -405,8 +392,6 @@ int pyqcow_file_init(
 void pyqcow_file_free(
       pyqcow_file_t *pyqcow_file )
 {
-	char error_string[ PYQCOW_ERROR_STRING_SIZE ];
-
 	libcerror_error_t *error = NULL;
 	static char *function    = "pyqcow_file_free";
 	int result               = 0;
@@ -457,24 +442,12 @@ void pyqcow_file_free(
 
 	if( result != 1 )
 	{
-		if( libcerror_error_backtrace_sprint(
-		     error,
-		     error_string,
-		     PYQCOW_ERROR_STRING_SIZE ) == -1 )
-                {
-			PyErr_Format(
-			 PyExc_MemoryError,
-			 "%s: unable to free libqcow file.",
-			 function );
-		}
-		else
-		{
-			PyErr_Format(
-			 PyExc_MemoryError,
-			 "%s: unable to free libqcow file.\n%s",
-			 function,
-			 error_string );
-		}
+		pyqcow_error_raise(
+		 PyExc_MemoryError,
+		 "%s: unable to free libqcow file.",
+		 function,
+		 error );
+
 		libcerror_error_free(
 		 &error );
 	}
@@ -489,8 +462,6 @@ PyObject *pyqcow_file_signal_abort(
            pyqcow_file_t *pyqcow_file,
            PyObject *arguments PYQCOW_ATTRIBUTE_UNUSED )
 {
-	char error_string[ PYQCOW_ERROR_STRING_SIZE ];
-
 	libcerror_error_t *error = NULL;
 	static char *function    = "pyqcow_file_signal_abort";
 	int result               = 0;
@@ -516,24 +487,12 @@ PyObject *pyqcow_file_signal_abort(
 
 	if( result != 1 )
 	{
-		if( libcerror_error_backtrace_sprint(
-		     error,
-		     error_string,
-		     PYQCOW_ERROR_STRING_SIZE ) == -1 )
-                {
-			PyErr_Format(
-			 PyExc_IOError,
-			 "%s: unable to signal abort.",
-			 function );
-		}
-		else
-		{
-			PyErr_Format(
-			 PyExc_IOError,
-			 "%s: unable to signal abort.\n%s",
-			 function,
-			 error_string );
-		}
+		pyqcow_error_raise(
+		 PyExc_IOError,
+		 "%s: unable to signal abort.",
+		 function,
+		 error );
+
 		libcerror_error_free(
 		 &error );
 
@@ -553,8 +512,6 @@ PyObject *pyqcow_file_open(
            PyObject *arguments,
            PyObject *keywords )
 {
-	char error_string[ PYQCOW_ERROR_STRING_SIZE ];
-
 	libcerror_error_t *error    = NULL;
 	char *filename              = NULL;
 	char *mode                  = NULL;
@@ -604,24 +561,12 @@ PyObject *pyqcow_file_open(
 
 	if( result != 1 )
 	{
-		if( libcerror_error_backtrace_sprint(
-		     error,
-		     error_string,
-		     PYQCOW_ERROR_STRING_SIZE ) == -1 )
-                {
-			PyErr_Format(
-			 PyExc_IOError,
-			 "%s: unable to open file.",
-			 function );
-		}
-		else
-		{
-			PyErr_Format(
-			 PyExc_IOError,
-			 "%s: unable to open file.\n%s",
-			 function,
-			 error_string );
-		}
+		pyqcow_error_raise(
+		 PyExc_IOError,
+		 "%s: unable to open file.",
+		 function,
+		 error );
+
 		libcerror_error_free(
 		 &error );
 
@@ -641,8 +586,6 @@ PyObject *pyqcow_file_open_file_object(
            PyObject *arguments,
            PyObject *keywords )
 {
-	char error_string[ PYQCOW_ERROR_STRING_SIZE ];
-
 	PyObject *file_object            = NULL;
 	libbfio_handle_t *file_io_handle = NULL;
 	libcerror_error_t *error         = NULL;
@@ -686,24 +629,12 @@ PyObject *pyqcow_file_open_file_object(
 	     file_object,
 	     &error ) != 1 )
 	{
-		if( libcerror_error_backtrace_sprint(
-		     error,
-		     error_string,
-		     PYQCOW_ERROR_STRING_SIZE ) == -1 )
-                {
-			PyErr_Format(
-			 PyExc_MemoryError,
-			 "%s: unable to initialize file IO handle.",
-			 function );
-		}
-		else
-		{
-			PyErr_Format(
-			 PyExc_MemoryError,
-			 "%s: unable to initialize file IO handle.\n%s",
-			 function,
-			 error_string );
-		}
+		pyqcow_error_raise(
+		 PyExc_MemoryError,
+		 "%s: unable to initialize file IO handle.",
+		 function,
+		 error );
+
 		libcerror_error_free(
 		 &error );
 
@@ -721,24 +652,12 @@ PyObject *pyqcow_file_open_file_object(
 
 	if( result != 1 )
 	{
-		if( libcerror_error_backtrace_sprint(
-		     error,
-		     error_string,
-		     PYQCOW_ERROR_STRING_SIZE ) == -1 )
-                {
-			PyErr_Format(
-			 PyExc_IOError,
-			 "%s: unable to open file.",
-			 function );
-		}
-		else
-		{
-			PyErr_Format(
-			 PyExc_IOError,
-			 "%s: unable to open file.\n%s",
-			 function,
-			 error_string );
-		}
+		pyqcow_error_raise(
+		 PyExc_IOError,
+		 "%s: unable to open file.",
+		 function,
+		 error );
+
 		libcerror_error_free(
 		 &error );
 
@@ -766,8 +685,6 @@ PyObject *pyqcow_file_close(
            pyqcow_file_t *pyqcow_file,
            PyObject *arguments PYQCOW_ATTRIBUTE_UNUSED )
 {
-	char error_string[ PYQCOW_ERROR_STRING_SIZE ];
-
 	libcerror_error_t *error = NULL;
 	static char *function    = "pyqcow_file_close";
 	int result               = 0;
@@ -793,24 +710,12 @@ PyObject *pyqcow_file_close(
 
 	if( result != 0 )
 	{
-		if( libcerror_error_backtrace_sprint(
-		     error,
-		     error_string,
-		     PYQCOW_ERROR_STRING_SIZE ) == -1 )
-                {
-			PyErr_Format(
-			 PyExc_IOError,
-			 "%s: unable to close file.",
-			 function );
-		}
-		else
-		{
-			PyErr_Format(
-			 PyExc_IOError,
-			 "%s: unable to close file.\n%s",
-			 function,
-			 error_string );
-		}
+		pyqcow_error_raise(
+		 PyExc_IOError,
+		 "%s: unable to close file.",
+		 function,
+		 error );
+
 		libcerror_error_free(
 		 &error );
 
@@ -830,8 +735,6 @@ PyObject *pyqcow_file_read_buffer(
            PyObject *arguments,
            PyObject *keywords )
 {
-	char error_string[ PYQCOW_ERROR_STRING_SIZE ];
-
 	libcerror_error_t *error    = NULL;
 	PyObject *result_data       = NULL;
 	static char *function       = "pyqcow_file_read_buffer";
@@ -892,26 +795,14 @@ PyObject *pyqcow_file_read_buffer(
 
 	Py_END_ALLOW_THREADS
 
-	if( read_count != (ssize_t) read_size )
+	if( read_count <= -1 )
 	{
-		if( libcerror_error_backtrace_sprint(
-		     error,
-		     error_string,
-		     PYQCOW_ERROR_STRING_SIZE ) == -1 )
-		{
-			PyErr_Format(
-			 PyExc_IOError,
-			 "%s: unable to read data.",
-			 function );
-		}
-		else
-		{
-			PyErr_Format(
-			 PyExc_IOError,
-			 "%s: unable to read data.\n%s",
-			 function,
-			 error_string );
-		}
+		pyqcow_error_raise(
+		 PyExc_IOError,
+		 "%s: unable to read data.",
+		 function,
+		 error );
+
 		libcerror_error_free(
 		 &error );
 
@@ -928,8 +819,6 @@ PyObject *pyqcow_file_read_random(
            PyObject *arguments,
            PyObject *keywords )
 {
-	char error_string[ PYQCOW_ERROR_STRING_SIZE ];
-
 	libcerror_error_t *error    = NULL;
 	PyObject *result_data       = NULL;
 	static char *function       = "pyqcow_file_read_random";
@@ -1004,26 +893,14 @@ PyObject *pyqcow_file_read_random(
 
 	Py_END_ALLOW_THREADS
 
-	if( read_count != (ssize_t) read_size )
+	if( read_count <= -1 )
 	{
-		if( libcerror_error_backtrace_sprint(
-		     error,
-		     error_string,
-		     PYQCOW_ERROR_STRING_SIZE ) == -1 )
-		{
-			PyErr_Format(
-			 PyExc_IOError,
-			 "%s: unable to read data.",
-			 function );
-		}
-		else
-		{
-			PyErr_Format(
-			 PyExc_IOError,
-			 "%s: unable to read data.\n%s",
-			 function,
-			 error_string );
-		}
+		pyqcow_error_raise(
+		 PyExc_IOError,
+		 "%s: unable to read data.",
+		 function,
+		 error );
+
 		libcerror_error_free(
 		 &error );
 
@@ -1040,8 +917,6 @@ PyObject *pyqcow_file_seek_offset(
            PyObject *arguments,
            PyObject *keywords )
 {
-	char error_string[ PYQCOW_ERROR_STRING_SIZE ];
-
 	libcerror_error_t *error    = NULL;
 	static char *function       = "pyqcow_file_seek_offset";
 	static char *keyword_list[] = { "offset", "whence", NULL };
@@ -1079,24 +954,12 @@ PyObject *pyqcow_file_seek_offset(
 
  	if( offset == -1 )
 	{
-		if( libcerror_error_backtrace_sprint(
-		     error,
-		     error_string,
-		     PYQCOW_ERROR_STRING_SIZE ) == -1 )
-		{
-			PyErr_Format(
-			 PyExc_IOError,
-			 "%s: unable to seek offset.",
-			 function );
-		}
-		else
-		{
-			PyErr_Format(
-			 PyExc_IOError,
-			 "%s: unable to seek offset.\n%s",
-			 function,
-			 error_string );
-		}
+		pyqcow_error_raise(
+		 PyExc_IOError,
+		 "%s: unable to seek offset.",
+		 function,
+		 error );
+
 		libcerror_error_free(
 		 &error );
 
@@ -1115,8 +978,6 @@ PyObject *pyqcow_file_get_offset(
            pyqcow_file_t *pyqcow_file,
            PyObject *arguments PYQCOW_ATTRIBUTE_UNUSED )
 {
-	char error_string[ PYQCOW_ERROR_STRING_SIZE ];
-
 	libcerror_error_t *error = NULL;
 	PyObject *integer_object = NULL;
 	static char *function    = "pyqcow_file_get_offset";
@@ -1145,24 +1006,12 @@ PyObject *pyqcow_file_get_offset(
 
 	if( result != 1 )
 	{
-		if( libcerror_error_backtrace_sprint(
-		     error,
-		     error_string,
-		     PYQCOW_ERROR_STRING_SIZE ) == -1 )
-		{
-			PyErr_Format(
-			 PyExc_IOError,
-			 "%s: unable to retrieve offset.",
-			 function );
-		}
-		else
-		{
-			PyErr_Format(
-			 PyExc_IOError,
-			 "%s: unable to retrieve offset.\n%s",
-			 function,
-			 error_string );
-		}
+		pyqcow_error_raise(
+		 PyExc_IOError,
+		 "%s: unable to retrieve offset.",
+		 function,
+		 error );
+
 		libcerror_error_free(
 		 &error );
 
@@ -1181,8 +1030,6 @@ PyObject *pyqcow_file_get_media_size(
            pyqcow_file_t *pyqcow_file,
            PyObject *arguments PYQCOW_ATTRIBUTE_UNUSED )
 {
-	char error_string[ PYQCOW_ERROR_STRING_SIZE ];
-
 	libcerror_error_t *error = NULL;
 	PyObject *integer_object = NULL;
 	static char *function    = "pyqcow_file_get_media_size";
@@ -1211,24 +1058,12 @@ PyObject *pyqcow_file_get_media_size(
 
 	if( result != 1 )
 	{
-		if( libcerror_error_backtrace_sprint(
-		     error,
-		     error_string,
-		     PYQCOW_ERROR_STRING_SIZE ) == -1 )
-		{
-			PyErr_Format(
-			 PyExc_IOError,
-			 "%s: failed to retrieve media size.",
-			 function );
-		}
-		else
-		{
-			PyErr_Format(
-			 PyExc_IOError,
-			 "%s: failed to retrieve media size.\n%s",
-			 function,
-			 error_string );
-		}
+		pyqcow_error_raise(
+		 PyExc_IOError,
+		 "%s: failed to retrieve media size.",
+		 function,
+		 error );
+
 		libcerror_error_free(
 		 &error );
 
@@ -1248,8 +1083,6 @@ PyObject *pyqcow_file_set_password(
            PyObject *arguments,
            PyObject *keywords )
 {
-	char error_string[ PYQCOW_ERROR_STRING_SIZE ];
-
 	libcerror_error_t *error      = NULL;
 	char *password_string         = NULL;
 	static char *keyword_list[]   = { "password", NULL };
@@ -1299,24 +1132,12 @@ PyObject *pyqcow_file_set_password(
 
 	if( result != 1 )
 	{
-		if( libcerror_error_backtrace_sprint(
-		     error,
-		     error_string,
-		     PYQCOW_ERROR_STRING_SIZE ) == -1 )
-		{
-			PyErr_Format(
-			 PyExc_IOError,
-			 "%s: unable to set password.",
-			 function );
-		}
-		else
-		{
-			PyErr_Format(
-			 PyExc_IOError,
-			 "%s: unable to set password.\n%s",
-			 function,
-			 error_string );
-		}
+		pyqcow_error_raise(
+		 PyExc_IOError,
+		 "%s: unable to set password.",
+		 function,
+		 error );
+
 		libcerror_error_free(
 		 &error );
 

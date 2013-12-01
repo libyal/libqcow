@@ -18,6 +18,13 @@ Tools:
   - fix volume size hints
   - create compatible dokan lib
 
+20131201
+* worked on Python bindings
+  - subtle bug fix where python file-like object returns an int object
+    instead of long object
+  - improved error reporting
+* updated libcerror
+
 20131020
 * updated libcstring
 

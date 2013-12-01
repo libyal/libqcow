@@ -1,5 +1,5 @@
 /*
- * Python bindings for libqcow (pyqcow)
+ * Error functions
  *
  * Copyright (c) 2010-2013, Joachim Metz <joachim.metz@gmail.com>
  *
@@ -19,34 +19,24 @@
  * along with this software.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !defined( _PYQCOW_H )
-#define _PYQCOW_H
+#if !defined( _PYQCOW_ERROR_H )
+#define _PYQCOW_ERROR_H
 
 #include <common.h>
 #include <types.h>
 
+#include "pyqcow_libcerror.h"
 #include "pyqcow_python.h"
 
 #if defined( __cplusplus )
 extern "C" {
 #endif
 
-PyObject *pyqcow_get_version(
-           PyObject *self,
-           PyObject *arguments );
-
-PyObject *pyqcow_check_file_signature(
-           PyObject *self,
-           PyObject *arguments,
-           PyObject *keywords );
-
-PyObject *pyqcow_check_file_signature_file_object(
-           PyObject *self,
-           PyObject *arguments,
-           PyObject *keywords );
-
-PyMODINIT_FUNC initpyqcow(
-                void );
+void pyqcow_error_raise(
+      PyObject *exception_object,
+      const char *format_string,
+      const char *function,
+      libcerror_error_t *error );
 
 #if defined( __cplusplus )
 }
