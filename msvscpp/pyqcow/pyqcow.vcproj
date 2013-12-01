@@ -189,6 +189,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\pyqcow\pyqcow_error.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\pyqcow\pyqcow_file.c"
 				>
 			</File>
@@ -208,6 +212,10 @@
 			>
 			<File
 				RelativePath="..\..\pyqcow\pyqcow.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\pyqcow\pyqcow_error.h"
 				>
 			</File>
 			<File
