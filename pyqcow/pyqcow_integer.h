@@ -25,6 +25,7 @@
 #include <common.h>
 #include <types.h>
 
+#include "pyqcow_libcerror.h"
 #include "pyqcow_python.h"
 
 #if defined( __cplusplus )
@@ -36,6 +37,16 @@ PyObject *pyqcow_integer_signed_new_from_64bit(
 
 PyObject *pyqcow_integer_unsigned_new_from_64bit(
            uint64_t value_64bit );
+
+int pyqcow_integer_signed_copy_to_64bit(
+     PyObject *integer_object,
+     int64_t *value_64bit,
+     libcerror_error_t **error );
+
+int pyqcow_integer_unsigned_copy_to_64bit(
+     PyObject *integer_object,
+     uint64_t *value_64bit,
+     libcerror_error_t **error );
 
 #if defined( __cplusplus )
 }

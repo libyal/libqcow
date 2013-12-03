@@ -24,6 +24,7 @@
 #include <types.h>
 
 #include "pyqcow_file_object_io_handle.h"
+#include "pyqcow_integer.h"
 #include "pyqcow_libbfio.h"
 #include "pyqcow_libcerror.h"
 #include "pyqcow_libcstring.h"
@@ -1033,15 +1034,7 @@ int pyqcow_file_object_get_offset(
 	PyObject *method_result       = NULL;
 	char *error_string            = NULL;
 	static char *function         = "pyqcow_file_object_get_offset";
-	int is_int_object             = 0;
-	int is_long_object            = 0;
 	int result                    = 0;
-
-#if defined( HAVE_LONG_LONG )
-	PY_LONG_LONG safe_offset      = 0;
-#else
-	long safe_offset              = 0;
-#endif
 
 	if( file_object == NULL )
 	{
@@ -1130,217 +1123,20 @@ int pyqcow_file_object_get_offset(
 
 		goto on_error;
 	}
-	PyErr_Clear();
-
-	is_long_object = PyObject_IsInstance(
-	                  method_result,
-	                  (PyObject *) &PyLong_Type );
-
-	if( is_long_object == -1 )
-	{
-		PyErr_Fetch(
-		 &exception_type,
-		 &exception_value,
-		 &exception_traceback );
-
-		exception_string = PyObject_Repr(
-		                    exception_value );
-
-		error_string = PyString_AsString(
-		                exception_string );
-
-		if( error_string != NULL )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to determine if result is a long object with error: %s.",
-			 function,
-			 error_string );
-		}
-		else
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to determine if result is a long object.",
-			 function );
-		}
-		Py_DecRef(
-		 exception_string );
-
-		goto on_error;
-	}
-	else if( is_long_object == 0 )
-	{
-		PyErr_Clear();
-
-		is_int_object = PyObject_IsInstance(
-		                 method_result,
-		                 (PyObject *) &PyInt_Type );
-
-		if( is_int_object == -1 )
-		{
-			PyErr_Fetch(
-			 &exception_type,
-			 &exception_value,
-			 &exception_traceback );
-
-			exception_string = PyObject_Repr(
-					    exception_value );
-
-			error_string = PyString_AsString(
-					exception_string );
-
-			if( error_string != NULL )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-				 "%s: unable to determine if result is an int object with error: %s.",
-				 function,
-				 error_string );
-			}
-			else
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-				 "%s: unable to determine if result is an int object.",
-				 function );
-			}
-			Py_DecRef(
-			 exception_string );
-
-			goto on_error;
-		}
-	}
-	if( is_long_object != 0 )
-	{
-		PyErr_Clear();
-
-#if defined( HAVE_LONG_LONG )
-		safe_offset = PyLong_AsLongLong(
-		               method_result );
-#else
-		safe_offset = PyLong_AsLong(
-		               method_result );
-#endif
-		if( safe_offset == -1 )
-		{
-			PyErr_Fetch(
-			 &exception_type,
-			 &exception_value,
-			 &exception_traceback );
-
-			exception_string = PyObject_Repr(
-					    exception_value );
-
-			error_string = PyString_AsString(
-					exception_string );
-
-			if( error_string != NULL )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-				 "%s: unable to convert long object of current offset of file object with error: %s.",
-				 function,
-				 error_string );
-			}
-			else
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-				 "%s: unable to convert long object of current offset of file object.",
-				 function );
-			}
-			Py_DecRef(
-			 exception_string );
-
-			goto on_error;
-		}
-	}
-	else if( is_int_object != 0 )
-	{
-		PyErr_Clear();
-
-		safe_offset = PyInt_AsLong(
-			       method_result );
-
-		if( safe_offset == -1 )
-		{
-			PyErr_Fetch(
-			 &exception_type,
-			 &exception_value,
-			 &exception_traceback );
-
-			exception_string = PyObject_Repr(
-					    exception_value );
-
-			error_string = PyString_AsString(
-					exception_string );
-
-			if( error_string != NULL )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-				 "%s: unable to convert int object of current offset of file object with error: %s.",
-				 function,
-				 error_string );
-			}
-			else
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-				 "%s: unable to convert int object of current offset of file object.",
-				 function );
-			}
-			Py_DecRef(
-			 exception_string );
-
-			goto on_error;
-		}
-	}
-	else
+	if( pyqcow_integer_signed_copy_to_64bit(
+	     method_result,
+	     offset,
+	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unsupported result object type.",
+		 "%s: unable to convert method result into current offset of file object.",
 		 function );
 
 		goto on_error;
 	}
-#if defined( HAVE_LONG_LONG )
-	if( safe_offset > (PY_LONG_LONG) INT64_MAX )
-#else
-	if( (off64_t) safe_offset > (off64_t) INT64_MAX )
-#endif
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_VALUE_EXCEEDS_MAXIMUM,
-		 "%s: invalid offset value exceeds maximum.",
-		 function );
-
-		goto on_error;
-	}
-	*offset = (off64_t) safe_offset;
-
 	Py_DecRef(
 	 method_result );
 
@@ -1509,14 +1305,6 @@ int pyqcow_file_object_get_size(
 	PyObject *method_result       = NULL;
 	char *error_string            = NULL;
 	static char *function         = "pyqcow_file_object_get_size";
-	int is_int_object             = 0;
-	int is_long_object            = 0;
-
-#if defined( HAVE_LONG_LONG )
-	PY_LONG_LONG safe_size        = 0;
-#else
-	long safe_size                = 0;
-#endif
 
 	if( file_object == NULL )
 	{
@@ -1587,221 +1375,20 @@ int pyqcow_file_object_get_size(
 
 		goto on_error;
 	}
-	PyErr_Clear();
-
-	is_long_object = PyObject_IsInstance(
-	                  method_result,
-	                  (PyObject *) &PyLong_Type );
-
-	if( is_long_object == -1 )
-	{
-		PyErr_Fetch(
-		 &exception_type,
-		 &exception_value,
-		 &exception_traceback );
-
-		exception_string = PyObject_Repr(
-		                    exception_value );
-
-		error_string = PyString_AsString(
-		                exception_string );
-
-		if( error_string != NULL )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to determine if result is a long object with error: %s.",
-			 function,
-			 error_string );
-		}
-		else
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to determine if result is a long object.",
-			 function );
-		}
-		Py_DecRef(
-		 exception_string );
-
-		goto on_error;
-	}
-	else if( is_long_object == 0 )
-	{
-		PyErr_Clear();
-
-		is_int_object = PyObject_IsInstance(
-		                 method_result,
-		                 (PyObject *) &PyInt_Type );
-
-		if( is_int_object == -1 )
-		{
-			PyErr_Fetch(
-			 &exception_type,
-			 &exception_value,
-			 &exception_traceback );
-
-			exception_string = PyObject_Repr(
-					    exception_value );
-
-			error_string = PyString_AsString(
-					exception_string );
-
-			if( error_string != NULL )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-				 "%s: unable to determine if result is an int object with error: %s.",
-				 function,
-				 error_string );
-			}
-			else
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-				 "%s: unable to determine if result is an int object.",
-				 function );
-			}
-			Py_DecRef(
-			 exception_string );
-
-			goto on_error;
-		}
-	}
-	if( is_long_object != 0 )
-	{
-		PyErr_Clear();
-
-#if defined( HAVE_LONG_LONG )
-		safe_size = PyLong_AsUnsignedLongLong(
-		             method_result );
-#else
-		safe_size = PyLong_AsUnsignedLong(
-		             method_result );
-#endif
-		if( safe_size == -1 )
-		{
-			PyErr_Fetch(
-			 &exception_type,
-			 &exception_value,
-			 &exception_traceback );
-
-			exception_string = PyObject_Repr(
-					    exception_value );
-
-			error_string = PyString_AsString(
-					exception_string );
-
-			if( error_string != NULL )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-				 "%s: unable to convert long object of size of file object with error: %s.",
-				 function,
-				 error_string );
-			}
-			else
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-				 "%s: unable to convert long object of size of file object.",
-				 function );
-			}
-			Py_DecRef(
-			 exception_string );
-
-			goto on_error;
-		}
-	}
-	else if( is_int_object != 0 )
-	{
-		PyErr_Clear();
-
-#if defined( HAVE_LONG_LONG )
-		safe_size = PyInt_AsUnsignedLongLongMask(
-			     method_result );
-#else
-		safe_size = PyInt_AsUnsignedLongMask(
-			     method_result );
-#endif
-		if( safe_size == -1 )
-		{
-			PyErr_Fetch(
-			 &exception_type,
-			 &exception_value,
-			 &exception_traceback );
-
-			exception_string = PyObject_Repr(
-					    exception_value );
-
-			error_string = PyString_AsString(
-					exception_string );
-
-			if( error_string != NULL )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-				 "%s: unable to convert int object of size of file object with error: %s.",
-				 function,
-				 error_string );
-			}
-			else
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-				 "%s: unable to convert int object of size of file object.",
-				 function );
-			}
-			Py_DecRef(
-			 exception_string );
-
-			goto on_error;
-		}
-	}
-	else
+	if( pyqcow_integer_unsigned_copy_to_64bit(
+	     method_result,
+	     size,
+	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unsupported result object type.",
+		 "%s: unable to convert method result into size of file object.",
 		 function );
 
 		goto on_error;
 	}
-#if defined( HAVE_LONG_LONG )
-	if( safe_size > (PY_LONG_LONG) INT64_MAX )
-#else
-	if( (size64_t) safe_size > (size64_t) INT64_MAX )
-#endif
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_VALUE_EXCEEDS_MAXIMUM,
-		 "%s: invalid size value exceeds maximum.",
-		 function );
-
-		goto on_error;
-	}
-	*size = (size64_t) safe_size;
-
 	Py_DecRef(
 	 method_result );
 
