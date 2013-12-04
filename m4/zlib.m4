@@ -1,6 +1,6 @@
 dnl Functions for zlib
 dnl
-dnl Version: 20130402
+dnl Version: 20131204
 
 dnl Function to detect if zlib is available
 AC_DEFUN([AX_ZLIB_CHECK_LIB],
@@ -45,7 +45,17 @@ AC_DEFUN([AX_ZLIB_CHECK_LIB],
      z,
      inflateInit2,
      [ac_zlib_dummy=yes],
-     [ac_cv_zlib=no])
+     [])
+
+    dnl Some versions of zlib provide inflateInit2_ instead of inflateInit2
+    AS_IF(
+     [test "x$ac_cv_lib_z_inflateinit2" = xno],
+     [AC_CHECK_LIB(
+      z,
+      inflateInit2_,
+      [ac_zlib_dummy=yes],
+      [ac_cv_zlib=no])
+     ])
 
     AC_CHECK_LIB(
      z,
@@ -62,6 +72,14 @@ AC_DEFUN([AX_ZLIB_CHECK_LIB],
     ac_cv_zlib_LIBADD="-lz";
     ])
    ])
+  ])
+
+ AS_IF(
+  [test "x$ac_cv_lib_z_inflateinit2" != xno],
+  [AC_DEFINE(
+   [HAVE_ZLIB_INFLATE_INIT2],
+   [1],
+   [Define to 1 if you have the `inflateInit2' function.])
   ])
 
  AS_IF(

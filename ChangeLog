@@ -18,6 +18,9 @@ Tools:
   - fix volume size hints
   - create compatible dokan lib
 
+20131204
+* fix for zlib versions that export inflateInit2_ instead of inflateInit2
+
 20131203
 * worked on Python bindings
 
