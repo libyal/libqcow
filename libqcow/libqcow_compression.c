@@ -144,7 +144,7 @@ int libqcow_decompress_data(
 		zlib_stream.next_out  = (Bytef *) uncompressed_data;
 		zlib_stream.avail_out = (uInt) *uncompressed_data_size;
 
-#if defined( HAVE_ZLIB_INFLATE_INIT2 )
+#if defined( HAVE_ZLIB_INFLATE_INIT2 ) || defined( ZLIB_DLL )
 		result = inflateInit2(
 		          &zlib_stream,
 		          -12 );
