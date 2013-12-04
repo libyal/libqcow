@@ -1540,7 +1540,7 @@ ssize_t libqcow_file_read_buffer(
 				}
 				if( ( compressed_cluster_block_offset + compressed_cluster_block_size ) > compressed_cluster_block_end_offset )
 				{
-					compressed_cluster_block_size = compressed_cluster_block_end_offset - compressed_cluster_block_offset;
+					compressed_cluster_block_size = (size_t) ( compressed_cluster_block_end_offset - compressed_cluster_block_offset );
 				}
 			}
 			cache_entry_index = ( compressed_cluster_block_offset & internal_file->io_handle->cluster_block_bit_mask )
