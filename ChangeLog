@@ -20,6 +20,7 @@ Tools:
 
 20131204
 * fix for zlib versions that export inflateInit2_ instead of inflateInit2
+* fix for handling last compressed cluster block
 
 20131203
 * worked on Python bindings

@@ -1244,22 +1244,23 @@ ssize_t libqcow_file_read_buffer(
          size_t buffer_size,
          libcerror_error_t **error )
 {
-	libqcow_cluster_block_t *cluster_block   = NULL;
-	libqcow_cluster_table_t *level2_table    = NULL;
-	libqcow_internal_file_t *internal_file   = NULL;
-	static char *function                    = "libqcow_file_read_buffer";
-	size_t buffer_offset                     = 0;
-	size_t cluster_block_data_size           = 0;
-	size_t compressed_cluster_block_size     = 0;
-	size_t read_size                         = 0;
-	uint64_t cluster_block_file_offset       = 0;
-	uint64_t compressed_cluster_block_offset = 0;
-	uint64_t cluster_block_offset            = 0;
-	uint64_t level1_table_index              = 0;
-	uint64_t level2_table_file_offset        = 0;
-	uint64_t level2_table_index              = 0;
-	int cache_entry_index                    = 0;
-	int cluster_block_is_compressed          = 0;
+	libqcow_cluster_block_t *cluster_block       = NULL;
+	libqcow_cluster_table_t *level2_table        = NULL;
+	libqcow_internal_file_t *internal_file       = NULL;
+	static char *function                        = "libqcow_file_read_buffer";
+	size_t buffer_offset                         = 0;
+	size_t cluster_block_data_size               = 0;
+	size_t compressed_cluster_block_size         = 0;
+	size_t read_size                             = 0;
+	uint64_t cluster_block_file_offset           = 0;
+	uint64_t compressed_cluster_block_offset     = 0;
+	uint64_t compressed_cluster_block_end_offset = 0;
+	uint64_t cluster_block_offset                = 0;
+	uint64_t level1_table_index                  = 0;
+	uint64_t level2_table_file_offset            = 0;
+	uint64_t level2_table_index                  = 0;
+	int cache_entry_index                        = 0;
+	int cluster_block_is_compressed              = 0;
 
 	if( file == NULL )
 	{
@@ -1518,30 +1519,28 @@ ssize_t libqcow_file_read_buffer(
 
 			if( internal_file->io_handle->format_version == 2 )
 			{
+				compressed_cluster_block_size += 1;
 				compressed_cluster_block_size *= 512;
 
-				/* Compensate for the missing partial sector bytes
-				 * but make sure the compressed block size stays within the bounds
+				/* Make sure the compressed block size stays within the bounds
 				 * of the cluster block size and the size of the file
 				 */
-				cluster_block_file_offset = compressed_cluster_block_offset / internal_file->io_handle->cluster_block_size;
+				compressed_cluster_block_end_offset = compressed_cluster_block_offset / internal_file->io_handle->cluster_block_size;
 
 				if( ( compressed_cluster_block_offset % internal_file->io_handle->cluster_block_size ) != 0 )
 				{
-					cluster_block_file_offset += 1;
+					compressed_cluster_block_end_offset += 1;
 				}
-				cluster_block_file_offset += 1;
-				cluster_block_file_offset *= internal_file->io_handle->cluster_block_size;
+				compressed_cluster_block_end_offset += 1;
+				compressed_cluster_block_end_offset *= internal_file->io_handle->cluster_block_size;
 
-				if( cluster_block_file_offset > internal_file->size )
+				if( compressed_cluster_block_end_offset > internal_file->size )
 				{
-					cluster_block_file_offset = internal_file->size;
+					compressed_cluster_block_end_offset = internal_file->size;
 				}
-				cluster_block_file_offset -= compressed_cluster_block_offset;
-
-				if( ( compressed_cluster_block_size + 512 ) <= cluster_block_file_offset )
+				if( ( compressed_cluster_block_offset + compressed_cluster_block_size ) > compressed_cluster_block_end_offset )
 				{
-					compressed_cluster_block_size += 512;
+					compressed_cluster_block_size = compressed_cluster_block_end_offset - compressed_cluster_block_offset;
 				}
 			}
 			cache_entry_index = ( compressed_cluster_block_offset & internal_file->io_handle->cluster_block_bit_mask )
