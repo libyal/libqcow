@@ -18,6 +18,10 @@ Tools:
   - fix volume size hints
   - create compatible dokan lib
 
+20131209
+* worked on Python bindings
+  - bug fix for read count behavior change
+
 20131204
 * fix for zlib versions that export inflateInit2_ instead of inflateInit2
 * fix for handling last compressed cluster block

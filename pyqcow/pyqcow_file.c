@@ -806,6 +806,20 @@ PyObject *pyqcow_file_read_buffer(
 		libcerror_error_free(
 		 &error );
 
+		Py_DecRef(
+		 (PyObject *) result_data );
+
+		return( NULL );
+	}
+	/* Need to resize the string here in case read_size was not fully read.
+	 */
+	if( _PyString_Resize(
+	     &result_data,
+	     (Py_ssize_t) read_count ) != 0 )
+	{
+		Py_DecRef(
+		 (PyObject *) result_data );
+
 		return( NULL );
 	}
 	return( result_data );
@@ -903,6 +917,20 @@ PyObject *pyqcow_file_read_random(
 
 		libcerror_error_free(
 		 &error );
+
+		Py_DecRef(
+		 (PyObject *) result_data );
+
+		return( NULL );
+	}
+	/* Need to resize the string here in case read_size was not fully read.
+	 */
+	if( _PyString_Resize(
+	     &result_data,
+	     (Py_ssize_t) read_count ) != 0 )
+	{
+		Py_DecRef(
+		 (PyObject *) result_data );
 
 		return( NULL );
 	}
