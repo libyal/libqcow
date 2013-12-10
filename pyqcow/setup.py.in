@@ -89,8 +89,6 @@ if platform.system() == "Windows":
 	LIBRARY_DIRS.append(library_directory)
 
 	library_dll_file = os.path.join(library_directory, "%s.dll" % (LIBRARY_NAME))
-
-	library_dll_file = os.path.join(library_directory, "%s.dll" % (LIBRARY_NAME))
 	zlib_dll_file = os.path.join(library_directory, "zlib.dll")
 
 	# Add the library DLL and zlib.dll files to the distribution.
