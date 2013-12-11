@@ -18,6 +18,9 @@ Tools:
   - fix volume size hints
   - create compatible dokan lib
 
+20131211
+* worked on Python bindings
+
 20131209
 * worked on Python bindings
   - bug fix for read count behavior change

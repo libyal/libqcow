@@ -28,18 +28,17 @@
 #include "pyqcow_libcerror.h"
 #include "pyqcow_python.h"
 
-#define PYQCOW_ERROR_FORMAT_STRING_SIZE		128
-#define PYQCOW_ERROR_STRING_SIZE		512
+#define PYQCOW_ERROR_STRING_SIZE	768
 
 #if defined( __cplusplus )
 extern "C" {
 #endif
 
 void pyqcow_error_raise(
+      libcerror_error_t *error,
       PyObject *exception_object,
       const char *format_string,
-      const char *function,
-      libcerror_error_t *error );
+      ... );
 
 #if defined( __cplusplus )
 }

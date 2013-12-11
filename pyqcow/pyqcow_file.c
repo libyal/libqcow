@@ -374,10 +374,10 @@ int pyqcow_file_init(
 	     &error ) != 1 )
 	{
 		pyqcow_error_raise(
+		 error,
 		 PyExc_MemoryError,
 		 "%s: unable to initialize file.",
-		 function,
-		 error );
+		 function );
 
 		libcerror_error_free(
 		 &error );
@@ -443,10 +443,10 @@ void pyqcow_file_free(
 	if( result != 1 )
 	{
 		pyqcow_error_raise(
+		 error,
 		 PyExc_MemoryError,
 		 "%s: unable to free libqcow file.",
-		 function,
-		 error );
+		 function );
 
 		libcerror_error_free(
 		 &error );
@@ -488,10 +488,10 @@ PyObject *pyqcow_file_signal_abort(
 	if( result != 1 )
 	{
 		pyqcow_error_raise(
+		 error,
 		 PyExc_IOError,
 		 "%s: unable to signal abort.",
-		 function,
-		 error );
+		 function );
 
 		libcerror_error_free(
 		 &error );
@@ -562,10 +562,10 @@ PyObject *pyqcow_file_open(
 	if( result != 1 )
 	{
 		pyqcow_error_raise(
+		 error,
 		 PyExc_IOError,
 		 "%s: unable to open file.",
-		 function,
-		 error );
+		 function );
 
 		libcerror_error_free(
 		 &error );
@@ -630,10 +630,10 @@ PyObject *pyqcow_file_open_file_object(
 	     &error ) != 1 )
 	{
 		pyqcow_error_raise(
+		 error,
 		 PyExc_MemoryError,
 		 "%s: unable to initialize file IO handle.",
-		 function,
-		 error );
+		 function );
 
 		libcerror_error_free(
 		 &error );
@@ -653,10 +653,10 @@ PyObject *pyqcow_file_open_file_object(
 	if( result != 1 )
 	{
 		pyqcow_error_raise(
+		 error,
 		 PyExc_IOError,
 		 "%s: unable to open file.",
-		 function,
-		 error );
+		 function );
 
 		libcerror_error_free(
 		 &error );
@@ -711,10 +711,10 @@ PyObject *pyqcow_file_close(
 	if( result != 0 )
 	{
 		pyqcow_error_raise(
+		 error,
 		 PyExc_IOError,
 		 "%s: unable to close file.",
-		 function,
-		 error );
+		 function );
 
 		libcerror_error_free(
 		 &error );
@@ -736,7 +736,7 @@ PyObject *pyqcow_file_read_buffer(
            PyObject *keywords )
 {
 	libcerror_error_t *error    = NULL;
-	PyObject *result_data       = NULL;
+	PyObject *string_object     = NULL;
 	static char *function       = "pyqcow_file_read_buffer";
 	static char *keyword_list[] = { "size", NULL };
 	ssize_t read_count          = 0;
@@ -780,16 +780,16 @@ PyObject *pyqcow_file_read_buffer(
 
 		return( NULL );
 	}
-	result_data = PyString_FromStringAndSize(
-	               NULL,
-	               read_size );
+	string_object = PyString_FromStringAndSize(
+	                 NULL,
+	                 read_size );
 
 	Py_BEGIN_ALLOW_THREADS
 
 	read_count = libqcow_file_read_buffer(
 	              pyqcow_file->file,
 	              PyString_AsString(
-	               result_data ),
+	               string_object ),
 	              (size_t) read_size,
 	              &error );
 
@@ -798,31 +798,31 @@ PyObject *pyqcow_file_read_buffer(
 	if( read_count <= -1 )
 	{
 		pyqcow_error_raise(
+		 error,
 		 PyExc_IOError,
 		 "%s: unable to read data.",
-		 function,
-		 error );
+		 function );
 
 		libcerror_error_free(
 		 &error );
 
 		Py_DecRef(
-		 (PyObject *) result_data );
+		 (PyObject *) string_object );
 
 		return( NULL );
 	}
 	/* Need to resize the string here in case read_size was not fully read.
 	 */
 	if( _PyString_Resize(
-	     &result_data,
+	     &string_object,
 	     (Py_ssize_t) read_count ) != 0 )
 	{
 		Py_DecRef(
-		 (PyObject *) result_data );
+		 (PyObject *) string_object );
 
 		return( NULL );
 	}
-	return( result_data );
+	return( string_object );
 }
 
 /* Reads data at a specific offset
@@ -834,7 +834,7 @@ PyObject *pyqcow_file_read_random(
            PyObject *keywords )
 {
 	libcerror_error_t *error    = NULL;
-	PyObject *result_data       = NULL;
+	PyObject *string_object     = NULL;
 	static char *function       = "pyqcow_file_read_random";
 	static char *keyword_list[] = { "size", "offset", NULL };
 	off64_t read_offset         = 0;
@@ -891,16 +891,16 @@ PyObject *pyqcow_file_read_random(
 	}
 	/* Make sure the data fits into the memory buffer
 	 */
-	result_data = PyString_FromStringAndSize(
-	               NULL,
-	               read_size );
+	string_object = PyString_FromStringAndSize(
+	                 NULL,
+	                 read_size );
 
 	Py_BEGIN_ALLOW_THREADS
 
 	read_count = libqcow_file_read_random(
 	              pyqcow_file->file,
 	              PyString_AsString(
-	               result_data ),
+	               string_object ),
 	              (size_t) read_size,
 	              (off64_t) read_offset,
 	              &error );
@@ -910,31 +910,31 @@ PyObject *pyqcow_file_read_random(
 	if( read_count <= -1 )
 	{
 		pyqcow_error_raise(
+		 error,
 		 PyExc_IOError,
 		 "%s: unable to read data.",
-		 function,
-		 error );
+		 function );
 
 		libcerror_error_free(
 		 &error );
 
 		Py_DecRef(
-		 (PyObject *) result_data );
+		 (PyObject *) string_object );
 
 		return( NULL );
 	}
 	/* Need to resize the string here in case read_size was not fully read.
 	 */
 	if( _PyString_Resize(
-	     &result_data,
+	     &string_object,
 	     (Py_ssize_t) read_count ) != 0 )
 	{
 		Py_DecRef(
-		 (PyObject *) result_data );
+		 (PyObject *) string_object );
 
 		return( NULL );
 	}
-	return( result_data );
+	return( string_object );
 }
 
 /* Seeks a certain offset in the data
@@ -983,10 +983,10 @@ PyObject *pyqcow_file_seek_offset(
  	if( offset == -1 )
 	{
 		pyqcow_error_raise(
+		 error,
 		 PyExc_IOError,
 		 "%s: unable to seek offset.",
-		 function,
-		 error );
+		 function );
 
 		libcerror_error_free(
 		 &error );
@@ -1035,10 +1035,10 @@ PyObject *pyqcow_file_get_offset(
 	if( result != 1 )
 	{
 		pyqcow_error_raise(
+		 error,
 		 PyExc_IOError,
 		 "%s: unable to retrieve offset.",
-		 function,
-		 error );
+		 function );
 
 		libcerror_error_free(
 		 &error );
@@ -1087,10 +1087,10 @@ PyObject *pyqcow_file_get_media_size(
 	if( result != 1 )
 	{
 		pyqcow_error_raise(
+		 error,
 		 PyExc_IOError,
 		 "%s: failed to retrieve media size.",
-		 function,
-		 error );
+		 function );
 
 		libcerror_error_free(
 		 &error );
@@ -1161,10 +1161,10 @@ PyObject *pyqcow_file_set_password(
 	if( result != 1 )
 	{
 		pyqcow_error_raise(
+		 error,
 		 PyExc_IOError,
 		 "%s: unable to set password.",
-		 function,
-		 error );
+		 function );
 
 		libcerror_error_free(
 		 &error );
