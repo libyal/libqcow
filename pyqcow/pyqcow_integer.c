@@ -1,7 +1,7 @@
 /*
  * Integer functions
  *
- * Copyright (c) 2010-2013, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (c) 2010-2014, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
@@ -22,7 +22,6 @@
 #include <common.h>
 #include <types.h>
 
-#include "pyqcow.h"
 #include "pyqcow_libcerror.h"
 #include "pyqcow_integer.h"
 #include "pyqcow_python.h"

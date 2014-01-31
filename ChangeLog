@@ -18,6 +18,13 @@ Tools:
   - fix volume size hints
   - create compatible dokan lib
 
+20140131
+* worked on Python bindings
+
+20140119
+* 2014 update
+* updated dependencies
+
 20131211
 * worked on Python bindings
 

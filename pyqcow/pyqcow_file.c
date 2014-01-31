@@ -1,7 +1,7 @@
 /*
  * Python object definition of the libqcow file
  *
- * Copyright (c) 2010-2013, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (c) 2010-2014, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
@@ -26,7 +26,6 @@
 #include <stdlib.h>
 #endif
 
-#include "pyqcow.h"
 #include "pyqcow_error.h"
 #include "pyqcow_file_object_io_handle.h"
 #include "pyqcow_integer.h"
