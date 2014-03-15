@@ -1248,6 +1248,7 @@ ssize_t libqcow_file_read_buffer(
 	libqcow_cluster_table_t *level2_table        = NULL;
 	libqcow_internal_file_t *internal_file       = NULL;
 	static char *function                        = "libqcow_file_read_buffer";
+	off64_t element_data_offset                  = 0;
 	size_t buffer_offset                         = 0;
 	size_t cluster_block_data_size               = 0;
 	size_t compressed_cluster_block_size         = 0;
@@ -1390,6 +1391,7 @@ ssize_t libqcow_file_read_buffer(
 			     (intptr_t *) internal_file->file_io_handle,
 			     internal_file->level2_table_cache,
 			     (off64_t) level2_table_file_offset,
+			     &element_data_offset,
 			     (intptr_t **) &level2_table,
 			     0,
 			     error ) != 1 )
@@ -1772,6 +1774,7 @@ ssize_t libqcow_file_read_buffer(
 				     (intptr_t *) internal_file->file_io_handle,
 				     internal_file->cluster_block_cache,
 				     (off64_t) cluster_block_file_offset,
+				     &element_data_offset,
 				     (intptr_t **) &cluster_block,
 				     0,
 				     error ) != 1 )
