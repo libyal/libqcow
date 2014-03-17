@@ -27,12 +27,13 @@
 #endif
 
 #include "pyqcow.h"
+#include "pyqcow_encryption_types.h"
 #include "pyqcow_error.h"
+#include "pyqcow_file.h"
+#include "pyqcow_file_object_io_handle.h"
 #include "pyqcow_libcerror.h"
 #include "pyqcow_libcstring.h"
 #include "pyqcow_libqcow.h"
-#include "pyqcow_file.h"
-#include "pyqcow_file_object_io_handle.h"
 #include "pyqcow_python.h"
 #include "pyqcow_unused.h"
 
@@ -276,9 +277,10 @@ on_error:
 PyMODINIT_FUNC initpyqcow(
                 void )
 {
-	PyObject *module               = NULL;
-	PyTypeObject *file_type_object = NULL;
-	PyGILState_STATE gil_state     = 0;
+	PyObject *module                           = NULL;
+	PyTypeObject *encryption_types_type_object = NULL;
+	PyTypeObject *file_type_object             = NULL;
+	PyGILState_STATE gil_state                 = 0;
 
 	/* Create the module
 	 * This function must be called before grabbing the GIL
@@ -309,8 +311,32 @@ PyMODINIT_FUNC initpyqcow(
 
 	PyModule_AddObject(
 	 module,
-	"file",
-	(PyObject *) file_type_object );
+	 "file",
+	 (PyObject *) file_type_object );
+
+	/* Setup the encryption types type object
+	 */
+	pyqcow_encryption_types_type_object.tp_new = PyType_GenericNew;
+
+	if( pyqcow_encryption_types_init_type(
+             &pyqcow_encryption_types_type_object ) != 1 )
+	{
+		goto on_error;
+	}
+	if( PyType_Ready(
+	     &pyqcow_encryption_types_type_object ) < 0 )
+	{
+		goto on_error;
+	}
+	Py_IncRef(
+	 (PyObject *) &pyqcow_encryption_types_type_object );
+
+	encryption_types_type_object = &pyqcow_encryption_types_type_object;
+
+	PyModule_AddObject(
+	 module,
+	 "encryption_types",
+	 (PyObject *) encryption_types_type_object );
 
 on_error:
 	PyGILState_Release(

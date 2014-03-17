@@ -16,6 +16,7 @@ pyexec_LTLIBRARIES = pyqcow.la
 
 pyqcow_la_SOURCES = \
 	pyqcow.c pyqcow.h \
+	pyqcow_encryption_types.c pyqcow_encryption_types.h \
 	pyqcow_error.c pyqcow_error.h \
 	pyqcow_file.c pyqcow_file.h \
 	pyqcow_file_object_io_handle.c pyqcow_file_object_io_handle.h \

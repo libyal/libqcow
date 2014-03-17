@@ -18,6 +18,10 @@ Tools:
   - fix volume size hints
   - create compatible dokan lib
 
+20140317
+* worked on Python bindings
+* worked on setup.py
+
 20140315
 * updated libfdata
 

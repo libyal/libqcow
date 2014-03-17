@@ -189,6 +189,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\pyqcow\pyqcow_encryption_types.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\pyqcow\pyqcow_error.c"
 				>
 			</File>
@@ -212,6 +216,10 @@
 			>
 			<File
 				RelativePath="..\..\pyqcow\pyqcow.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\pyqcow\pyqcow_encryption_types.h"
 				>
 			</File>
 			<File
