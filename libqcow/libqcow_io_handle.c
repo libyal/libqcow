@@ -164,7 +164,6 @@ int libqcow_io_handle_clear(
      libcerror_error_t **error )
 {
 	static char *function = "libqcow_io_handle_clear";
-	int result            = 1;
 
 	if( io_handle == NULL )
 	{
@@ -194,9 +193,9 @@ int libqcow_io_handle_clear(
 		 "%s: unable to clear IO handle.",
 		 function );
 
-		result = -1;
+		return( -1 );
 	}
-	return( result );
+	return( 1 );
 }
 
 /* Reads the file header

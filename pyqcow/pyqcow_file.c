@@ -86,12 +86,21 @@ PyMethodDef pyqcow_file_object_methods[] = {
 	  "\n"
 	  "Reads a buffer of data." },
 
+	{ "read_buffer_at_offset",
+	  (PyCFunction) pyqcow_file_read_buffer_at_offset,
+	  METH_VARARGS | METH_KEYWORDS,
+	  "read_buffer_at_offset(size, offset) -> String\n"
+	  "\n"
+	  "Reads a buffer of data at a specific offset." },
+
 	{ "read_random",
-	  (PyCFunction) pyqcow_file_read_random,
+	  (PyCFunction) pyqcow_file_read_buffer_at_offset,
 	  METH_VARARGS | METH_KEYWORDS,
 	  "read_random(size, offset) -> String\n"
 	  "\n"
-	  "Reads a buffer of data at a specific offset." },
+	  "Reads a buffer of data at a specific offset.\n"
+	  "\n"
+	  "WARNING: this function is deprecated use read_buffer_at_offset instead." },
 
 	{ "seek_offset",
 	  (PyCFunction) pyqcow_file_seek_offset,
@@ -364,9 +373,8 @@ int pyqcow_file_init(
 
 		return( -1 );
 	}
-	/* Make sure libqcow file is set to NULL
-	 */
-	pyqcow_file->file = NULL;
+	pyqcow_file->file           = NULL;
+	pyqcow_file->file_io_handle = NULL;
 
 	if( libqcow_file_initialize(
 	     &( pyqcow_file->file ),
@@ -585,13 +593,12 @@ PyObject *pyqcow_file_open_file_object(
            PyObject *arguments,
            PyObject *keywords )
 {
-	PyObject *file_object            = NULL;
-	libbfio_handle_t *file_io_handle = NULL;
-	libcerror_error_t *error         = NULL;
-	char *mode                       = NULL;
-	static char *keyword_list[]      = { "file_object", "mode", NULL };
-	static char *function            = "pyqcow_file_open_file_object";
-	int result                       = 0;
+	PyObject *file_object       = NULL;
+	libcerror_error_t *error    = NULL;
+	char *mode                  = NULL;
+	static char *keyword_list[] = { "file_object", "mode", NULL };
+	static char *function       = "pyqcow_file_open_file_object";
+	int result                  = 0;
 
 	if( pyqcow_file == NULL )
 	{
@@ -624,7 +631,7 @@ PyObject *pyqcow_file_open_file_object(
 		return( NULL );
 	}
 	if( pyqcow_file_object_initialize(
-	     &file_io_handle,
+	     &( pyqcow_file->file_io_handle ),
 	     file_object,
 	     &error ) != 1 )
 	{
@@ -643,7 +650,7 @@ PyObject *pyqcow_file_open_file_object(
 
 	result = libqcow_file_open_file_io_handle(
 	          pyqcow_file->file,
-                  file_io_handle,
+                  pyqcow_file->file_io_handle,
                   LIBQCOW_OPEN_READ,
 	          &error );
 
@@ -668,10 +675,10 @@ PyObject *pyqcow_file_open_file_object(
 	return( Py_None );
 
 on_error:
-	if( file_io_handle != NULL )
+	if( pyqcow_file->file_io_handle != NULL )
 	{
 		libbfio_handle_free(
-		 &file_io_handle,
+		 &( pyqcow_file->file_io_handle ),
 		 NULL );
 	}
 	return( NULL );
@@ -719,6 +726,30 @@ PyObject *pyqcow_file_close(
 		 &error );
 
 		return( NULL );
+	}
+	if( pyqcow_file->file_io_handle != NULL )
+	{
+		Py_BEGIN_ALLOW_THREADS
+
+		result = libbfio_handle_free(
+		          &( pyqcow_file->file_io_handle ),
+		          &error );
+
+		Py_END_ALLOW_THREADS
+
+		if( result != 1 )
+		{
+			pyqcow_error_raise(
+			 error,
+			 PyExc_IOError,
+			 "%s: unable to free libbfio file IO handle.",
+			 function );
+
+			libcerror_error_free(
+			 &error );
+
+			return( NULL );
+		}
 	}
 	Py_IncRef(
 	 Py_None );
@@ -827,14 +858,14 @@ PyObject *pyqcow_file_read_buffer(
 /* Reads data at a specific offset
  * Returns a Python object if successful or NULL on error
  */
-PyObject *pyqcow_file_read_random(
+PyObject *pyqcow_file_read_buffer_at_offset(
            pyqcow_file_t *pyqcow_file,
            PyObject *arguments,
            PyObject *keywords )
 {
 	libcerror_error_t *error    = NULL;
 	PyObject *string_object     = NULL;
-	static char *function       = "pyqcow_file_read_random";
+	static char *function       = "pyqcow_file_read_buffer_at_offset";
 	static char *keyword_list[] = { "size", "offset", NULL };
 	off64_t read_offset         = 0;
 	ssize_t read_count          = 0;
@@ -896,7 +927,7 @@ PyObject *pyqcow_file_read_random(
 
 	Py_BEGIN_ALLOW_THREADS
 
-	read_count = libqcow_file_read_random(
+	read_count = libqcow_file_read_buffer_at_offset(
 	              pyqcow_file->file,
 	              PyString_AsString(
 	               string_object ),

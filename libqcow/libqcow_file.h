@@ -160,6 +160,7 @@ int libqcow_file_close(
 
 int libqcow_file_open_read(
      libqcow_internal_file_t *internal_file,
+     libbfio_handle_t *file_io_handle,
      libcerror_error_t **error );
 
 LIBQCOW_EXTERN \
@@ -167,6 +168,14 @@ ssize_t libqcow_file_read_buffer(
          libqcow_file_t *file,
          void *buffer,
          size_t buffer_size,
+         libcerror_error_t **error );
+
+LIBQCOW_EXTERN \
+ssize_t libqcow_file_read_buffer_at_offset(
+         libqcow_file_t *file,
+         void *buffer,
+         size_t buffer_size,
+         off64_t offset,
          libcerror_error_t **error );
 
 LIBQCOW_EXTERN \
@@ -186,7 +195,7 @@ ssize_t libqcow_file_write_buffer(
          libcerror_error_t **error );
 
 LIBQCOW_EXTERN \
-ssize_t libqcow_file_write_random(
+ssize_t libqcow_file_write_buffer_at_offset(
          libqcow_file_t *file,
          const void *buffer,
          size_t buffer_size,

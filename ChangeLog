@@ -1,4 +1,7 @@
 TODO
+* remove deprecated functions:
+  - libqcow_file_read_random
+  - pyqcow file.read_random
 * add file IO handle opened in library check
 * add snapshot support
   - backing filename
@@ -9,6 +12,7 @@ TODO
 * add write support ?
 
 File format:
+* version 3 support
 * reference count support
 
 Tools:
@@ -17,6 +21,9 @@ Tools:
   - what about unmount?
   - fix volume size hints
   - create compatible dokan lib
+
+20140328
+* worked on Python bindings
 
 20140317
 * worked on Python bindings

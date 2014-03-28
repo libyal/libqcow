@@ -592,10 +592,8 @@ int libqcow_file_open_file_io_handle(
 	{
 		bfio_access_flags = LIBBFIO_ACCESS_FLAG_READ;
 	}
-	internal_file->file_io_handle = file_io_handle;
-
 	file_io_handle_is_open = libbfio_handle_is_open(
-	                          internal_file->file_io_handle,
+	                          file_io_handle,
 	                          error );
 
 	if( file_io_handle_is_open == -1 )
@@ -612,7 +610,7 @@ int libqcow_file_open_file_io_handle(
 	else if( file_io_handle_is_open == 0 )
 	{
 		if( libbfio_handle_open(
-		     internal_file->file_io_handle,
+		     file_io_handle,
 		     bfio_access_flags,
 		     error ) != 1 )
 		{
@@ -629,6 +627,7 @@ int libqcow_file_open_file_io_handle(
 	}
 	if( libqcow_file_open_read(
 	     internal_file,
+	     file_io_handle,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -640,17 +639,21 @@ int libqcow_file_open_file_io_handle(
 
 		goto on_error;
 	}
+	internal_file->file_io_handle = file_io_handle;
+
 	return( 1 );
 
 on_error:
-	if( file_io_handle_is_open == 0 )
+	if( ( file_io_handle_is_open == 0 )
+	 && ( internal_file->file_io_handle_opened_in_library != 0 ) )
 	{
 		libbfio_handle_close(
 		 file_io_handle,
 		 error );
+
+		internal_file->file_io_handle_opened_in_library = 0;
 	}
-	internal_file->file_io_handle                   = NULL;
-	internal_file->file_io_handle_opened_in_library = 0;
+	internal_file->file_io_handle = NULL;
 
 	return( -1 );
 }
@@ -859,6 +862,7 @@ int libqcow_file_close(
  */
 int libqcow_file_open_read(
      libqcow_internal_file_t *internal_file,
+     libbfio_handle_t *file_io_handle,
      libcerror_error_t **error )
 {
 	static char *function = "libqcow_file_open_read";
@@ -953,7 +957,7 @@ int libqcow_file_open_read(
 		return( -1 );
 	}
 	if( libbfio_handle_get_size(
-	     internal_file->file_io_handle,
+	     file_io_handle,
 	     &( internal_file->size ),
 	     error ) != 1 )
 	{
@@ -986,7 +990,7 @@ int libqcow_file_open_read(
 #endif
 	if( libqcow_io_handle_read_file_header(
 	     internal_file->io_handle,
-	     internal_file->file_io_handle,
+	     file_io_handle,
 	     &( internal_file->encryption_method ),
 	     error ) != 1 )
 	{
@@ -1065,7 +1069,7 @@ int libqcow_file_open_read(
 	}
 	if( libqcow_cluster_table_read(
 	     internal_file->level1_table,
-	     internal_file->file_io_handle,
+	     file_io_handle,
 	     internal_file->io_handle->level1_table_offset,
 	     (size_t) internal_file->io_handle->level1_table_size,
 	     error ) != 1 )
@@ -1889,6 +1893,54 @@ ssize_t libqcow_file_read_buffer(
 /* Reads (media) data at a specific offset
  * Returns the number of bytes read or -1 on error
  */
+ssize_t libqcow_file_read_buffer_at_offset(
+         libqcow_file_t *file,
+         void *buffer,
+         size_t buffer_size,
+         off64_t offset,
+         libcerror_error_t **error )
+{
+	static char *function = "libqcow_file_read_buffer_at_offset";
+	ssize_t read_count    = 0;
+
+	if( libqcow_file_seek_offset(
+	     file,
+	     offset,
+	     SEEK_SET,
+	     error ) == -1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_IO,
+		 LIBCERROR_IO_ERROR_SEEK_FAILED,
+		 "%s: unable to seek offset.",
+		 function );
+
+		return( -1 );
+	}
+	read_count = libqcow_file_read_buffer(
+	              file,
+	              buffer,
+	              buffer_size,
+	              error );
+
+	if( read_count <= -1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_IO,
+		 LIBCERROR_IO_ERROR_READ_FAILED,
+		 "%s: unable to read buffer.",
+		 function );
+
+		return( -1 );
+	}
+	return( read_count );
+}
+
+/* Reads (media) data at a specific offset
+ * Returns the number of bytes read or -1 on error
+ */
 ssize_t libqcow_file_read_random(
          libqcow_file_t *file,
          void *buffer,
@@ -2005,14 +2057,14 @@ ssize_t libqcow_file_write_buffer(
  * Will initialize write if necessary
  * Returns the number of input bytes written, 0 when no longer bytes can be written or -1 on error
  */
-ssize_t libqcow_file_write_random(
+ssize_t libqcow_file_write_buffer_at_offset(
          libqcow_file_t *file,
          const void *buffer,
          size_t buffer_size,
          off64_t offset,
          libcerror_error_t **error )
 {
-	static char *function = "libqcow_file_write_random";
+	static char *function = "libqcow_file_write_buffer_at_offset";
 	ssize_t write_count   = 0;
 
 	if( libqcow_file_seek_offset(

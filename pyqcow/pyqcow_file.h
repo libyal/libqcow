@@ -25,6 +25,7 @@
 #include <common.h>
 #include <types.h>
 
+#include "pyqcow_libbfio.h"
 #include "pyqcow_libqcow.h"
 #include "pyqcow_python.h"
 
@@ -43,6 +44,10 @@ struct pyqcow_file
 	/* The libqcow file
 	 */
 	libqcow_file_t *file;
+
+	/* The libbfio file IO handle
+	 */
+	libbfio_handle_t *file_io_handle;
 };
 
 extern PyMethodDef pyqcow_file_object_methods[];
@@ -90,7 +95,7 @@ PyObject *pyqcow_file_read_buffer(
            PyObject *arguments,
            PyObject *keywords );
 
-PyObject *pyqcow_file_read_random(
+PyObject *pyqcow_file_read_buffer_at_offset(
            pyqcow_file_t *pyqcow_file,
            PyObject *arguments,
            PyObject *keywords );
