@@ -120,6 +120,7 @@ splint:
 	(cd $(srcdir)/libqcow && $(MAKE) splint $(AM_MAKEFLAGS))
 	(cd $(srcdir)/libcsystem && $(MAKE) splint $(AM_MAKEFLAGS))
 	(cd $(srcdir)/qcowtools && $(MAKE) splint $(AM_MAKEFLAGS))
+	(cd $(srcdir)/pyqcow && $(MAKE) splint $(AM_MAKEFLAGS))
 	(cd $(srcdir)/po && $(MAKE) $(AM_MAKEFLAGS))
 	(cd $(srcdir)/tests && $(MAKE) $(AM_MAKEFLAGS))
 
