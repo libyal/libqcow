@@ -28,6 +28,7 @@
 
 #include "qcowtools_libcerror.h"
 #include "qcowtools_libcnotify.h"
+#include "qcowtools_libcstring.h"
 #include "qcowtools_libqcow.h"
 
 #if defined( __cplusplus )

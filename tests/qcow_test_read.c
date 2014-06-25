@@ -368,7 +368,7 @@ int qcow_test_read_from_file(
 	{
 		fprintf(
 		 stderr,
-		 "Volume size exceeds maximum.\n" );
+		 "Media size exceeds maximum.\n" );
 
 		return( -1 );
 	}

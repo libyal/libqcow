@@ -1291,13 +1291,13 @@ ssize_t libqcow_file_read_buffer(
 
 		return( -1 );
 	}
-	if( internal_file->io_handle->current_offset < 0 )
+	if( internal_file->current_offset < 0 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
-		 "%s: invalid internal file - invalid IO handle - current offset value out of bounds.",
+		 "%s: invalid internal file - current offset value out of bounds.",
 		 function );
 
 		return( -1 );
@@ -1324,7 +1324,7 @@ ssize_t libqcow_file_read_buffer(
 
 		return( -1 );
 	}
-	if( (size64_t) internal_file->io_handle->current_offset >= internal_file->io_handle->media_size )
+	if( (size64_t) internal_file->current_offset >= internal_file->io_handle->media_size )
 	{
 		return( 0 );
 	}
@@ -1336,10 +1336,10 @@ ssize_t libqcow_file_read_buffer(
 			libcnotify_printf(
 			 "%s: current offset\t\t\t\t: 0x%08" PRIx64 "\n",
 			 function,
-			 internal_file->io_handle->current_offset );
+			 internal_file->current_offset );
 		}
 #endif
-		level1_table_index = internal_file->io_handle->current_offset >> internal_file->io_handle->level1_index_bit_shift;
+		level1_table_index = internal_file->current_offset >> internal_file->io_handle->level1_index_bit_shift;
 
 #if defined( HAVE_DEBUG_OUTPUT )
 		if( libcnotify_verbose != 0 )
@@ -1410,7 +1410,7 @@ ssize_t libqcow_file_read_buffer(
 
 				return( -1 );
 			}
-			level2_table_index = ( internal_file->io_handle->current_offset >> internal_file->io_handle->number_of_cluster_block_bits )
+			level2_table_index = ( internal_file->current_offset >> internal_file->io_handle->number_of_cluster_block_bits )
 			                   & internal_file->io_handle->level2_index_bit_mask;
 
 #if defined( HAVE_DEBUG_OUTPUT )
@@ -1485,13 +1485,13 @@ ssize_t libqcow_file_read_buffer(
 			cluster_block_is_compressed = 0;
 		}
 		cluster_block_file_offset &= internal_file->io_handle->offset_bit_mask;
-		cluster_block_offset       = internal_file->io_handle->current_offset & internal_file->io_handle->cluster_block_bit_mask;
+		cluster_block_offset       = internal_file->current_offset & internal_file->io_handle->cluster_block_bit_mask;
 
 		read_size = internal_file->io_handle->cluster_block_size - (size_t) cluster_block_offset;
 
-		if( ( (size64_t) internal_file->io_handle->current_offset + read_size ) > internal_file->io_handle->media_size )
+		if( ( (size64_t) internal_file->current_offset + read_size ) > internal_file->io_handle->media_size )
 		{
-			read_size = (size_t) ( internal_file->io_handle->media_size - internal_file->io_handle->current_offset );
+			read_size = (size_t) ( internal_file->io_handle->media_size - internal_file->current_offset );
 		}
 		if( ( buffer_offset + read_size ) > buffer_size )
 		{
@@ -1843,7 +1843,7 @@ ssize_t libqcow_file_read_buffer(
 					     cluster_block->data_size,
 					     cluster_block->data,
 					     cluster_block->data_size,
-					     (uint64_t) ( internal_file->io_handle->current_offset - cluster_block_offset ) / 512,
+					     (uint64_t) ( internal_file->current_offset - cluster_block_offset ) / 512,
 					     error ) != 1 )
 					{
 						libcerror_error_set(
@@ -1872,7 +1872,7 @@ ssize_t libqcow_file_read_buffer(
 				return( -1 );
 			}
 		}
-		internal_file->io_handle->current_offset += read_size;
+		internal_file->current_offset += read_size;
 		buffer_offset                            += read_size;
 
 #if defined( HAVE_DEBUG_OUTPUT )
@@ -1882,7 +1882,7 @@ ssize_t libqcow_file_read_buffer(
 			 "\n" );
 		}
 #endif
-		if( (size64_t) internal_file->io_handle->current_offset >= internal_file->io_handle->media_size )
+		if( (size64_t) internal_file->current_offset >= internal_file->io_handle->media_size )
 		{
 			break;
 		}
@@ -2155,7 +2155,7 @@ off64_t libqcow_file_seek_offset(
 	}
 	if( whence == SEEK_CUR )
 	{
-		offset += internal_file->io_handle->current_offset;
+		offset += internal_file->current_offset;
 	}
 	else if( whence == SEEK_END )
 	{
@@ -2172,7 +2172,7 @@ off64_t libqcow_file_seek_offset(
 
 		return( -1 );
 	}
-	internal_file->io_handle->current_offset = offset;
+	internal_file->current_offset = offset;
 
 	return( offset );
 }
@@ -2223,7 +2223,7 @@ int libqcow_file_get_offset(
 
 		return( -1 );
 	}
-	*offset = internal_file->io_handle->current_offset;
+	*offset = internal_file->current_offset;
 
 	return( 1 );
 }

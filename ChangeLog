@@ -22,6 +22,12 @@ Tools:
   - fix volume size hints
   - create compatible dokan lib
 
+20140625
+* code clean up
+
+20140330
+* code clean up
+
 20140328
 * worked on Python bindings
 

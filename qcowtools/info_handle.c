@@ -27,6 +27,7 @@
 #include "info_handle.h"
 #include "qcowtools_libcerror.h"
 #include "qcowtools_libcnotify.h"
+#include "qcowtools_libcstring.h"
 #include "qcowtools_libqcow.h"
 
 #define INFO_HANDLE_NOTIFY_STREAM		stdout

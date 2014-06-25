@@ -50,6 +50,10 @@ typedef struct libqcow_internal_file libqcow_internal_file_t;
 
 struct libqcow_internal_file
 {
+	/* The current (storage media) offset
+	 */
+	off64_t current_offset;
+
 	/* The IO handle
 	 */
 	libqcow_io_handle_t *io_handle;

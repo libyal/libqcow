@@ -60,10 +60,9 @@ test_read()
 
 QCOW_TEST_READ="qcow_test_read";
 
-if ! test -x ${QCOW_TEST_SEEK};
+if ! test -x ${QCOW_TEST_READ};
 then
 	QCOW_TEST_READ="qcow_test_read.exe";
-
 fi
 
 if ! test -x ${QCOW_TEST_READ};

@@ -40,10 +40,6 @@ typedef struct libqcow_io_handle libqcow_io_handle_t;
 
 struct libqcow_io_handle
 {
-	/* The current (storage media) offset
-	 */
-	off64_t current_offset;
-
 	/* The (storage) media size
 	 */
 	size64_t media_size;
