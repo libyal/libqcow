@@ -1,5 +1,5 @@
 MSVSCPP_FILES = \
-	dokan_dll/dokan_dll.vcproj \
+	dokan/dokan.vcproj \
 	libbfio/libbfio.vcproj \
 	libcaes/libcaes.vcproj \
 	libcdata/libcdata.vcproj \
@@ -14,7 +14,7 @@ MSVSCPP_FILES = \
 	libcthreads/libcthreads.vcproj \
 	libfcache/libfcache.vcproj \
 	libfdata/libfdata.vcproj \
-	libqcow_dll/libqcow_dll.vcproj \
+	libqcow/libqcow.vcproj \
 	libuna/libuna.vcproj \
 	pyqcow/pyqcow.vcproj \
 	qcow_test_open_close/qcow_test_open_close.vcproj \
@@ -22,7 +22,7 @@ MSVSCPP_FILES = \
 	qcow_test_seek/qcow_test_seek.vcproj \
 	qcowinfo/qcowinfo.vcproj \
 	qcowmount/qcowmount.vcproj \
-	zlib_dll/zlib_dll.vcproj \
+	zlib/zlib.vcproj \
 	libqcow.sln
 
 SCRIPT_FILES = \

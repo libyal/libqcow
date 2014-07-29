@@ -276,20 +276,6 @@ ssize_t libqcow_file_read_buffer(
 
 /* Reads (media) data at a specific offset
  * Returns the number of bytes read or -1 on error
- *
- * This function is deprecated use libqcow_file_read_buffer_at_offset instead
- */
-LIBQCOW_DEPRECATED \
-LIBQCOW_EXTERN \
-ssize_t libqcow_file_read_random(
-         libqcow_file_t *file,
-         void *buffer,
-         size_t buffer_size,
-         off64_t offset,
-         libqcow_error_t **error );
-
-/* Reads (media) data at a specific offset
- * Returns the number of bytes read or -1 on error
  */
 LIBQCOW_EXTERN \
 ssize_t libqcow_file_read_buffer_at_offset(
@@ -397,6 +383,24 @@ int libqcow_file_set_utf16_password(
      const uint16_t *utf16_string,
      size_t utf16_string_length,
      libqcow_error_t **error );
+
+/* -------------------------------------------------------------------------
+ * File functions - deprecated
+ * ------------------------------------------------------------------------- */
+
+/* Reads (media) data at a specific offset
+ * Returns the number of bytes read or -1 on error
+ *
+ * This function is deprecated use libqcow_file_read_buffer_at_offset instead
+ */
+LIBQCOW_DEPRECATED \
+LIBQCOW_EXTERN \
+ssize_t libqcow_file_read_random(
+         libqcow_file_t *file,
+         void *buffer,
+         size_t buffer_size,
+         off64_t offset,
+         libqcow_error_t **error );
 
 /* -------------------------------------------------------------------------
  * Meta data functions

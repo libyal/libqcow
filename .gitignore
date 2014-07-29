@@ -104,13 +104,6 @@ stamp-h1
 /libqcow/libqcow_definitions.h
 /qcowtools/qcowinfo
 /qcowtools/qcowmount
-/macosx/Introduction.rtf
-/macosx/libqcow.pmdoc/01bin.xml
-/macosx/libqcow.pmdoc/02include.xml
-/macosx/libqcow.pmdoc/03lib.xml
-/macosx/libqcow.pmdoc/04share.xml
-/macosx/libqcow.pmdoc/05python.xml
-/macosx/libqcow.pmdoc/index.xml
 /pyqcow/setup.py
 /tests/input
 /tests/qcow_test_open_close

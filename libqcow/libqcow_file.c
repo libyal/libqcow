@@ -549,7 +549,7 @@ int libqcow_file_open_file_io_handle(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
-		 "%s: invalid internal file - file IO handle already set.",
+		 "%s: invalid file - file IO handle already set.",
 		 function );
 
 		return( -1 );
@@ -874,7 +874,7 @@ int libqcow_file_open_read(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
 		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid internal file.",
+		 "%s: invalid file.",
 		 function );
 
 		return( -1 );
@@ -885,7 +885,7 @@ int libqcow_file_open_read(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
-		 "%s: invalid internal file - missing IO handle.",
+		 "%s: invalid file - missing IO handle.",
 		 function );
 
 		return( -1 );
@@ -896,7 +896,7 @@ int libqcow_file_open_read(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
-		 "%s: invalid internal file - level 1 table already set.",
+		 "%s: invalid file - level 1 table already set.",
 		 function );
 
 		return( -1 );
@@ -907,7 +907,7 @@ int libqcow_file_open_read(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
-		 "%s: invalid internal file - level2 table vector already set.",
+		 "%s: invalid file - level2 table vector already set.",
 		 function );
 
 		return( -1 );
@@ -918,7 +918,7 @@ int libqcow_file_open_read(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
-		 "%s: invalid internal file - level2 table cache already set.",
+		 "%s: invalid file - level2 table cache already set.",
 		 function );
 
 		return( -1 );
@@ -929,7 +929,7 @@ int libqcow_file_open_read(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
-		 "%s: invalid internal file - cluster block vector already set.",
+		 "%s: invalid file - cluster block vector already set.",
 		 function );
 
 		return( -1 );
@@ -940,7 +940,7 @@ int libqcow_file_open_read(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
-		 "%s: invalid internal file - cluster block cache already set.",
+		 "%s: invalid file - cluster block cache already set.",
 		 function );
 
 		return( -1 );
@@ -951,7 +951,7 @@ int libqcow_file_open_read(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
-		 "%s: invalid internal file - compressed cluster block cache already set.",
+		 "%s: invalid file - compressed cluster block cache already set.",
 		 function );
 
 		return( -1 );
@@ -1286,7 +1286,7 @@ ssize_t libqcow_file_read_buffer(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
-		 "%s: invalid internal file - missing IO handle.",
+		 "%s: invalid file - missing IO handle.",
 		 function );
 
 		return( -1 );
@@ -1297,7 +1297,7 @@ ssize_t libqcow_file_read_buffer(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
-		 "%s: invalid internal file - current offset value out of bounds.",
+		 "%s: invalid file - current offset value out of bounds.",
 		 function );
 
 		return( -1 );
@@ -2020,7 +2020,7 @@ ssize_t libqcow_file_write_buffer(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
-		 "%s: invalid internal file - missing IO handle.",
+		 "%s: invalid file - missing IO handle.",
 		 function );
 
 		return( -1 );
@@ -2135,7 +2135,7 @@ off64_t libqcow_file_seek_offset(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
-		 "%s: invalid internal file - missing IO handle.",
+		 "%s: invalid file - missing IO handle.",
 		 function );
 
 		return( -1 );
@@ -2207,7 +2207,7 @@ int libqcow_file_get_offset(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
-		 "%s: invalid internal file - missing IO handle.",
+		 "%s: invalid file - missing IO handle.",
 		 function );
 
 		return( -1 );
@@ -2258,7 +2258,7 @@ int libqcow_file_get_format_version(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
-		 "%s: invalid internal file - missing IO handle.",
+		 "%s: invalid file - missing IO handle.",
 		 function );
 
 		return( -1 );

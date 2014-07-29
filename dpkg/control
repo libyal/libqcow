@@ -10,8 +10,16 @@ Package: libqcow
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
+Suggests: libqcow-dbg
 Description: Library to access the QEMU Copy-On-Write (QCOW) image file format
  libqcow is a library to access the QEMU Copy-On-Write (QCOW) image file format.
+
+Package: libqcow-dbg
+Architecture: any
+Section: debug
+Depends: libqcow (= ${Source-Version}), ${misc:Depends}
+Description: Debugging symbols for libqcow
+ Debugging symbols for libqcow.
 
 Package: libqcow-dev
 Section: libdevel
@@ -31,6 +39,14 @@ Package: libqcow-python
 Section: python
 Architecture: any
 Depends: libqcow (= ${Source-Version}), ${shlibs:Depends}, ${python:Depends}
+Suggests: libqcow-python-dbg
 Description: Python bindings for libqcow
  Python bindings for libqcow.
+
+Package: libqcow-python-dbg
+Section: debug
+Architecture: any
+Depends: libqcow-python (= ${Source-Version})
+Description: Debugging symbols for libqcow-python
+ Debugging symbols for libqcow-python.
 
