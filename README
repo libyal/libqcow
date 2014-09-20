@@ -1,4 +1,6 @@
-See:
-* http://code.google.com/p/libqcow/wiki/Building
-* README.macosx
+libqcow is a library to access the QEMU Copy-On-Write (QCOW) image format.
+
+For more information see:
+* Project documentation: https://github.com/libyal/libqcow/wiki/Home
+* How to build from source: https://github.com/libyal/libqcow/wiki/Building
 

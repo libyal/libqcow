@@ -28,7 +28,7 @@ BEGIN
       VALUE "OriginalFilename",		"libqcow.dll\0"
       VALUE "ProductName",		"libqcow\0"
       VALUE "ProductVersion",		"@VERSION@" "\0"
-      VALUE "Comments",			"For more information visit http://code.google.com/p/libqcow/\0"
+      VALUE "Comments",			"For more information visit https://github.com/libyal/libqcow/\0"
     END
   END
   BLOCK "VarFileInfo"

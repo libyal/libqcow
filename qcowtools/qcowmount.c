@@ -923,7 +923,8 @@ int qcowmount_fuse_getattr(
 
 				goto on_error;
 			}
-			result = 0;
+			use_mount_time = 1;
+			result         = 0;
 		}
 	}
 	if( result == 0 )
@@ -1994,7 +1995,9 @@ int __stdcall qcowmount_dokan_GetFileInformation(
 		 "%s: unable to set file info.",
 		 function );
 
-		return( -1 );
+		result = -ERROR_GEN_FAILURE;
+
+		goto on_error;
 	}
 	return( 0 );
 

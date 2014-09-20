@@ -50,7 +50,6 @@ SPEC_FILES = \
 	libqcow.spec.in
 
 EXTRA_DIST = \
-	README.macosx \
 	$(DPKG_FILES) \
 	$(GETTEXT_FILES) \
 	$(PKGCONFIG_FILES) \
