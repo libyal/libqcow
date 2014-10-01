@@ -1,5 +1,26 @@
 libqcow is a library to access the QEMU Copy-On-Write (QCOW) image format.
 
+Read-only supported QCOW formats:
+* version 1
+* version 2
+
+Supported QCOW format features:
+* compression
+* encryption
+
+QCOW format features not supported at the moment:
+* backing file-based snapshots
+* in-image snapshots
+
+Work in progress:
+* Python bindings
+* Dokan library support
+
+Planned:
+* QCOW version 3 support
+* Multi-threading support
+* Python 3 support
+
 For more information see:
 * Project documentation: https://github.com/libyal/libqcow/wiki/Home
 * How to build from source: https://github.com/libyal/libqcow/wiki/Building

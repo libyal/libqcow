@@ -120,6 +120,7 @@ stamp-h1
 /libcnotify
 /libcpath
 /libcsplit
+/libcstring
 /libcthreads
 /libfcache
 /libfdata
