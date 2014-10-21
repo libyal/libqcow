@@ -25,47 +25,36 @@
 #include <common.h>
 #include <types.h>
 
-#if defined( HAVE_SIGNAL_H )
-#include <signal.h>
-#endif
-
+#include "libcsystem_extern.h"
 #include "libcsystem_libcerror.h"
+#include "libcsystem_types.h"
 
 #if defined( __cplusplus )
 extern "C" {
 #endif
 
-#if defined( WINAPI )
-typedef unsigned long libcsystem_signal_t;
+#if !defined( HAVE_SIGNAL_H ) && !defined( WINAPI )
+#error missing signal functions
+#endif
 
+#if defined( WINAPI )
 BOOL WINAPI libcsystem_signal_handler(
              libcsystem_signal_t signal );
+#endif
 
 #if defined( _MSC_VER )
 void libcsystem_signal_initialize_memory_debug(
       void );
 #endif
 
+LIBCSYSTEM_EXTERN \
 int libcsystem_signal_attach(
      void (*signal_handler)( libcsystem_signal_t ),
      libcerror_error_t **error );
 
+LIBCSYSTEM_EXTERN \
 int libcsystem_signal_detach(
      libcerror_error_t **error );
-
-#elif defined( HAVE_SIGNAL_H )
-typedef int libcsystem_signal_t;
-
-int libcsystem_signal_attach(
-     void (*signal_handler)( libcsystem_signal_t ),
-     libcerror_error_t **error );
-
-int libcsystem_signal_detach(
-     libcerror_error_t **error );
-
-#else
-#error missing signal functions
-#endif
 
 #if defined( __cplusplus )
 }

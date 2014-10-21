@@ -32,6 +32,7 @@
 
 #include "libcsystem_libcerror.h"
 #include "libcsystem_signal.h"
+#include "libcsystem_types.h"
 
 #if defined( WINAPI )
 

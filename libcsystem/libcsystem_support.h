@@ -25,12 +25,14 @@
 #include <common.h>
 #include <types.h>
 
+#include "libcsystem_extern.h"
 #include "libcsystem_libcerror.h"
 
 #if defined( __cplusplus )
 extern "C" {
 #endif
 
+LIBCSYSTEM_EXTERN \
 int libcsystem_initialize(
      int stdio_mode,
      libcerror_error_t **error );

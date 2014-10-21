@@ -25,11 +25,77 @@
 #include <common.h>
 #include <types.h>
 
-#define LIBCSYSTEM_VERSION			20140505
-
-/* The libcsystem version string
+/* Define HAVE_LOCAL_LIBCSYSTEM for local use of libcsystem
  */
-#define LIBCSYSTEM_VERSION_STRING		"20140505"
+#if !defined( HAVE_LOCAL_LIBCSYSTEM )
+#include <libcsystem/definitions.h>
+
+/* The definitions in <libcsystem/definitions.h> are copied here
+ * for local use of libcsystem
+ */
+#else
+
+#define LIBCSYSTEM_VERSION				20141019
+
+/* The libcstring version string
+ */
+#define LIBCSYSTEM_VERSION_STRING				"20141019"
+
+/* The file access flags
+ * bit 1	set to 1 for read access
+ * bit 2	set to 1 for write access
+ * bit 3	set to 1 to truncate an existing file on write
+ * bit 4-8	not used
+ */
+enum LIBCSYSTEM_ACCESS_FLAGS
+{
+	LIBCSYSTEM_ACCESS_FLAG_READ			= 0x01,
+	LIBCSYSTEM_ACCESS_FLAG_WRITE			= 0x02,
+	LIBCSYSTEM_ACCESS_FLAG_TRUNCATE			= 0x04
+};
+
+/* The file access macros
+ */
+#define LIBCSYSTEM_OPEN_READ				( LIBCSYSTEM_ACCESS_FLAG_READ )
+#define LIBCSYSTEM_OPEN_WRITE				( LIBCSYSTEM_ACCESS_FLAG_WRITE )
+#define LIBCSYSTEM_OPEN_READ_WRITE			( LIBCSYSTEM_ACCESS_FLAG_READ | LIBCSYSTEM_ACCESS_FLAG_WRITE )
+#define LIBCSYSTEM_OPEN_WRITE_TRUNCATE			( LIBCSYSTEM_ACCESS_FLAG_WRITE | LIBCSYSTEM_ACCESS_FLAG_TRUNCATE )
+#define LIBCSYSTEM_OPEN_READ_WRITE_TRUNCATE		( LIBCSYSTEM_ACCESS_FLAG_READ | LIBCSYSTEM_ACCESS_FLAG_WRITE | LIBCSYSTEM_ACCESS_FLAG_TRUNCATE )
+
+/* The access behavior types
+ */
+enum LIBCSYSTEM_ACCESS_BEHAVIOR
+{
+	LIBCSYSTEM_ACCESS_BEHAVIOR_NORMAL,
+	LIBCSYSTEM_ACCESS_BEHAVIOR_RANDOM,
+	LIBCSYSTEM_ACCESS_BEHAVIOR_SEQUENTIAL
+};
+
+#endif /* !defined( HAVE_LOCAL_LIBCSYSTEM ) */
+
+/* Platform specific macros
+ */
+#if defined( WINAPI )
+
+#if defined( _MSC_VER )
+#define  LIBCSYSTEM_LARGE_INTEGER_ZERO			{ 0, 0 }
+
+#elif defined( __BORLANDC__ )
+#define  LIBCSYSTEM_LARGE_INTEGER_ZERO			{ 0 }
+
+#elif defined( __CYGWIN__ )
+#define  LIBCSYSTEM_LARGE_INTEGER_ZERO			{ { 0, 0 } }
+
+#elif defined( __MINGW32_VERSION ) || defined( __MINGW64_VERSION_MAJOR )
+#define  LIBCSYSTEM_LARGE_INTEGER_ZERO			{ { 0, 0 } }
+
+#endif
+
+#if !defined( INVALID_FILE_ATTRIBUTES )
+#define INVALID_FILE_ATTRIBUTES				( (DWORD) -1 )
+#endif
+
+#endif /* defined( WINAPI ) */
 
 #endif
 

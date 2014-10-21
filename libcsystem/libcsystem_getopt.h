@@ -25,6 +25,7 @@
 #include <common.h>
 #include <types.h>
 
+#include "libcsystem_extern.h"
 #include "libcsystem_libcstring.h"
 
 /* unistd.h is included here to export getopt, optarg, optind and optopt
@@ -42,25 +43,22 @@ extern "C" {
 	getopt( argument_count, argument_values, options_string )
 
 #else
+LIBCSYSTEM_EXTERN \
+libcstring_system_character_t *optarg;
 
-/* The current option argument
- */
-extern libcstring_system_character_t *optarg;
+LIBCSYSTEM_EXTERN \
+int optind;
 
-/* The option index
- */
-extern int optind;
+LIBCSYSTEM_EXTERN \
+libcstring_system_integer_t optopt;
 
-/* Value to indicate the current option
- */
-extern libcstring_system_integer_t optopt;
-
+LIBCSYSTEM_EXTERN \
 libcstring_system_integer_t libcsystem_getopt(
                              int argument_count,
                              libcstring_system_character_t * const argument_values[],
                              const libcstring_system_character_t *options_string );
 
-#endif
+#endif /* defined( HAVE_GETOPT ) */
 
 #if defined( __cplusplus )
 }
