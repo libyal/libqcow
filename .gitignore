@@ -125,6 +125,7 @@ stamp-h1
 /libcpath
 /libcsplit
 /libcstring
+/libcsystem
 /libcthreads
 /libfcache
 /libfdata
