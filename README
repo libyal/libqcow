@@ -1,5 +1,9 @@
 libqcow is a library to access the QEMU Copy-On-Write (QCOW) image format.
 
+Project information:
+* Status: alpha
+* Licence: LGPLv3+
+
 Read-only supported QCOW formats:
 * version 1
 * version 2
