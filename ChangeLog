@@ -22,6 +22,9 @@ Tools:
   - fix volume size hints
   - create compatible dokan lib
 
+20141029
+* bug fix in Python-bindings
+
 20141027
 * changes for deployment
 
