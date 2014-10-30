@@ -266,20 +266,15 @@ sparse or stored in a corresponding backing file.
 
 ==== Cluster block reference – version 1
 The cluster block reference is 8-bytes of size and consists of:
-offset
-size
-value
-description
-0.0
-63 bits
 
-Cluster block offset
+[cols="1,1,1,5",options="header"]
+|===
+| Offset | Size | Value | Description
+| 0.0 | 63 bits | | Cluster block offset +
 The offset is relative to the start of the cluster block
-7.7
-1 bit
-
-Is compressed flag
+| 7.7 | 1 bit | | Is compressed flag +
 (QCOW_OFLAG_COMPRESSED)
+|===
 
 ==== Cluster block reference – version 2
 The cluster block reference is 8-bytes of size and consists of:
