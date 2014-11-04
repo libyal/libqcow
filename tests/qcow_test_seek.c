@@ -114,6 +114,308 @@ int qcow_test_seek_offset(
 	return( result );
 }
 
+/* Tests seeking in a file
+ * Returns 1 if successful, 0 if not or -1 on error
+ */
+int qcow_test_seek_file(
+     libqcow_file_t *file,
+     size64_t media_size )
+{
+	int result = 0;
+
+	if( file == NULL )
+	{
+		return( -1 );
+	}
+	if( media_size > (size64_t) INT64_MAX )
+	{
+		fprintf(
+		 stderr,
+		 "Media size exceeds maximum.\n" );
+
+		return( -1 );
+	}
+	/* Test: SEEK_SET offset: 0
+	 * Expected result: 0
+	 */
+	result = qcow_test_seek_offset(
+	          file,
+	          0,
+	          SEEK_SET,
+	          0 );
+
+	if( result != 1 )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to test seek offset.\n" );
+
+		return( result );
+	}
+	/* Test: SEEK_SET offset: <media_size>
+	 * Expected result: <media_size>
+	 */
+	result = qcow_test_seek_offset(
+	          file,
+	          (off64_t) media_size,
+	          SEEK_SET,
+	          (off64_t) media_size );
+
+	if( result != 1 )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to test seek offset.\n" );
+
+		return( result );
+	}
+	/* Test: SEEK_SET offset: <media_size / 5>
+	 * Expected result: <media_size / 5>
+	 */
+	result = qcow_test_seek_offset(
+	          file,
+	          (off64_t) ( media_size / 5 ),
+	          SEEK_SET,
+	          (off64_t) ( media_size / 5 ) );
+
+	if( result != 1 )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to test seek offset.\n" );
+
+		return( result );
+	}
+	/* Test: SEEK_SET offset: <media_size + 987>
+	 * Expected result: <media_size + 987>
+	 */
+	result = qcow_test_seek_offset(
+	          file,
+	          (off64_t) ( media_size + 987 ),
+	          SEEK_SET,
+	          (off64_t) ( media_size + 987 ) );
+
+	if( result != 1 )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to test seek offset.\n" );
+
+		return( result );
+	}
+	/* Test: SEEK_SET offset: -987
+	 * Expected result: -1
+	 */
+	result = qcow_test_seek_offset(
+	          file,
+	          -987,
+	          SEEK_SET,
+	          -1 );
+
+	if( result != 1 )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to test seek offset.\n" );
+
+		return( result );
+	}
+	/* Test: SEEK_CUR offset: 0
+	 * Expected result: <media_size + 987>
+	 */
+	result = qcow_test_seek_offset(
+	          file,
+	          0,
+	          SEEK_CUR,
+	          (off64_t) ( media_size + 987 ) );
+
+	if( result != 1 )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to test seek offset.\n" );
+
+		return( result );
+	}
+	/* Test: SEEK_CUR offset: <-1 * (media_size + 987)>
+	 * Expected result: 0
+	 */
+	result = qcow_test_seek_offset(
+	          file,
+	          -1 * (off64_t) ( media_size + 987 ),
+	          SEEK_CUR,
+	          0 );
+
+	if( result != 1 )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to test seek offset.\n" );
+
+		return( result );
+	}
+	/* Test: SEEK_CUR offset: <media_size / 3>
+	 * Expected result: <media_size / 3>
+	 */
+	result = qcow_test_seek_offset(
+	          file,
+	          (off64_t) ( media_size / 3 ),
+	          SEEK_CUR,
+	          (off64_t) ( media_size / 3 ) );
+
+	if( result != 1 )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to test seek offset.\n" );
+
+		return( result );
+	}
+	if( media_size == 0 )
+	{
+		/* Test: SEEK_CUR offset: <-2 * (media_size / 3)>
+		 * Expected result: 0
+		 */
+		result = qcow_test_seek_offset(
+		          file,
+		          -2 * (off64_t) ( media_size / 3 ),
+		          SEEK_CUR,
+		          0 );
+
+		if( result != 1 )
+		{
+			fprintf(
+			 stderr,
+			 "Unable to test seek offset.\n" );
+
+			return( result );
+		}
+	}
+	else
+	{
+		/* Test: SEEK_CUR offset: <-2 * (media_size / 3)>
+		 * Expected result: -1
+		 */
+		result = qcow_test_seek_offset(
+		          file,
+		          -2 * (off64_t) ( media_size / 3 ),
+		          SEEK_CUR,
+		          -1 );
+
+		if( result != 1 )
+		{
+			fprintf(
+			 stderr,
+			 "Unable to test seek offset.\n" );
+
+			return( result );
+		}
+	}
+	/* Test: SEEK_END offset: 0
+	 * Expected result: <media_size>
+	 */
+	result = qcow_test_seek_offset(
+	          file,
+	          0,
+	          SEEK_END,
+	          (off64_t) media_size );
+
+	if( result != 1 )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to test seek offset.\n" );
+
+		return( result );
+	}
+	/* Test: SEEK_END offset: <-1 * media_size>
+	 * Expected result: 0
+	 */
+	result = qcow_test_seek_offset(
+	          file,
+	          -1 * (off64_t) media_size,
+	          SEEK_END,
+	          0 );
+
+	if( result != 1 )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to test seek offset.\n" );
+
+		return( result );
+	}
+	/* Test: SEEK_END offset: <-1 * (media_size / 4)>
+	 * Expected result: <media_size - (media_size / 4)>
+	 */
+	result = qcow_test_seek_offset(
+	          file,
+	          -1 * (off64_t) ( media_size / 4 ),
+	          SEEK_END,
+	          (off64_t) media_size - (off64_t) ( media_size / 4 ) );
+
+	if( result != 1 )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to test seek offset.\n" );
+
+		return( result );
+	}
+	/* Test: SEEK_END offset: 542
+	 * Expected result: <media_size + 542>
+	 */
+	result = qcow_test_seek_offset(
+	          file,
+	          542,
+	          SEEK_END,
+	          (off64_t) ( media_size + 542 ) );
+
+	if( result != 1 )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to test seek offset.\n" );
+
+		return( result );
+	}
+	/* Test: SEEK_END offset: <-1 * (media_size + 542)>
+	 * Expected result: -1
+	 */
+	result = qcow_test_seek_offset(
+	          file,
+	          -1 * (off64_t) ( media_size + 542 ),
+	          SEEK_END,
+	          -1 );
+
+	if( result != 1 )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to test seek offset.\n" );
+
+		return( result );
+	}
+	/* Test: UNKNOWN (88) offset: 0
+	 * Expected result: -1
+	 */
+	result = qcow_test_seek_offset(
+	          file,
+	          0,
+	          88,
+	          -1 );
+
+	if( result != 1 )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to test seek offset.\n" );
+
+		return( result );
+	}
+	return( result );
+}
+
 /* The main program
  */
 #if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
@@ -184,257 +486,13 @@ int main( int argc, char * const argv[] )
 
 		goto on_error;
 	}
-	if( media_size > (size64_t) INT64_MAX )
-	{
-		fprintf(
-		 stderr,
-		 "Media size exceeds maximum.\n" );
-
-		goto on_error;
-	}
-	/* Test: SEEK_SET offset: 0
-	 * Expected result: 0
-	 */
-	if( qcow_test_seek_offset(
+	if( qcow_test_seek_file(
 	     file,
-	     0,
-	     SEEK_SET,
-	     0 ) != 1 )
+	     media_size ) != 1 )
 	{
 		fprintf(
 		 stderr,
-		 "Unable to test seek offset.\n" );
-
-		goto on_error;
-	}
-	/* Test: SEEK_SET offset: <media_size>
-	 * Expected result: <media_size>
-	 */
-	if( qcow_test_seek_offset(
-	     file,
-	     (off64_t) media_size,
-	     SEEK_SET,
-	     (off64_t) media_size ) != 1 )
-	{
-		fprintf(
-		 stderr,
-		 "Unable to test seek offset.\n" );
-
-		goto on_error;
-	}
-	/* Test: SEEK_SET offset: <media_size / 5>
-	 * Expected result: <media_size / 5>
-	 */
-	if( qcow_test_seek_offset(
-	     file,
-	     (off64_t) ( media_size / 5 ),
-	     SEEK_SET,
-	     (off64_t) ( media_size / 5 ) ) != 1 )
-	{
-		fprintf(
-		 stderr,
-		 "Unable to test seek offset.\n" );
-
-		goto on_error;
-	}
-	/* Test: SEEK_SET offset: <media_size + 987>
-	 * Expected result: <media_size + 987>
-	 */
-	if( qcow_test_seek_offset(
-	     file,
-	     (off64_t) ( media_size + 987 ),
-	     SEEK_SET,
-	     (off64_t) ( media_size + 987 ) ) != 1 )
-	{
-		fprintf(
-		 stderr,
-		 "Unable to test seek offset.\n" );
-
-		goto on_error;
-	}
-	/* Test: SEEK_SET offset: -987
-	 * Expected result: -1
-	 */
-	if( qcow_test_seek_offset(
-	     file,
-	     -987,
-	     SEEK_SET,
-	     -1 ) != 1 )
-	{
-		fprintf(
-		 stderr,
-		 "Unable to test seek offset.\n" );
-
-		goto on_error;
-	}
-	/* Test: SEEK_CUR offset: 0
-	 * Expected result: <media_size + 987>
-	 */
-	if( qcow_test_seek_offset(
-	     file,
-	     0,
-	     SEEK_CUR,
-	     (off64_t) ( media_size + 987 ) ) != 1 )
-	{
-		fprintf(
-		 stderr,
-		 "Unable to test seek offset.\n" );
-
-		goto on_error;
-	}
-	/* Test: SEEK_CUR offset: <-1 * (media_size + 987)>
-	 * Expected result: 0
-	 */
-	if( qcow_test_seek_offset(
-	     file,
-	     -1 * (off64_t) ( media_size + 987 ),
-	     SEEK_CUR,
-	     0 ) != 1 )
-	{
-		fprintf(
-		 stderr,
-		 "Unable to test seek offset.\n" );
-
-		goto on_error;
-	}
-	/* Test: SEEK_CUR offset: <media_size / 3>
-	 * Expected result: <media_size / 3>
-	 */
-	if( qcow_test_seek_offset(
-	     file,
-	     (off64_t) ( media_size / 3 ),
-	     SEEK_CUR,
-	     (off64_t) ( media_size / 3 ) ) != 1 )
-	{
-		fprintf(
-		 stderr,
-		 "Unable to test seek offset.\n" );
-
-		goto on_error;
-	}
-	if( media_size == 0 )
-	{
-		/* Test: SEEK_CUR offset: <-2 * (media_size / 3)>
-		 * Expected result: 0
-		 */
-		if( qcow_test_seek_offset(
-		     file,
-		     -2 * (off64_t) ( media_size / 3 ),
-		     SEEK_CUR,
-		     0 ) != 1 )
-		{
-			fprintf(
-			 stderr,
-			 "Unable to test seek offset.\n" );
-
-			goto on_error;
-		}
-	}
-	else
-	{
-		/* Test: SEEK_CUR offset: <-2 * (media_size / 3)>
-		 * Expected result: -1
-		 */
-		if( qcow_test_seek_offset(
-		     file,
-		     -2 * (off64_t) ( media_size / 3 ),
-		     SEEK_CUR,
-		     -1 ) != 1 )
-		{
-			fprintf(
-			 stderr,
-			 "Unable to test seek offset.\n" );
-
-			goto on_error;
-		}
-	}
-	/* Test: SEEK_END offset: 0
-	 * Expected result: <media_size>
-	 */
-	if( qcow_test_seek_offset(
-	     file,
-	     0,
-	     SEEK_END,
-	     (off64_t) media_size ) != 1 )
-	{
-		fprintf(
-		 stderr,
-		 "Unable to test seek offset.\n" );
-
-		goto on_error;
-	}
-	/* Test: SEEK_END offset: <-1 * media_size>
-	 * Expected result: 0
-	 */
-	if( qcow_test_seek_offset(
-	     file,
-	     -1 * (off64_t) media_size,
-	     SEEK_END,
-	     0 ) != 1 )
-	{
-		fprintf(
-		 stderr,
-		 "Unable to test seek offset.\n" );
-
-		goto on_error;
-	}
-	/* Test: SEEK_END offset: <-1 * (media_size / 4)>
-	 * Expected result: <media_size - (media_size / 4)>
-	 */
-	if( qcow_test_seek_offset(
-	     file,
-	     -1 * (off64_t) ( media_size / 4 ),
-	     SEEK_END,
-	     (off64_t) media_size - (off64_t) ( media_size / 4 ) ) != 1 )
-	{
-		fprintf(
-		 stderr,
-		 "Unable to test seek offset.\n" );
-
-		goto on_error;
-	}
-	/* Test: SEEK_END offset: 542
-	 * Expected result: <media_size + 542>
-	 */
-	if( qcow_test_seek_offset(
-	     file,
-	     542,
-	     SEEK_END,
-	     (off64_t) ( media_size + 542 ) ) != 1 )
-	{
-		fprintf(
-		 stderr,
-		 "Unable to test seek offset.\n" );
-
-		goto on_error;
-	}
-	/* Test: SEEK_END offset: <-1 * (media_size + 542)>
-	 * Expected result: -1
-	 */
-	if( qcow_test_seek_offset(
-	     file,
-	     -1 * (off64_t) ( media_size + 542 ),
-	     SEEK_END,
-	     -1 ) != 1 )
-	{
-		fprintf(
-		 stderr,
-		 "Unable to test seek offset.\n" );
-
-		goto on_error;
-	}
-	/* Test: UNKNOWN (88) offset: 0
-	 * Expected result: -1
-	 */
-	if( qcow_test_seek_offset(
-	     file,
-	     0,
-	     88,
-	     -1 ) != 1 )
-	{
-		fprintf(
-		 stderr,
-		 "Unable to test seek offset.\n" );
+		 "Unable to seek in file.\n" );
 
 		goto on_error;
 	}
