@@ -403,8 +403,38 @@ int libqcow_file_open(
 
 		goto on_error;
 	}
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_write(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for writing.",
+		 function );
+
+		return( -1 );
+	}
+#endif
 	internal_file->file_io_handle_created_in_library = 1;
 
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_write(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for writing.",
+		 function );
+
+		return( -1 );
+	}
+#endif
 	return( 1 );
 
 on_error:
@@ -540,8 +570,38 @@ int libqcow_file_open_wide(
 
 		goto on_error;
 	}
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_write(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for writing.",
+		 function );
+
+		return( -1 );
+	}
+#endif
 	internal_file->file_io_handle_created_in_library = 1;
 
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_write(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for writing.",
+		 function );
+
+		return( -1 );
+	}
+#endif
 	return( 1 );
 
 on_error:
@@ -554,7 +614,7 @@ on_error:
 	return( -1 );
 }
 
-#endif
+#endif /* defined( HAVE_WIDE_CHARACTER_TYPE ) */
 
 /* Opens a file using a Basic File IO (bfio) handle
  * Returns 1 if successful or -1 on error
@@ -569,6 +629,7 @@ int libqcow_file_open_file_io_handle(
 	static char *function                  = "libqcow_file_open_file_io_handle";
 	int bfio_access_flags                  = 0;
 	int file_io_handle_is_open             = 0;
+	int file_io_handle_opened_in_library   = 0;
 
 	if( file == NULL )
 	{
@@ -663,7 +724,7 @@ int libqcow_file_open_file_io_handle(
 
 			goto on_error;
 		}
-		internal_file->file_io_handle_opened_in_library = 1;
+		file_io_handle_opened_in_library = 1;
 	}
 	if( libqcow_file_open_read(
 	     internal_file,
@@ -679,22 +740,49 @@ int libqcow_file_open_file_io_handle(
 
 		goto on_error;
 	}
-	internal_file->file_io_handle = file_io_handle;
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_write(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for writing.",
+		 function );
 
+		return( -1 );
+	}
+#endif
+	internal_file->file_io_handle                   = file_io_handle;
+	internal_file->file_io_handle_opened_in_library = file_io_handle_opened_in_library;
+
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_write(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for writing.",
+		 function );
+
+		return( -1 );
+	}
+#endif
 	return( 1 );
 
 on_error:
 	if( ( file_io_handle_is_open == 0 )
-	 && ( internal_file->file_io_handle_opened_in_library != 0 ) )
+	 && ( file_io_handle_opened_in_library != 0 ) )
 	{
 		libbfio_handle_close(
 		 file_io_handle,
 		 error );
-
-		internal_file->file_io_handle_opened_in_library = 0;
 	}
-	internal_file->file_io_handle = NULL;
-
 	return( -1 );
 }
 
@@ -733,6 +821,21 @@ int libqcow_file_close(
 
 		return( -1 );
 	}
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_write(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for writing.",
+		 function );
+
+		return( -1 );
+	}
+#endif
 #if defined( HAVE_DEBUG_OUTPUT )
 	if( libcnotify_verbose != 0 )
 	{
@@ -894,6 +997,21 @@ int libqcow_file_close(
 
 		result = -1;
 	}
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_write(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for writing.",
+		 function );
+
+		return( -1 );
+	}
+#endif
 	return( result );
 }
 
@@ -996,6 +1114,21 @@ int libqcow_file_open_read(
 
 		return( -1 );
 	}
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_write(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for writing.",
+		 function );
+
+		return( -1 );
+	}
+#endif
 	if( libbfio_handle_get_size(
 	     file_io_handle,
 	     &( internal_file->size ),
@@ -1008,7 +1141,7 @@ int libqcow_file_open_read(
 		 "%s: unable to retrieve file size.",
 		 function );
 
-		return( -1 );
+		goto on_error;
 	}
 	if( internal_file->size == 0 )
 	{
@@ -1019,7 +1152,7 @@ int libqcow_file_open_read(
 		 "%s: invalid file size.",
 		 function );
 
-		return( -1 );
+		goto on_error;
 	}
 #if defined( HAVE_DEBUG_OUTPUT )
 	if( libcnotify_verbose != 0 )
@@ -1123,7 +1256,7 @@ int libqcow_file_open_read(
 
 		goto on_error;
 	}
-	/* TODO clone function ? */
+/* TODO clone function ? */
 	if( libfdata_vector_initialize(
 	     &( internal_file->level2_table_vector ),
 	     (size64_t) internal_file->io_handle->level2_table_size,
@@ -1142,7 +1275,7 @@ int libqcow_file_open_read(
 		 "%s: unable to create level2 table vector.",
 		 function );
 
-		return( -1 );
+		goto on_error;
 	}
 	if( libfdata_vector_append_segment(
 	     internal_file->level2_table_vector,
@@ -1160,7 +1293,7 @@ int libqcow_file_open_read(
 		 "%s: unable to append segment to level2 table vector.",
 		 function );
 
-		return( -1 );
+		goto on_error;
 	}
 	if( libfcache_cache_initialize(
 	     &( internal_file->level2_table_cache ),
@@ -1174,9 +1307,9 @@ int libqcow_file_open_read(
 		 "%s: unable to create level2 table cache.",
 		 function );
 
-		return( -1 );
+		goto on_error;
 	}
-	/* TODO clone function ? */
+/* TODO clone function ? */
 	if( libfdata_vector_initialize(
 	     &( internal_file->cluster_block_vector ),
 	     (size64_t) internal_file->io_handle->cluster_block_size,
@@ -1195,7 +1328,7 @@ int libqcow_file_open_read(
 		 "%s: unable to create cluster block vector.",
 		 function );
 
-		return( -1 );
+		goto on_error;
 	}
 	if( libfdata_vector_append_segment(
 	     internal_file->cluster_block_vector,
@@ -1213,7 +1346,7 @@ int libqcow_file_open_read(
 		 "%s: unable to append segment to cluster block vector.",
 		 function );
 
-		return( -1 );
+		goto on_error;
 	}
 	if( libfcache_cache_initialize(
 	     &( internal_file->cluster_block_cache ),
@@ -1227,7 +1360,7 @@ int libqcow_file_open_read(
 		 "%s: unable to create cluster block cache.",
 		 function );
 
-		return( -1 );
+		goto on_error;
 	}
 	if( libfcache_cache_initialize(
 	     &( internal_file->compressed_cluster_block_cache ),
@@ -1241,8 +1374,23 @@ int libqcow_file_open_read(
 		 "%s: unable to create compressed cluster block cache.",
 		 function );
 
+		goto on_error;
+	}
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_write(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for writing.",
+		 function );
+
 		return( -1 );
 	}
+#endif
 	return( 1 );
 
 on_error:
@@ -1276,6 +1424,11 @@ on_error:
 		 &( internal_file->level1_table ),
 		 NULL );
 	}
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	libcthreads_read_write_lock_release_for_write(
+	 internal_file->read_write_lock,
+	 NULL );
+#endif
 	return( -1 );
 }
 

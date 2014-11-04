@@ -3,6 +3,7 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/common \
 	@LIBCSTRING_CPPFLAGS@ \
 	@LIBCERROR_CPPFLAGS@ \
+	@LIBCTHREADS_CPPFLAGS@ \
 	@LIBCDATA_CPPFLAGS@ \
 	@LIBCLOCALE_CPPFLAGS@ \
 	@LIBCNOTIFY_CPPFLAGS@ \
@@ -11,6 +12,7 @@ AM_CPPFLAGS = \
 	@LIBCFILE_CPPFLAGS@ \
 	@LIBCPATH_CPPFLAGS@ \
 	@LIBBFIO_CPPFLAGS@ \
+	@PTHREAD_CPPFLAGS@ \
 	@LIBQCOW_DLL_IMPORT@
 
 if HAVE_PYTHON
@@ -45,38 +47,47 @@ check_PROGRAMS = \
 qcow_test_open_close_SOURCES = \
 	qcow_test_libcerror.h \
 	qcow_test_libcstring.h \
+	qcow_test_libcthreads.h \
 	qcow_test_libqcow.h \
 	qcow_test_open_close.c \
 	qcow_test_unused.h
 
 qcow_test_open_close_LDADD = \
 	../libqcow/libqcow.la \
+	@LIBCTHREADS_LIBADD@ \
 	@LIBCERROR_LIBADD@ \
-	@LIBCSTRING_LIBADD@
+	@LIBCSTRING_LIBADD@ \
+	@PTHREAD_LIBADD@
 
 qcow_test_read_SOURCES = \
 	qcow_test_libcerror.h \
 	qcow_test_libcstring.h \
+	qcow_test_libcthreads.h \
 	qcow_test_libqcow.h \
 	qcow_test_read.c \
 	qcow_test_unused.h
 
 qcow_test_read_LDADD = \
 	../libqcow/libqcow.la \
+	@LIBCTHREADS_LIBADD@ \
 	@LIBCERROR_LIBADD@ \
-	@LIBCSTRING_LIBADD@
+	@LIBCSTRING_LIBADD@ \
+	@PTHREAD_LIBADD@
 
 qcow_test_seek_SOURCES = \
 	qcow_test_libcerror.h \
 	qcow_test_libcstring.h \
+	qcow_test_libcthreads.h \
 	qcow_test_libqcow.h \
 	qcow_test_seek.c \
 	qcow_test_unused.h
 
 qcow_test_seek_LDADD = \
 	../libqcow/libqcow.la \
+	@LIBCTHREADS_LIBADD@ \
 	@LIBCERROR_LIBADD@ \
-	@LIBCSTRING_LIBADD@
+	@LIBCSTRING_LIBADD@ \
+	@PTHREAD_LIBADD@
 
 MAINTAINERCLEANFILES = \
 	Makefile.in

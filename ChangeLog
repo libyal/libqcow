@@ -20,7 +20,8 @@ Tools:
   - create compatible dokan lib
 
 Tests:
-* add concurrent read and seek tests
+* add concurrent open close test
+* add concurrent seek test ?
 
 20141104
 * worked on multi-threading support
