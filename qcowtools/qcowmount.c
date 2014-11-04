@@ -2142,7 +2142,7 @@ int main( int argc, char * const argv[] )
 #if defined( HAVE_LIBFUSE ) || defined( HAVE_LIBOSXFUSE )
 	struct fuse_operations qcowmount_fuse_operations;
 
-	struct fuse_args vhdimount_fuse_arguments              = FUSE_ARGS_INIT(0, NULL);
+	struct fuse_args qcowmount_fuse_arguments              = FUSE_ARGS_INIT(0, NULL);
 	struct fuse_chan *qcowmount_fuse_channel               = NULL;
 	struct fuse *qcowmount_fuse_handle                     = NULL;
 
@@ -2333,7 +2333,7 @@ int main( int argc, char * const argv[] )
 		/* This argument is required but ignored
 		 */
 		if( fuse_opt_add_arg(
-		     &vhdimount_fuse_arguments,
+		     &qcowmount_fuse_arguments,
 		     "" ) != 0 )
 		{
 			fprintf(
@@ -2343,7 +2343,7 @@ int main( int argc, char * const argv[] )
 			goto on_error;
 		}
 		if( fuse_opt_add_arg(
-		     &vhdimount_fuse_arguments,
+		     &qcowmount_fuse_arguments,
 		     "-o" ) != 0 )
 		{
 			fprintf(
@@ -2353,7 +2353,7 @@ int main( int argc, char * const argv[] )
 			goto on_error;
 		}
 		if( fuse_opt_add_arg(
-		     &vhdimount_fuse_arguments,
+		     &qcowmount_fuse_arguments,
 		     option_extended_options ) != 0 )
 		{
 			fprintf(
@@ -2371,7 +2371,7 @@ int main( int argc, char * const argv[] )
 
 	qcowmount_fuse_channel = fuse_mount(
 	                          mount_point,
-	                          &vhdimount_fuse_arguments );
+	                          &qcowmount_fuse_arguments );
 
 	if( qcowmount_fuse_channel == NULL )
 	{
@@ -2383,7 +2383,7 @@ int main( int argc, char * const argv[] )
 	}
 	qcowmount_fuse_handle = fuse_new(
 	                         qcowmount_fuse_channel,
-	                         &vhdimount_fuse_arguments,
+	                         &qcowmount_fuse_arguments,
 	                         &qcowmount_fuse_operations,
 	                         sizeof( struct fuse_operations ),
 	                         qcowmount_mount_handle );
@@ -2423,7 +2423,7 @@ int main( int argc, char * const argv[] )
 	 qcowmount_fuse_handle );
 
 	fuse_opt_free_args(
-	 &vhdimount_fuse_arguments );
+	 &qcowmount_fuse_arguments );
 
 	return( EXIT_SUCCESS );
 
@@ -2568,7 +2568,7 @@ on_error:
 		 qcowmount_fuse_handle );
 	}
 	fuse_opt_free_args(
-	 &vhdimount_fuse_arguments );
+	 &qcowmount_fuse_arguments );
 #endif
 	if( qcowmount_mount_handle != NULL )
 	{
