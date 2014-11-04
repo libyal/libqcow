@@ -19,10 +19,10 @@ QCOW format features not supported at the moment:
 Work in progress:
 * Python bindings
 * Dokan library support
+* Thread-safety in file API functions
 
 Planned:
 * QCOW version 3 support
-* Multi-threading support
 * Python 3 support
 
 For more information see:

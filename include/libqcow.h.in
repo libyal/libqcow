@@ -94,6 +94,7 @@ int libqcow_check_file_signature(
      libqcow_error_t **error );
 
 #if defined( LIBQCOW_HAVE_WIDE_CHARACTER_TYPE )
+
 /* Determines if a file is a QCOW file (check for the QCOW file signature)
  * Returns 1 if true, 0 if not or -1 on error
  */
@@ -101,9 +102,11 @@ LIBQCOW_EXTERN \
 int libqcow_check_file_signature_wide(
      const wchar_t *filename,
      libqcow_error_t **error );
+
 #endif
 
 #if defined( LIBQCOW_HAVE_BFIO )
+
 /* Determines if a file is a QCOW file (check for the QCOW file signature) using a Basic File IO (bfio) handle
  * Returns 1 if true, 0 if not or -1 on error
  */
@@ -111,6 +114,7 @@ LIBQCOW_EXTERN \
 int libqcow_check_file_signature_file_io_handle(
      libbfio_handle_t *bfio_handle,
      libqcow_error_t **error );
+
 #endif
 
 /* -------------------------------------------------------------------------
@@ -233,6 +237,7 @@ int libqcow_file_open(
      libqcow_error_t **error );
 
 #if defined( LIBQCOW_HAVE_WIDE_CHARACTER_TYPE )
+
 /* Opens a file
  * Returns 1 if successful or -1 on error
  */
@@ -242,9 +247,11 @@ int libqcow_file_open_wide(
      const wchar_t *filename,
      int access_flags,
      libqcow_error_t **error );
+
 #endif
 
 #if defined( LIBQCOW_HAVE_BFIO )
+
 /* Opens a file using a Basic File IO (bfio) handle
  * Returns 1 if successful or -1 on error
  */
@@ -254,6 +261,7 @@ int libqcow_file_open_file_io_handle(
      libbfio_handle_t *file_io_handle,
      int access_flags,
      libqcow_error_t **error );
+
 #endif
 
 /* Closes a file
