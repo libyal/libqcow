@@ -1,7 +1,4 @@
 TODO
-* remove deprecated functions:
-  - libqcow_file_read_random
-  - pyqcow file.read_random
 * add file IO handle opened in library check
 * add snapshot support
   - backing filename
@@ -21,6 +18,15 @@ Tools:
   - what about unmount?
   - fix volume size hints
   - create compatible dokan lib
+
+Tests:
+* add concurrent read and seek tests
+
+20141104
+* worked on multi-threading support
+* removed deprecated functions:
+  - libqcow_file_read_random
+  - pyqcow file.read_random
 
 20141029
 * bug fix in Python-bindings

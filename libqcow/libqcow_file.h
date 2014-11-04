@@ -31,6 +31,7 @@
 #include "libqcow_io_handle.h"
 #include "libqcow_libbfio.h"
 #include "libqcow_libcerror.h"
+#include "libqcow_libcthreads.h"
 #include "libqcow_libfcache.h"
 #include "libqcow_libfdata.h"
 
@@ -117,6 +118,12 @@ struct libqcow_internal_file
 	/* Value to indicate if abort was signalled
 	 */
 	int abort;
+
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	/* The read/write lock
+	 */
+	libcthreads_read_write_lock_t *read_write_lock;
+#endif
 };
 
 LIBQCOW_EXTERN \
@@ -167,6 +174,13 @@ int libqcow_file_open_read(
      libbfio_handle_t *file_io_handle,
      libcerror_error_t **error );
 
+ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
+         libqcow_internal_file_t *internal_file,
+         libbfio_handle_t *file_io_handle,
+         void *buffer,
+         size_t buffer_size,
+         libcerror_error_t **error );
+
 LIBQCOW_EXTERN \
 ssize_t libqcow_file_read_buffer(
          libqcow_file_t *file,
@@ -182,15 +196,8 @@ ssize_t libqcow_file_read_buffer_at_offset(
          off64_t offset,
          libcerror_error_t **error );
 
-LIBQCOW_EXTERN \
-ssize_t libqcow_file_read_random(
-         libqcow_file_t *file,
-         void *buffer,
-         size_t buffer_size,
-         off64_t offset,
-         libcerror_error_t **error );
-
 #ifdef TODO_WRITE_SUPPORT
+
 LIBQCOW_EXTERN \
 ssize_t libqcow_file_write_buffer(
          libqcow_file_t *file,
@@ -205,7 +212,14 @@ ssize_t libqcow_file_write_buffer_at_offset(
          size_t buffer_size,
          off64_t offset,
          libcerror_error_t **error );
+
 #endif /* TODO_WRITE_SUPPORT */
+
+off64_t libqcow_internal_file_seek_offset(
+         libqcow_internal_file_t *internal_file,
+         off64_t offset,
+         int whence,
+         libcerror_error_t **error );
 
 LIBQCOW_EXTERN \
 off64_t libqcow_file_seek_offset(

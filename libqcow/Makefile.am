@@ -42,6 +42,7 @@ libqcow_la_SOURCES = \
 	libqcow_libclocale.h \
 	libqcow_libcnotify.h \
 	libqcow_libcstring.h \
+	libqcow_libcthreads.h \
 	libqcow_libfcache.h \
 	libqcow_libfdata.h \
 	libqcow_libuna.h \

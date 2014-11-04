@@ -302,6 +302,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\libqcow\libqcow_libcthreads.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\libqcow\libqcow_libfcache.h"
 				>
 			</File>

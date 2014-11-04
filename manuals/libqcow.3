@@ -1,4 +1,4 @@
-.Dd January 19, 2014
+.Dd November 4, 2014
 .Dt libqcow 3
 .Os libqcow
 .Sh NAME
@@ -69,7 +69,7 @@ File functions
 .Ft ssize_t
 .Fn libqcow_file_read_buffer "libqcow_file_t *file, void *buffer, size_t buffer_size, libqcow_error_t **error"
 .Ft ssize_t
-.Fn libqcow_file_read_random "libqcow_file_t *file, void *buffer, size_t buffer_size, off64_t offset, libqcow_error_t **error"
+.Fn libqcow_file_read_buffer_at_offset "libqcow_file_t *file, void *buffer, size_t buffer_size, off64_t offset, libqcow_error_t **error"
 .Ft off64_t
 .Fn libqcow_file_seek_offset "libqcow_file_t *file, off64_t offset, int whence, libqcow_error_t **error"
 .Ft int

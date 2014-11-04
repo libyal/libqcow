@@ -37,6 +37,7 @@
 #include "libqcow_libcerror.h"
 #include "libqcow_libcnotify.h"
 #include "libqcow_libcstring.h"
+#include "libqcow_libcthreads.h"
 #include "libqcow_libfcache.h"
 #include "libqcow_libfdata.h"
 #include "libqcow_libuna.h"
@@ -100,7 +101,10 @@ int libqcow_file_initialize(
 		 "%s: unable to clear file.",
 		 function );
 
-		goto on_error;
+		memory_free(
+		 internal_file );
+
+		return( -1 );
 	}
 	if( libqcow_io_handle_initialize(
 	     &( internal_file->io_handle ),
@@ -127,6 +131,21 @@ int libqcow_file_initialize(
 
 		goto on_error;
 	}
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_initialize(
+	     &( internal_file->read_write_lock ),
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+		 "%s: unable to intialize read/write lock.",
+		 function );
+
+		goto on_error;
+	}
+#endif
 	*file = (libqcow_file_t *) internal_file;
 
 	return( 1 );
@@ -134,6 +153,12 @@ int libqcow_file_initialize(
 on_error:
 	if( internal_file != NULL )
 	{
+		if( internal_file->io_handle != NULL )
+		{
+			libqcow_io_handle_free(
+			 &( internal_file->io_handle ),
+			 NULL );
+		}
 		memory_free(
 		 internal_file );
 	}
@@ -184,6 +209,21 @@ int libqcow_file_free(
 		}
 		*file = NULL;
 
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+		if( libcthreads_read_write_lock_free(
+		     &( internal_file->read_write_lock ),
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+			 "%s: unable to free read/write lock.",
+			 function );
+
+			result = -1;
+		}
+#endif
 		if( libqcow_io_handle_free(
 		     &( internal_file->io_handle ),
 		     error ) != 1 )
@@ -1239,19 +1279,20 @@ on_error:
 	return( -1 );
 }
 
-/* Reads (media) data from the last current into a buffer
+/* Reads (media) data from the last current into a buffer using a Basic File IO (bfio) handle
+ * This function is not multi-thread safe acquire write lock before call
  * Returns the number of bytes read or -1 on error
  */
-ssize_t libqcow_file_read_buffer(
-         libqcow_file_t *file,
+ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
+         libqcow_internal_file_t *internal_file,
+         libbfio_handle_t *file_io_handle,
          void *buffer,
          size_t buffer_size,
          libcerror_error_t **error )
 {
 	libqcow_cluster_block_t *cluster_block       = NULL;
 	libqcow_cluster_table_t *level2_table        = NULL;
-	libqcow_internal_file_t *internal_file       = NULL;
-	static char *function                        = "libqcow_file_read_buffer";
+	static char *function                        = "libqcow_internal_file_read_buffer_from_file_io_handle";
 	off64_t element_data_offset                  = 0;
 	size_t buffer_offset                         = 0;
 	size_t cluster_block_data_size               = 0;
@@ -1267,7 +1308,7 @@ ssize_t libqcow_file_read_buffer(
 	int cache_entry_index                        = 0;
 	int cluster_block_is_compressed              = 0;
 
-	if( file == NULL )
+	if( internal_file == NULL )
 	{
 		libcerror_error_set(
 		 error,
@@ -1278,8 +1319,6 @@ ssize_t libqcow_file_read_buffer(
 
 		return( -1 );
 	}
-	internal_file = (libqcow_internal_file_t *) file;
-
 	if( internal_file->io_handle == NULL )
 	{
 		libcerror_error_set(
@@ -1392,7 +1431,7 @@ ssize_t libqcow_file_read_buffer(
 		{
 			if( libfdata_vector_get_element_value_at_offset(
 			     internal_file->level2_table_vector,
-			     (intptr_t *) internal_file->file_io_handle,
+			     (intptr_t *) file_io_handle,
 			     internal_file->level2_table_cache,
 			     (off64_t) level2_table_file_offset,
 			     &element_data_offset,
@@ -1586,7 +1625,7 @@ ssize_t libqcow_file_read_buffer(
 				}
 				if( libqcow_cluster_block_read(
 				     cluster_block,
-				     internal_file->file_io_handle,
+				     file_io_handle,
 				     compressed_cluster_block_offset,
 				     error ) != 1 )
 				{
@@ -1727,7 +1766,7 @@ ssize_t libqcow_file_read_buffer(
 					}
 					if( libqcow_cluster_block_read(
 					     cluster_block,
-					     internal_file->file_io_handle,
+					     file_io_handle,
 					     cluster_block_file_offset,
 					     error ) != 1 )
 					{
@@ -1775,7 +1814,7 @@ ssize_t libqcow_file_read_buffer(
 			{
 				if( libfdata_vector_get_element_value_at_offset(
 				     internal_file->cluster_block_vector,
-				     (intptr_t *) internal_file->file_io_handle,
+				     (intptr_t *) file_io_handle,
 				     internal_file->cluster_block_cache,
 				     (off64_t) cluster_block_file_offset,
 				     &element_data_offset,
@@ -1873,7 +1912,7 @@ ssize_t libqcow_file_read_buffer(
 			}
 		}
 		internal_file->current_offset += read_size;
-		buffer_offset                            += read_size;
+		buffer_offset                 += read_size;
 
 #if defined( HAVE_DEBUG_OUTPUT )
 		if( libcnotify_verbose != 0 )
@@ -1890,6 +1929,83 @@ ssize_t libqcow_file_read_buffer(
 	return( (ssize_t) buffer_offset );
 }
 
+/* Reads (media) data from the last current into a buffer
+ * Returns the number of bytes read or -1 on error
+ */
+ssize_t libqcow_file_read_buffer(
+         libqcow_file_t *file,
+         void *buffer,
+         size_t buffer_size,
+         libcerror_error_t **error )
+{
+	libqcow_internal_file_t *internal_file = NULL;
+	static char *function                  = "libqcow_file_read_buffer";
+	ssize_t read_count                     = 0;
+
+	if( file == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file.",
+		 function );
+
+		return( -1 );
+	}
+	internal_file = (libqcow_internal_file_t *) file;
+
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_write(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for writing.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	read_count = libqcow_internal_file_read_buffer_from_file_io_handle(
+		      internal_file,
+		      internal_file->file_io_handle,
+		      buffer,
+		      buffer_size,
+		      error );
+
+	if( read_count == -1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_IO,
+		 LIBCERROR_IO_ERROR_READ_FAILED,
+		 "%s: unable to read buffer.",
+		 function );
+
+		read_count = -1;
+	}
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_write(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for writing.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	return( read_count );
+}
+
 /* Reads (media) data at a specific offset
  * Returns the number of bytes read or -1 on error
  */
@@ -1900,11 +2016,40 @@ ssize_t libqcow_file_read_buffer_at_offset(
          off64_t offset,
          libcerror_error_t **error )
 {
-	static char *function = "libqcow_file_read_buffer_at_offset";
-	ssize_t read_count    = 0;
+	libqcow_internal_file_t *internal_file = NULL;
+	static char *function                  = "libqcow_file_read_buffer_from_file_io_handle";
+	ssize_t read_count                     = 0;
 
-	if( libqcow_file_seek_offset(
-	     file,
+	if( file == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file.",
+		 function );
+
+		return( -1 );
+	}
+	internal_file = (libqcow_internal_file_t *) file;
+
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_write(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for writing.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	if( libqcow_internal_file_seek_offset(
+	     internal_file,
 	     offset,
 	     SEEK_SET,
 	     error ) == -1 )
@@ -1916,15 +2061,16 @@ ssize_t libqcow_file_read_buffer_at_offset(
 		 "%s: unable to seek offset.",
 		 function );
 
-		return( -1 );
+		goto on_error;
 	}
-	read_count = libqcow_file_read_buffer(
-	              file,
-	              buffer,
-	              buffer_size,
-	              error );
+	read_count = libqcow_internal_file_read_buffer_from_file_io_handle(
+		      internal_file,
+		      internal_file->file_io_handle,
+		      buffer,
+		      buffer_size,
+		      error );
 
-	if( read_count <= -1 )
+	if( read_count == -1 )
 	{
 		libcerror_error_set(
 		 error,
@@ -1933,60 +2079,37 @@ ssize_t libqcow_file_read_buffer_at_offset(
 		 "%s: unable to read buffer.",
 		 function );
 
-		return( -1 );
+		goto on_error;
 	}
-	return( read_count );
-}
-
-/* Reads (media) data at a specific offset
- * Returns the number of bytes read or -1 on error
- */
-ssize_t libqcow_file_read_random(
-         libqcow_file_t *file,
-         void *buffer,
-         size_t buffer_size,
-         off64_t offset,
-         libcerror_error_t **error )
-{
-	static char *function = "libqcow_file_read_random";
-	ssize_t read_count    = 0;
-
-	if( libqcow_file_seek_offset(
-	     file,
-	     offset,
-	     SEEK_SET,
-	     error ) == -1 )
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_write(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
-		 LIBCERROR_ERROR_DOMAIN_IO,
-		 LIBCERROR_IO_ERROR_SEEK_FAILED,
-		 "%s: unable to seek offset.",
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for writing.",
 		 function );
 
 		return( -1 );
 	}
-	read_count = libqcow_file_read_buffer(
-	              file,
-	              buffer,
-	              buffer_size,
-	              error );
-
-	if( read_count <= -1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_IO,
-		 LIBCERROR_IO_ERROR_READ_FAILED,
-		 "%s: unable to read buffer.",
-		 function );
-
-		return( -1 );
-	}
+#endif
 	return( read_count );
+
+on_error:
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	libcthreads_read_write_lock_release_for_write(
+	 internal_file->read_write_lock,
+	 NULL );
+#endif
+	return( -1 );
 }
 
-#ifdef TODO
+
+#ifdef TODO_WRITE_SUPPORT
+
 /* Writes (media) data at the current offset
  * the necessary settings of the write values must have been made
  * Will initialize write if necessary
@@ -2102,21 +2225,21 @@ ssize_t libqcow_file_write_buffer_at_offset(
 	return( write_count );
 }
 
-#endif
+#endif /* TODO_WRITE_SUPPORT */
 
 /* Seeks a certain offset of the (media) data
+ * This function is not multi-thread safe acquire write lock before call
  * Returns the offset if seek is successful or -1 on error
  */
-off64_t libqcow_file_seek_offset(
-         libqcow_file_t *file,
+off64_t libqcow_internal_file_seek_offset(
+         libqcow_internal_file_t *internal_file,
          off64_t offset,
          int whence,
          libcerror_error_t **error )
 {
-	libqcow_internal_file_t *internal_file = NULL;
-	static char *function                  = "libqcow_file_seek_offset";
+	static char *function = "libqcow_internal_file_seek_offset";
 
-	if( file == NULL )
+	if( internal_file == NULL )
 	{
 		libcerror_error_set(
 		 error,
@@ -2127,8 +2250,6 @@ off64_t libqcow_file_seek_offset(
 
 		return( -1 );
 	}
-	internal_file = (libqcow_internal_file_t *) file;
-
 	if( internal_file->io_handle == NULL )
 	{
 		libcerror_error_set(
@@ -2174,6 +2295,81 @@ off64_t libqcow_file_seek_offset(
 	}
 	internal_file->current_offset = offset;
 
+	return( offset );
+}
+
+/* Seeks a certain offset of the (media) data
+ * Returns the offset if seek is successful or -1 on error
+ */
+off64_t libqcow_file_seek_offset(
+         libqcow_file_t *file,
+         off64_t offset,
+         int whence,
+         libcerror_error_t **error )
+{
+	libqcow_internal_file_t *internal_file = NULL;
+	static char *function                  = "libqcow_file_seek_offset";
+
+	if( file == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file.",
+		 function );
+
+		return( -1 );
+	}
+	internal_file = (libqcow_internal_file_t *) file;
+
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_write(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for writing.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	offset = libqcow_internal_file_seek_offset(
+	          internal_file,
+	          offset,
+	          whence,
+	          error );
+
+	if( offset == -1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_IO,
+		 LIBCERROR_IO_ERROR_SEEK_FAILED,
+		 "%s: unable to seek offset.",
+		 function );
+
+		offset = -1;
+	}
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_write(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for writing.",
+		 function );
+
+		return( -1 );
+	}
+#endif
 	return( offset );
 }
 
@@ -2223,8 +2419,38 @@ int libqcow_file_get_offset(
 
 		return( -1 );
 	}
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_read(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
 	*offset = internal_file->current_offset;
 
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_read(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
 	return( 1 );
 }
 
@@ -2274,8 +2500,38 @@ int libqcow_file_get_format_version(
 
 		return( -1 );
 	}
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_read(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
 	*format_version = internal_file->io_handle->format_version;
 
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_read(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
 	return( 1 );
 }
 
@@ -2314,8 +2570,38 @@ int libqcow_file_get_encryption_method(
 
 		return( -1 );
 	}
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_read(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
 	*encryption_method = internal_file->encryption_method;
 
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_read(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
 	return( 1 );
 }
 
@@ -2389,6 +2675,21 @@ int libqcow_file_set_keys(
 
 		return( -1 );
 	}
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_write(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for writing.",
+		 function );
+
+		return( -1 );
+	}
+#endif
 	if( memory_copy(
 	     internal_file->key_data,
 	     key,
@@ -2405,6 +2706,21 @@ int libqcow_file_set_keys(
 	}
 	internal_file->key_data_is_set = 1;
 
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_write(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for writing.",
+		 function );
+
+		return( -1 );
+	}
+#endif
 	return( 1 );
 
 on_error:
@@ -2413,6 +2729,11 @@ on_error:
 	 0,
 	 16 );
 
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	libcthreads_read_write_lock_release_for_write(
+	 internal_file->read_write_lock,
+	 NULL );
+#endif
 	return( -1 );
 }
 
@@ -2464,6 +2785,21 @@ int libqcow_file_set_utf8_password(
 
 		return( -1 );
 	}
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_write(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for writing.",
+		 function );
+
+		return( -1 );
+	}
+#endif
 	if( memory_set(
 	     internal_file->key_data,
 	     0,
@@ -2497,6 +2833,21 @@ int libqcow_file_set_utf8_password(
 	}
 	internal_file->key_data_is_set = 1;
 
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_write(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for writing.",
+		 function );
+
+		return( -1 );
+	}
+#endif
 	return( 1 );
 
 on_error:
@@ -2505,6 +2856,11 @@ on_error:
 	 0,
 	 16 );
 
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	libcthreads_read_write_lock_release_for_write(
+	 internal_file->read_write_lock,
+	 NULL );
+#endif
 	return( -1 );
 }
 
@@ -2556,6 +2912,21 @@ int libqcow_file_set_utf16_password(
 
 		return( -1 );
 	}
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_write(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for writing.",
+		 function );
+
+		return( -1 );
+	}
+#endif
 	if( memory_set(
 	     internal_file->key_data,
 	     0,
@@ -2589,6 +2960,21 @@ int libqcow_file_set_utf16_password(
 	}
 	internal_file->key_data_is_set = 1;
 
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_write(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for writing.",
+		 function );
+
+		return( -1 );
+	}
+#endif
 	return( 1 );
 
 on_error:
@@ -2597,6 +2983,11 @@ on_error:
 	 0,
 	 16 );
 
+#if defined( HAVE_MULTI_THREAD_SUPPORT )
+	libcthreads_read_write_lock_release_for_write(
+	 internal_file->read_write_lock,
+	 NULL );
+#endif
 	return( -1 );
 }
 

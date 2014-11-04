@@ -232,7 +232,6 @@ int libqcow_cluster_block_read(
 
 		return( -1 );
 	}
-/* TODO what about compression ? */
 #if defined( HAVE_DEBUG_OUTPUT )
 	if( libcnotify_verbose != 0 )
 	{
@@ -253,8 +252,9 @@ int libqcow_cluster_block_read(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_IO,
 		 LIBCERROR_IO_ERROR_SEEK_FAILED,
-		 "%s: unable to seek cluster block offset: %" PRIi64 ".",
+		 "%s: unable to seek cluster block offset: %" PRIi64 " (0x%08" PRIx64 ").",
 		 function,
+		 cluster_block_offset,
 		 cluster_block_offset );
 
 		return( -1 );
