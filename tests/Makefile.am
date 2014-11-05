@@ -16,7 +16,7 @@ AM_CPPFLAGS = \
 	@LIBQCOW_DLL_IMPORT@
 
 if HAVE_PYTHON
-TESTS_PYQCOW  = \
+TESTS_PYQCOW = \
 	test_pyqcow_open_close.sh
 endif
 

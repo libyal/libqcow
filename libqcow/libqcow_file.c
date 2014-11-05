@@ -2260,7 +2260,6 @@ on_error:
 	return( -1 );
 }
 
-
 #ifdef TODO_WRITE_SUPPORT
 
 /* Writes (media) data at the current offset
