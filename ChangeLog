@@ -23,6 +23,9 @@ Tests:
 * add concurrent open close test
 * add concurrent seek test ?
 
+20141112
+* code clean up
+
 20141104
 * worked on multi-threading support
 * removed deprecated functions:
