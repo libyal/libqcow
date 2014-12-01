@@ -45,6 +45,7 @@ May 2013 | Additional information regarding QCOW version 1, compression and encr
 | 0.0.4 | J.B. Metz | May 2013 | Additional information regarding QCOW version 2.
 | 0.0.5 | J.B. Metz | December 2013 | Additional information regarding compressed QCOW version 2.
 | 0.0.6 | J.B. Metz | October 2014 | Switched to asccidoc format.
+| 0.0.7 | J.B. Metz | December 2014 | Additional information regarding QCOW version 3.
 |===
 
 :numbered:
@@ -67,6 +68,10 @@ The storage media data is stored in clusters. Each cluster is a multitude of
 512 bytes. The level 1 (L1) table contains level 1 reference of level 2 (L2) 
 tables. The level 2 tables contain level 2 references of the storage media 
 clusters.
+
+There are multiple versions of the QCOW image file format. QCOW (version 1) 
+and QCOW2 (version) are sometimes considered even as separate image formats,
+where version 3 is considered as an extended version of QCOW2. 
 
 [cols="1,5",options="header"]
 |===
@@ -163,7 +168,7 @@ level 1 table size *= 8
 The backing filename is set in snapshot image files and is normally stored 
 after the file header.
 
-=== File header – version 2
+=== File header – version 2 or 3
 The version 2 file header is 72 bytes of size and consist of:
 
 [cols="1,1,1,5",options="header"]
@@ -171,7 +176,7 @@ The version 2 file header is 72 bytes of size and consist of:
 | Offset | Size | Value | Description
 | 0 | 4 | "QFI\xfb" | The signature (magic identifier) +
 0x51 0x46 0x49 0xfb
-| 4 | 4 | 2 | Version
+| 4 | 4 | 2 or 3 | Version
 | 8 | 8 | | Backing filename offset
 | 16 | 4 | | Backing filename size
 | 20 | 4 | | Number of cluster block bits
@@ -236,7 +241,7 @@ Contains an offset value relative from the start of the file
 (QCOW_OFLAG_COMPRESSED)
 |===
 
-==== Level 2 table reference – version 2
+==== Level 2 table reference – version 2 or 3
 The level 2 table reference is 8-bytes of size and consists of:
 
 [cols="1,1,1,5",options="header"]
@@ -276,7 +281,7 @@ The offset is relative to the start of the cluster block
 (QCOW_OFLAG_COMPRESSED)
 |===
 
-==== Cluster block reference – version 2
+==== Cluster block reference – version 2 or 3
 The cluster block reference is 8-bytes of size and consists of:
 
 [cols="1,1,1,5",options="header"]
@@ -356,7 +361,7 @@ cluster block data offset = ( offset & cluster block bit mask )
                           + cluster block offset
 ....
 
-Note that in version 2 the last cluster block in the file can be smaller than 
+Note that in version 2 or 3 the last cluster block in the file can be smaller than 
 the cluster block size defined by the number of cluster block bits in the file 
 header. This does not seem to be the case for version 1.
 
@@ -385,7 +390,7 @@ aligned.
 
 The compressed data uses a zlib inflate window bits value of -12
 
-===== Compressed chunk data block – version 2
+===== Compressed chunk data block – version 2 or 3
 ....
 compressed size bit shift =  62 - ( number of cluster block bits – 8 )
 ....
@@ -420,7 +425,7 @@ to a parent image that contains the snapshot image where the current image only
 contains the modifications. Version 2 adds support to store snapshot inside the 
 image.
 
-=== Snapshot header - version 2
+=== Snapshot header - version 2 or 3
 An in-image snapshot is created by adding a snapshot header, copying the L1 
 table and incrementing the reference counts of all L2 tables and data clusters 
 referenced by the L1 table.
@@ -493,6 +498,12 @@ for any snapshots referencing it.
 |===
 | Title: | QEMU Open Source Process Emulator
 | URL: | http://wiki.qemu.org/Main_Page
+|===
+
+[cols="1,5",options="header"]
+|===
+| Title: | Features/Qcow3
+| URL: | http://wiki.qemu.org/Features/Qcow3
 |===
 
 [appendix]

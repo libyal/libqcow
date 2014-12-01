@@ -7,6 +7,7 @@ Project information:
 Read-only supported QCOW formats:
 * version 1
 * version 2
+* version 3 (as of version 20141201)
 
 Supported QCOW format features:
 * compression
@@ -22,7 +23,6 @@ Work in progress:
 * Thread-safety in file API functions
 
 Planned:
-* QCOW version 3 support
 * Python 3 support
 
 For more information see:

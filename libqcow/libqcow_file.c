@@ -1714,7 +1714,8 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 			compressed_cluster_block_size   = (size_t) ( cluster_block_file_offset >> internal_file->io_handle->compression_bit_shift );
 			compressed_cluster_block_offset = cluster_block_file_offset & internal_file->io_handle->compression_bit_mask;
 
-			if( internal_file->io_handle->format_version == 2 )
+			if( ( internal_file->io_handle->format_version == 2 )
+			 || ( internal_file->io_handle->format_version == 3 ) )
 			{
 				compressed_cluster_block_size += 1;
 				compressed_cluster_block_size *= 512;
@@ -1877,7 +1878,8 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 			/* For version 2 make sure the sure the last cluster block size
 			 * stays within the bounds of the size of the file
 			 */
-			if( ( internal_file->io_handle->format_version == 2 )
+			if( ( ( internal_file->io_handle->format_version == 2 )
+			  ||  ( internal_file->io_handle->format_version == 3 ) )
 			 && ( ( cluster_block_file_offset + internal_file->io_handle->cluster_block_size ) > internal_file->size ) )
 			{
 				compressed_cluster_block_size = (size_t) ( internal_file->size - cluster_block_file_offset );

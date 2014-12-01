@@ -373,7 +373,8 @@ int libqcow_io_handle_read_file_header(
 	}
 #endif
 	if( ( io_handle->format_version != 1 )
-	 && ( io_handle->format_version != 2 ) )
+	 && ( io_handle->format_version != 2 )
+	 && ( io_handle->format_version != 3 ) )
 	{
 		libcerror_error_set(
 		 error,
@@ -449,7 +450,8 @@ int libqcow_io_handle_read_file_header(
 		}
 #endif
 	}
-	else if( io_handle->format_version == 2 )
+	else if( ( io_handle->format_version == 2 )
+	      || ( io_handle->format_version == 3 ) )
 	{
 		byte_stream_copy_to_uint32_big_endian(
 		 ( (qcow_file_header_v2_t *) file_header_data )->number_of_cluster_block_bits,
@@ -551,7 +553,8 @@ int libqcow_io_handle_read_file_header(
 		io_handle->compression_flag_bit_mask = (uint64_t) 1 << 63;
 		io_handle->compression_bit_shift     = 63 - io_handle->number_of_cluster_block_bits;
 	}
-	else if( io_handle->format_version == 2 )
+	else if( ( io_handle->format_version == 2 )
+	      || ( io_handle->format_version == 3 ) )
 	{
 		if( io_handle->number_of_cluster_block_bits <= 8 )
 		{
@@ -591,7 +594,8 @@ int libqcow_io_handle_read_file_header(
 			io_handle->level1_table_size = (uint32_t) ( io_handle->media_size / io_handle->level1_table_size );
 		}
 	}
-	else if( io_handle->format_version == 2 )
+	else if( ( io_handle->format_version == 2 )
+	      || ( io_handle->format_version == 3 ) )
 	{
 		io_handle->level1_table_size = number_of_level1_table_references;
 	}
