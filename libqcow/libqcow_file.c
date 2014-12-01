@@ -131,7 +131,7 @@ int libqcow_file_initialize(
 
 		goto on_error;
 	}
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_initialize(
 	     &( internal_file->read_write_lock ),
 	     error ) != 1 )
@@ -209,7 +209,7 @@ int libqcow_file_free(
 		}
 		*file = NULL;
 
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 		if( libcthreads_read_write_lock_free(
 		     &( internal_file->read_write_lock ),
 		     error ) != 1 )
@@ -403,7 +403,7 @@ int libqcow_file_open(
 
 		goto on_error;
 	}
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_grab_for_write(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -420,7 +420,7 @@ int libqcow_file_open(
 #endif
 	internal_file->file_io_handle_created_in_library = 1;
 
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_write(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -570,7 +570,7 @@ int libqcow_file_open_wide(
 
 		goto on_error;
 	}
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_grab_for_write(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -587,7 +587,7 @@ int libqcow_file_open_wide(
 #endif
 	internal_file->file_io_handle_created_in_library = 1;
 
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_write(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -740,7 +740,7 @@ int libqcow_file_open_file_io_handle(
 
 		goto on_error;
 	}
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_grab_for_write(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -758,7 +758,7 @@ int libqcow_file_open_file_io_handle(
 	internal_file->file_io_handle                   = file_io_handle;
 	internal_file->file_io_handle_opened_in_library = file_io_handle_opened_in_library;
 
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_write(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -820,7 +820,7 @@ int libqcow_file_close(
 
 		return( -1 );
 	}
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_grab_for_write(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -996,7 +996,7 @@ int libqcow_file_close(
 
 		result = -1;
 	}
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_write(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -1113,7 +1113,7 @@ int libqcow_file_open_read(
 
 		return( -1 );
 	}
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_grab_for_write(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -1375,7 +1375,7 @@ int libqcow_file_open_read(
 
 		goto on_error;
 	}
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_write(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -1423,7 +1423,7 @@ on_error:
 		 &( internal_file->level1_table ),
 		 NULL );
 	}
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	libcthreads_read_write_lock_release_for_write(
 	 internal_file->read_write_lock,
 	 NULL );
@@ -2107,7 +2107,7 @@ ssize_t libqcow_file_read_buffer(
 	}
 	internal_file = (libqcow_internal_file_t *) file;
 
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_grab_for_write(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -2140,7 +2140,7 @@ ssize_t libqcow_file_read_buffer(
 
 		read_count = -1;
 	}
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_write(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -2185,7 +2185,7 @@ ssize_t libqcow_file_read_buffer_at_offset(
 	}
 	internal_file = (libqcow_internal_file_t *) file;
 
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_grab_for_write(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -2233,7 +2233,7 @@ ssize_t libqcow_file_read_buffer_at_offset(
 
 		goto on_error;
 	}
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_write(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -2251,7 +2251,7 @@ ssize_t libqcow_file_read_buffer_at_offset(
 	return( read_count );
 
 on_error:
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	libcthreads_read_write_lock_release_for_write(
 	 internal_file->read_write_lock,
 	 NULL );
@@ -2474,7 +2474,7 @@ off64_t libqcow_file_seek_offset(
 	}
 	internal_file = (libqcow_internal_file_t *) file;
 
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_grab_for_write(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -2506,7 +2506,7 @@ off64_t libqcow_file_seek_offset(
 
 		offset = -1;
 	}
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_write(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -2570,7 +2570,7 @@ int libqcow_file_get_offset(
 
 		return( -1 );
 	}
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_grab_for_read(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -2587,7 +2587,7 @@ int libqcow_file_get_offset(
 #endif
 	*offset = internal_file->current_offset;
 
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_read(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -2651,7 +2651,7 @@ int libqcow_file_get_format_version(
 
 		return( -1 );
 	}
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_grab_for_read(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -2668,7 +2668,7 @@ int libqcow_file_get_format_version(
 #endif
 	*format_version = internal_file->io_handle->format_version;
 
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_read(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -2721,7 +2721,7 @@ int libqcow_file_get_encryption_method(
 
 		return( -1 );
 	}
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_grab_for_read(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -2738,7 +2738,7 @@ int libqcow_file_get_encryption_method(
 #endif
 	*encryption_method = internal_file->encryption_method;
 
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_read(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -2826,7 +2826,7 @@ int libqcow_file_set_keys(
 
 		return( -1 );
 	}
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_grab_for_write(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -2857,7 +2857,7 @@ int libqcow_file_set_keys(
 	}
 	internal_file->key_data_is_set = 1;
 
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_write(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -2880,7 +2880,7 @@ on_error:
 	 0,
 	 16 );
 
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	libcthreads_read_write_lock_release_for_write(
 	 internal_file->read_write_lock,
 	 NULL );
@@ -2936,7 +2936,7 @@ int libqcow_file_set_utf8_password(
 
 		return( -1 );
 	}
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_grab_for_write(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -2984,7 +2984,7 @@ int libqcow_file_set_utf8_password(
 	}
 	internal_file->key_data_is_set = 1;
 
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_write(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -3007,7 +3007,7 @@ on_error:
 	 0,
 	 16 );
 
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	libcthreads_read_write_lock_release_for_write(
 	 internal_file->read_write_lock,
 	 NULL );
@@ -3063,7 +3063,7 @@ int libqcow_file_set_utf16_password(
 
 		return( -1 );
 	}
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_grab_for_write(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -3111,7 +3111,7 @@ int libqcow_file_set_utf16_password(
 	}
 	internal_file->key_data_is_set = 1;
 
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_write(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -3134,7 +3134,7 @@ on_error:
 	 0,
 	 16 );
 
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	libcthreads_read_write_lock_release_for_write(
 	 internal_file->read_write_lock,
 	 NULL );

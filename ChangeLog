@@ -23,6 +23,10 @@ Tests:
 * add concurrent open close test
 * add concurrent seek test ?
 
+20141201
+* worked on multi-threading support
+* code clean up
+
 20141129
 * code clean up
 

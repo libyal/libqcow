@@ -74,7 +74,7 @@ int libqcow_file_get_media_size(
 
 		return( -1 );
 	}
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_grab_for_read(
 	     internal_file->read_write_lock,
 	     error ) != 1 )
@@ -91,7 +91,7 @@ int libqcow_file_get_media_size(
 #endif
 	*media_size = internal_file->io_handle->media_size;
 
-#if defined( HAVE_MULTI_THREAD_SUPPORT )
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_read(
 	     internal_file->read_write_lock,
 	     error ) != 1 )

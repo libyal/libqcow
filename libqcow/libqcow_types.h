@@ -41,7 +41,7 @@ typedef intptr_t libqcow_file_t;
 
 #endif
 
-#endif
+#endif /* defined( HAVE_LOCAL_LIBQCOW ) */
 
 #endif
 
