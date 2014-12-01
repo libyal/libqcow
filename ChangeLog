@@ -1,5 +1,4 @@
 TODO
-* add file IO handle opened in library check
 * add snapshot support
   - backing filename
   - in-image snapshots
@@ -9,11 +8,10 @@ TODO
 * add write support ?
 
 File format:
-* version 3 support
 * reference count support
 
 Tools:
-* qcowmount dokan version
+* qcowmount - dokan version
   - have it run in background (using CreateProcess)?
   - what about unmount?
   - fix volume size hints
