@@ -58,6 +58,37 @@ test_seek()
 	return ${RESULT};
 }
 
+test_seek_password()
+{ 
+	DIRNAME=$1;
+	INPUT_FILE=$2;
+	BASENAME=`basename ${INPUT_FILE}`;
+	RESULT=${EXIT_FAILURE};
+	PASSWORD_FILE="input/.libqcow/${DIRNAME}/${BASENAME}.password";
+
+	if test -f "${PASSWORD_FILE}";
+	then
+		rm -rf tmp;
+		mkdir tmp;
+
+		PASSWORD=`cat "${PASSWORD_FILE}" | head -n 1 | sed 's/[\r\n]*$//'`;
+
+		echo "Testing seek with password of input: ${INPUT_FILE}";
+
+		${TEST_RUNNER} ./${QCOW_TEST_SEEK} -p${PASSWORD} ${INPUT_FILE};
+
+		RESULT=$?;
+
+		rm -rf tmp;
+
+		echo "";
+	else
+		echo "Testing seek with password of input: ${INPUT_FILE} (FAIL)";
+	fi
+
+	return ${RESULT};
+}
+
 QCOW_TEST_SEEK="qcow_test_seek";
 
 if ! test -x ${QCOW_TEST_SEEK};
@@ -127,9 +158,17 @@ else
 				fi
 				for TEST_FILE in ${TEST_FILES};
 				do
-					if ! test_seek "${TEST_FILE}";
+					if test -f "input/.libqcow/${DIRNAME}/${BASENAME}.password";
 					then
-						exit ${EXIT_FAILURE};
+						if ! test_seek_password "${DIRNAME}" "${TEST_FILE}";
+						then
+							exit ${EXIT_FAILURE};
+						fi
+					else
+						if ! test_seek "${TEST_FILE}";
+						then
+							exit ${EXIT_FAILURE};
+						fi
 					fi
 				done
 			fi

@@ -29,6 +29,7 @@
 
 #include "qcow_test_libcerror.h"
 #include "qcow_test_libcstring.h"
+#include "qcow_test_libcsystem.h"
 #include "qcow_test_libqcow.h"
 
 /* Tests single open and close of a file
@@ -36,12 +37,14 @@
  */
 int qcow_test_single_open_close_file(
      libcstring_system_character_t *filename,
+     const libcstring_system_character_t *password,
      int access_flags,
      int expected_result )
 {
 	libcerror_error_t *error = NULL;
 	libqcow_file_t *file     = NULL;
 	static char *function    = "qcow_test_single_open_close_file";
+	size_t string_length     = 0;
 	int result               = 0;
 
 	if( libqcow_file_initialize(
@@ -55,7 +58,36 @@ int qcow_test_single_open_close_file(
 		 "%s: unable to create file.",
 		 function );
 
-		return( -1 );
+		goto on_error;
+	}
+	if( password != NULL )
+	{
+		string_length = libcstring_system_string_length(
+		                 password );
+
+#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+		if( libqcow_file_set_utf16_password(
+		     file,
+		     (uint16_t *) password,
+		     string_length,
+		     &error ) != 1 )
+#else
+		if( libqcow_file_set_utf8_password(
+		     file,
+		     (uint8_t *) password,
+		     string_length,
+		     &error ) != 1 )
+#endif
+		{
+			libcerror_error_set(
+			 &error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+			 "%s: unable to set password.",
+			 function );
+
+			goto on_error;
+		}
 	}
 #if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
 	result = libqcow_file_open_wide(
@@ -83,7 +115,7 @@ int qcow_test_single_open_close_file(
 			 "%s: unable to close file.",
 			 function );
 
-			result = -1;
+			goto on_error;
 		}
 	}
 	if( libqcow_file_free(
@@ -97,7 +129,7 @@ int qcow_test_single_open_close_file(
 		 "%s: unable to free file.",
 		 function );
 
-		result = -1;
+		goto on_error;
 	}
 	result = ( expected_result == result );
 
@@ -119,16 +151,30 @@ int qcow_test_single_open_close_file(
 
 	if( error != NULL )
 	{
-		if( result != 1 )
-		{
-			libcerror_error_backtrace_fprint(
-			 error,
-			 stderr );
-		}
+		libcerror_error_backtrace_fprint(
+		 error,
+		 stderr );
 		libcerror_error_free(
 		 &error );
 	}
 	return( result );
+
+on_error:
+	if( error != NULL )
+	{
+		libcerror_error_backtrace_fprint(
+		 error,
+		 stderr );
+		libcerror_error_free(
+		 &error );
+	}
+	if( file != NULL )
+	{
+		libqcow_file_free(
+		 &file,
+		 NULL);
+	}
+	return( -1 );
 }
 
 /* Tests multiple open and close of a file
@@ -136,12 +182,14 @@ int qcow_test_single_open_close_file(
  */
 int qcow_test_multi_open_close_file(
      libcstring_system_character_t *filename,
+     const libcstring_system_character_t *password,
      int access_flags,
      int expected_result )
 {
 	libcerror_error_t *error = NULL;
 	libqcow_file_t *file     = NULL;
 	static char *function    = "qcow_test_multi_open_close_file";
+	size_t string_length     = 0;
 	int result               = 0;
 
 	if( libqcow_file_initialize(
@@ -155,7 +203,36 @@ int qcow_test_multi_open_close_file(
 		 "%s: unable to create file.",
 		 function );
 
-		return( -1 );
+		goto on_error;
+	}
+	if( password != NULL )
+	{
+		string_length = libcstring_system_string_length(
+		                 password );
+
+#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+		if( libqcow_file_set_utf16_password(
+		     file,
+		     (uint16_t *) password,
+		     string_length,
+		     &error ) != 1 )
+#else
+		if( libqcow_file_set_utf8_password(
+		     file,
+		     (uint8_t *) password,
+		     string_length,
+		     &error ) != 1 )
+#endif
+		{
+			libcerror_error_set(
+			 &error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+			 "%s: unable to set password.",
+			 function );
+
+			goto on_error;
+		}
 	}
 #if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
 	result = libqcow_file_open_wide(
@@ -183,7 +260,7 @@ int qcow_test_multi_open_close_file(
 			 "%s: unable to close file.",
 			 function );
 
-			result = -1;
+			goto on_error;
 		}
 #if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
 		result = libqcow_file_open_wide(
@@ -211,7 +288,7 @@ int qcow_test_multi_open_close_file(
 				 "%s: unable to close file.",
 				 function );
 
-				result = -1;
+				goto on_error;
 			}
 		}
 	}
@@ -226,7 +303,7 @@ int qcow_test_multi_open_close_file(
 		 "%s: unable to free file.",
 		 function );
 
-		result = -1;
+		goto on_error;
 	}
 	result = ( expected_result == result );
 
@@ -248,16 +325,30 @@ int qcow_test_multi_open_close_file(
 
 	if( error != NULL )
 	{
-		if( result != 1 )
-		{
-			libcerror_error_backtrace_fprint(
-			 error,
-			 stderr );
-		}
+		libcerror_error_backtrace_fprint(
+		 error,
+		 stderr );
 		libcerror_error_free(
 		 &error );
 	}
 	return( result );
+
+on_error:
+	if( error != NULL )
+	{
+		libcerror_error_backtrace_fprint(
+		 error,
+		 stderr );
+		libcerror_error_free(
+		 &error );
+	}
+	if( file != NULL )
+	{
+		libqcow_file_free(
+		 &file,
+		 NULL);
+	}
+	return( -1 );
 }
 
 /* The main program
@@ -268,23 +359,61 @@ int wmain( int argc, wchar_t * const argv[] )
 int main( int argc, char * const argv[] )
 #endif
 {
-	if( argc != 2 )
+	libcerror_error_t *error                       = NULL;
+	libcstring_system_character_t *option_password = NULL;
+	libcstring_system_character_t *source          = NULL;
+	libcstring_system_integer_t option             = 0;
+
+	while( ( option = libcsystem_getopt(
+	                   argc,
+	                   argv,
+	                   _LIBCSTRING_SYSTEM_STRING( "p:" ) ) ) != (libcstring_system_integer_t) -1 )
+	{
+		switch( option )
+		{
+			case (libcstring_system_integer_t) '?':
+			default:
+				fprintf(
+				 stderr,
+				 "Invalid argument: %" PRIs_LIBCSTRING_SYSTEM ".\n",
+				 argv[ optind - 1 ] );
+
+				return( EXIT_FAILURE );
+
+			case (libcstring_system_integer_t) 'p':
+				option_password = optarg;
+
+				break;
+		}
+	}
+	if( optind == argc )
 	{
 		fprintf(
 		 stderr,
-		 "Unsupported number of arguments.\n" );
+		 "Missing source file or device.\n" );
 
 		return( EXIT_FAILURE );
 	}
+	source = argv[ optind ];
+
+#if defined( HAVE_DEBUG_OUTPUT ) && defined( QCOW_TEST_OPEN_CLOSE_VERBOSE )
+	libqcow_notify_set_verbose(
+	 1 );
+	libqcow_notify_set_stream(
+	 stderr,
+	 NULL );
+#endif
+
 	/* Case 0: single open and close of a file using filename
 	 */
 	fprintf(
 	 stdout,
 	 "Testing single open close of: %s with access: read\t",
-	 argv[ 1 ] );
+	 source );
 
 	if( qcow_test_single_open_close_file(
-	     argv[ 1 ],
+	     source,
+	     option_password,
 	     LIBQCOW_OPEN_READ,
 	     1 ) != 1 )
 	{
@@ -300,6 +429,7 @@ int main( int argc, char * const argv[] )
 
 	if( qcow_test_single_open_close_file(
 	     NULL,
+	     option_password,
 	     LIBQCOW_OPEN_READ,
 	     -1 ) != 1 )
 	{
@@ -312,10 +442,11 @@ int main( int argc, char * const argv[] )
 	fprintf(
 	 stdout,
 	 "Testing single open close of: %s with access: write\t",
-	 argv[ 1 ] );
+	 source );
 
 	if( qcow_test_single_open_close_file(
-	     argv[ 1 ],
+	     source,
+	     option_password,
 	     LIBQCOW_OPEN_WRITE,
 	     -1 ) != 1 )
 	{
@@ -330,10 +461,11 @@ int main( int argc, char * const argv[] )
 	fprintf(
 	 stdout,
 	 "Testing multi open close of: %s with access: read\t",
-	 argv[ 1 ] );
+	 source );
 
 	if( qcow_test_multi_open_close_file(
-	     argv[ 1 ],
+	     source,
+	     option_password,
 	     LIBQCOW_OPEN_READ,
 	     1 ) != 1 )
 	{

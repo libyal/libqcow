@@ -40,6 +40,65 @@ list_contains()
 	return ${EXIT_FAILURE};
 }
 
+test_open_close()
+{ 
+	INPUT_FILE=$1;
+
+	rm -rf tmp;
+	mkdir tmp;
+
+	echo "Testing open close of input: ${INPUT_FILE}";
+
+	if test `uname -s` = 'Darwin';
+	then
+		DYLD_LIBRARY_PATH="../libqcow/.libs/" PYTHONPATH="../pyqcow/.libs/" ${PYTHON} ${SCRIPT} ${INPUT_FILE};
+		RESULT=$?;
+	else
+		LD_LIBRARY_PATH="../libqcow/.libs/" PYTHONPATH="../pyqcow/.libs/" ${PYTHON} ${SCRIPT} ${INPUT_FILE};
+		RESULT=$?;
+	fi
+
+	rm -rf tmp;
+
+	return ${RESULT};
+}
+
+test_open_close_password()
+{ 
+	DIRNAME=$1;
+	INPUT_FILE=$2;
+	BASENAME=`basename ${INPUT_FILE}`;
+	RESULT=${EXIT_FAILURE};
+	PASSWORDFILE="input/.qcowinfo/${DIRNAME}/${BASENAME}.password";
+
+	if test -f "${PASSWORDFILE}";
+	then
+		rm -rf tmp;
+		mkdir tmp;
+
+		PASSWORD=`cat "${PASSWORDFILE}" | head -n 1 | sed 's/[\r\n]*$//'`;
+
+		echo "Testing open close with password of input: ${INPUT_FILE}";
+
+		if test `uname -s` = 'Darwin';
+		then
+			DYLD_LIBRARY_PATH="../libqcow/.libs/" PYTHONPATH="../pyqcow/.libs/" ${PYTHON} ${SCRIPT} -p${PASSWORD} ${INPUT_FILE};
+			RESULT=$?;
+		else
+			LD_LIBRARY_PATH="../libqcow/.libs/" PYTHONPATH="../pyqcow/.libs/" ${PYTHON} ${SCRIPT} -p${PASSWORD} ${INPUT_FILE};
+			RESULT=$?;
+		fi
+
+		rm -rf tmp;
+
+		echo "";
+	else
+		echo "Testing open close with password of input: ${INPUT_FILE} (FAIL)";
+	fi
+
+	return ${RESULT};
+}
+
 PYTHON=`which python`;
 
 if ! test -x ${PYTHON};
@@ -54,6 +113,15 @@ then
 	echo "No input directory found.";
 
 	exit ${EXIT_IGNORE};
+fi
+
+SCRIPT="pyqcow_test_open_close.py";
+
+if ! test -f ${SCRIPT};
+then
+	echo "Missing script: ${SCRIPT}";
+
+	exit ${EXIT_FAILURE};
 fi
 
 OLDIFS=${IFS};
@@ -90,9 +158,19 @@ else
 				fi
 				for TEST_FILE in ${TEST_FILES};
 				do
-					if ! PYTHONPATH=../pyqcow/.libs/ ${PYTHON} pyqcow_test_open_close.py ${TEST_FILE};
+					BASENAME=`basename ${TEST_FILE}`;
+
+					if test -f "input/.qcowinfo/${DIRNAME}/${BASENAME}.password";
 					then
-						exit ${EXIT_FAILURE};
+						if ! test_open_close_password "${DIRNAME}" "${TEST_FILE}";
+						then
+							exit ${EXIT_FAILURE};
+						fi
+					else
+						if ! test_open_close "${TEST_FILE}";
+						then
+							exit ${EXIT_FAILURE};
+						fi
 					fi
 				done
 			fi

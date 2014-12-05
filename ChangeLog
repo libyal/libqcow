@@ -20,6 +20,10 @@ Tools:
 Tests:
 * add concurrent open close test
 * add concurrent seek test ?
+* add password for encrypted QCOW images
+
+20141205
+* worked on test scripts
 
 20141201
 * worked on multi-threading support

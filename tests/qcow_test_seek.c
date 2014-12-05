@@ -27,7 +27,9 @@
 
 #include <stdio.h>
 
+#include "qcow_test_libcerror.h"
 #include "qcow_test_libcstring.h"
+#include "qcow_test_libcsystem.h"
 #include "qcow_test_libqcow.h"
 
 /* Define to make qcow_test_seek generate verbose output
@@ -43,7 +45,7 @@ int qcow_test_seek_offset(
      int input_whence,
      off64_t output_offset )
 {
-	libqcow_error_t *error    = NULL;
+	libcerror_error_t *error  = NULL;
 	const char *whence_string = NULL;
 	off64_t result_offset     = 0;
 	int result                = 0;
@@ -424,18 +426,46 @@ int wmain( int argc, wchar_t * const argv[] )
 int main( int argc, char * const argv[] )
 #endif
 {
-	libqcow_error_t *error = NULL;
-	libqcow_file_t *file   = NULL;
-	size64_t media_size    = 0;
+	libcerror_error_t *error                       = NULL;
+	libqcow_file_t *file                           = NULL;
+	libcstring_system_character_t *option_password = NULL;
+	libcstring_system_character_t *source          = NULL;
+	libcstring_system_integer_t option             = 0;
+	size64_t media_size                            = 0;
+	size_t string_length                           = 0;
 
-	if( argc < 2 )
+	while( ( option = libcsystem_getopt(
+	                   argc,
+	                   argv,
+	                   _LIBCSTRING_SYSTEM_STRING( "p:" ) ) ) != (libcstring_system_integer_t) -1 )
+	{
+		switch( option )
+		{
+			case (libcstring_system_integer_t) '?':
+			default:
+				fprintf(
+				 stderr,
+				 "Invalid argument: %" PRIs_LIBCSTRING_SYSTEM ".\n",
+				 argv[ optind - 1 ] );
+
+				return( EXIT_FAILURE );
+
+			case (libcstring_system_integer_t) 'p':
+				option_password = optarg;
+
+				break;
+		}
+	}
+	if( optind == argc )
 	{
 		fprintf(
 		 stderr,
-		 "Missing filename.\n" );
+		 "Missing source file or device.\n" );
 
 		return( EXIT_FAILURE );
 	}
+	source = argv[ optind ];
+
 #if defined( HAVE_DEBUG_OUTPUT ) && defined( QCOW_TEST_SEEK_VERBOSE )
 	libqcow_notify_set_verbose(
 	 1 );
@@ -455,16 +485,42 @@ int main( int argc, char * const argv[] )
 
 		goto on_error;
 	}
+	if( option_password != NULL )
+	{
+		string_length = libcstring_system_string_length(
+		                 option_password );
+
+#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+		if( libqcow_file_set_utf16_password(
+		     file,
+		     (uint16_t *) option_password,
+		     string_length,
+		     &error ) != 1 )
+#else
+		if( libqcow_file_set_utf8_password(
+		     file,
+		     (uint8_t *) option_password,
+		     string_length,
+		     &error ) != 1 )
+#endif
+		{
+			fprintf(
+			 stderr,
+			 "Unable to set password." );
+
+			goto on_error;
+		}
+	}
 #if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
 	if( libqcow_file_open_wide(
 	     file,
-	     argv[ 1 ],
+	     source,
 	     LIBQCOW_OPEN_READ,
 	     &error ) != 1 )
 #else
 	if( libqcow_file_open(
 	     file,
-	     argv[ 1 ],
+	     source,
 	     LIBQCOW_OPEN_READ,
 	     &error ) != 1 )
 #endif

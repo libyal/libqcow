@@ -190,11 +190,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\tests\qcow_test_libcnotify.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\tests\qcow_test_libcstring.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\tests\qcow_test_libcthreads.h"
+				RelativePath="..\..\tests\qcow_test_libcsystem.h"
 				>
 			</File>
 			<File
