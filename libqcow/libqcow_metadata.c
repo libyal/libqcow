@@ -63,6 +63,17 @@ int libqcow_file_get_media_size(
 
 		return( -1 );
 	}
+	if( internal_file->file_io_handle == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid file - missing file IO handle.",
+		 function );
+
+		return( -1 );
+	}
 	if( media_size == NULL )
 	{
 		libcerror_error_set(

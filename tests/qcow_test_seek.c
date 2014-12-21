@@ -31,6 +31,7 @@
 #include "qcow_test_libcstring.h"
 #include "qcow_test_libcsystem.h"
 #include "qcow_test_libqcow.h"
+#include "qcow_test_unused.h"
 
 /* Define to make qcow_test_seek generate verbose output
 #define QCOW_TEST_SEEK_VERBOSE
@@ -102,7 +103,7 @@ int qcow_test_seek_offset(
 	 stdout,
 	 "\n" );
 
-	if( error != NULL)
+	if( error != NULL )
 	{
 		if( result != 1 )
 		{
@@ -119,7 +120,7 @@ int qcow_test_seek_offset(
 /* Tests seeking in a file
  * Returns 1 if successful, 0 if not or -1 on error
  */
-int qcow_test_seek_file(
+int qcow_test_seek(
      libqcow_file_t *file,
      size64_t media_size )
 {
@@ -418,6 +419,248 @@ int qcow_test_seek_file(
 	return( result );
 }
 
+/* Tests seeking in a file
+ * Returns 1 if successful, 0 if not or -1 on error
+ */
+int qcow_test_seek_file(
+     libcstring_system_character_t *source,
+     libcstring_system_character_t *password,
+     libcerror_error_t **error )
+{
+	libqcow_file_t *file = NULL;
+	size64_t media_size  = 0;
+	size_t string_length = 0;
+	int result           = 0;
+
+	if( libqcow_file_initialize(
+	     &file,
+	     error ) != 1 )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to create file.\n" );
+
+		goto on_error;
+	}
+	if( password != NULL )
+	{
+		string_length = libcstring_system_string_length(
+		                 password );
+
+#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+		if( libqcow_file_set_utf16_password(
+		     file,
+		     (uint16_t *) password,
+		     string_length,
+		     error ) != 1 )
+#else
+		if( libqcow_file_set_utf8_password(
+		     file,
+		     (uint8_t *) password,
+		     string_length,
+		     error ) != 1 )
+#endif
+		{
+			fprintf(
+			 stderr,
+			 "Unable to set password." );
+
+			goto on_error;
+		}
+	}
+#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+	if( libqcow_file_open_wide(
+	     file,
+	     source,
+	     LIBQCOW_OPEN_READ,
+	     error ) != 1 )
+#else
+	if( libqcow_file_open(
+	     file,
+	     source,
+	     LIBQCOW_OPEN_READ,
+	     error ) != 1 )
+#endif
+	{
+		fprintf(
+		 stderr,
+		 "Unable to open file.\n" );
+
+		goto on_error;
+	}
+	if( libqcow_file_get_media_size(
+	     file,
+	     &media_size,
+	     error ) != 1 )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to retrieve media size.\n" );
+
+		goto on_error;
+	}
+	result = qcow_test_seek(
+	          file,
+	          media_size );
+
+	if( result == -1 )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to seek in file.\n" );
+
+		goto on_error;
+	}
+	if( libqcow_file_close(
+	     file,
+	     error ) != 0 )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to close file.\n" );
+
+		goto on_error;
+	}
+	if( libqcow_file_free(
+	     &file,
+	     error ) != 1 )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to free file.\n" );
+
+		goto on_error;
+	}
+	return( result );
+
+on_error:
+	if( file != NULL )
+	{
+		libqcow_file_close(
+		 file,
+		 NULL );
+		libqcow_file_free(
+		 &file,
+		 NULL );
+	}
+	return( -1 );
+}
+
+/* Tests seeking in a file without opening it
+ * Returns 1 if successful, 0 if not or -1 on error
+ */
+int qcow_test_seek_file_no_open(
+     libcstring_system_character_t *source QCOW_TEST_ATTRIBUTE_UNUSED,
+     libcstring_system_character_t *password,
+     libcerror_error_t **error )
+{
+	libqcow_file_t *file  = NULL;
+	size_t string_length  = 0;
+	off64_t result_offset = 0;
+	int result            = 0;
+
+	QCOW_TEST_UNREFERENCED_PARAMETER( source );
+
+	if( libqcow_file_initialize(
+	     &file,
+	     error ) != 1 )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to create file.\n" );
+
+		goto on_error;
+	}
+	if( password != NULL )
+	{
+		string_length = libcstring_system_string_length(
+		                 password );
+
+#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+		if( libqcow_file_set_utf16_password(
+		     file,
+		     (uint16_t *) password,
+		     string_length,
+		     error ) != 1 )
+#else
+		if( libqcow_file_set_utf8_password(
+		     file,
+		     (uint8_t *) password,
+		     string_length,
+		     error ) != 1 )
+#endif
+		{
+			fprintf(
+			 stderr,
+			 "Unable to set password." );
+
+			goto on_error;
+		}
+	}
+	fprintf(
+	 stdout,
+	 "Testing seek without open: \t" );
+
+	result_offset = libqcow_file_seek_offset(
+	                 file,
+	                 0,
+	                 SEEK_SET,
+	                 error );
+
+	if( result_offset == -1 )
+	{
+		result = 1;
+	}
+	if( result != 0 )
+	{
+		fprintf(
+		 stdout,
+		 "(PASS)" );
+	}
+	else
+	{
+		fprintf(
+		 stdout,
+		 "(FAIL)" );
+	}
+	fprintf(
+	 stdout,
+	 "\n" );
+
+	if( ( error != NULL )
+	 && ( *error != NULL ) )
+	{
+		if( result != 1 )
+		{
+			libqcow_error_backtrace_fprint(
+			 *error,
+			 stderr );
+		}
+		libqcow_error_free(
+		 error );
+	}
+	if( libqcow_file_free(
+	     &file,
+	     error ) != 1 )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to free file.\n" );
+
+		goto on_error;
+	}
+	return( result );
+
+on_error:
+	if( file != NULL )
+	{
+		libqcow_file_free(
+		 &file,
+		 NULL );
+	}
+	return( -1 );
+}
+
 /* The main program
  */
 #if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
@@ -427,12 +670,10 @@ int main( int argc, char * const argv[] )
 #endif
 {
 	libcerror_error_t *error                       = NULL;
-	libqcow_file_t *file                           = NULL;
 	libcstring_system_character_t *option_password = NULL;
 	libcstring_system_character_t *source          = NULL;
 	libcstring_system_integer_t option             = 0;
-	size64_t media_size                            = 0;
-	size_t string_length                           = 0;
+	int result                                     = 0;
 
 	while( ( option = libcsystem_getopt(
 	                   argc,
@@ -473,78 +714,12 @@ int main( int argc, char * const argv[] )
 	 stderr,
 	 NULL );
 #endif
-	/* Initialization
-	 */
-	if( libqcow_file_initialize(
-	     &file,
-	     &error ) != 1 )
-	{
-		fprintf(
-		 stderr,
-		 "Unable to create file.\n" );
+	result = qcow_test_seek_file(
+	          source,
+	          option_password,
+	          &error );
 
-		goto on_error;
-	}
-	if( option_password != NULL )
-	{
-		string_length = libcstring_system_string_length(
-		                 option_password );
-
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
-		if( libqcow_file_set_utf16_password(
-		     file,
-		     (uint16_t *) option_password,
-		     string_length,
-		     &error ) != 1 )
-#else
-		if( libqcow_file_set_utf8_password(
-		     file,
-		     (uint8_t *) option_password,
-		     string_length,
-		     &error ) != 1 )
-#endif
-		{
-			fprintf(
-			 stderr,
-			 "Unable to set password." );
-
-			goto on_error;
-		}
-	}
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
-	if( libqcow_file_open_wide(
-	     file,
-	     source,
-	     LIBQCOW_OPEN_READ,
-	     &error ) != 1 )
-#else
-	if( libqcow_file_open(
-	     file,
-	     source,
-	     LIBQCOW_OPEN_READ,
-	     &error ) != 1 )
-#endif
-	{
-		fprintf(
-		 stderr,
-		 "Unable to open file.\n" );
-
-		goto on_error;
-	}
-	if( libqcow_file_get_media_size(
-	     file,
-	     &media_size,
-	     &error ) != 1 )
-	{
-		fprintf(
-		 stderr,
-		 "Unable to retrieve media size.\n" );
-
-		goto on_error;
-	}
-	if( qcow_test_seek_file(
-	     file,
-	     media_size ) != 1 )
+	if( result != 1 )
 	{
 		fprintf(
 		 stderr,
@@ -552,25 +727,16 @@ int main( int argc, char * const argv[] )
 
 		goto on_error;
 	}
-	/* Clean up
-	 */
-	if( libqcow_file_close(
-	     file,
-	     &error ) != 0 )
-	{
-		fprintf(
-		 stderr,
-		 "Unable to close file.\n" );
+	result = qcow_test_seek_file_no_open(
+	          source,
+	          option_password,
+	          &error );
 
-		goto on_error;
-	}
-	if( libqcow_file_free(
-	     &file,
-	     &error ) != 1 )
+	if( result != 1 )
 	{
 		fprintf(
 		 stderr,
-		 "Unable to free file.\n" );
+		 "Unable to seek in file without open.\n" );
 
 		goto on_error;
 	}
@@ -584,15 +750,6 @@ on_error:
 		 stderr );
 		libqcow_error_free(
 		 &error );
-	}
-	if( file != NULL )
-	{
-		libqcow_file_close(
-		 file,
-		 NULL );
-		libqcow_file_free(
-		 &file,
-		 NULL );
 	}
 	return( EXIT_FAILURE );
 }

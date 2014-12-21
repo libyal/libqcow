@@ -13,17 +13,14 @@ Supported QCOW format features:
 * compression
 * encryption
 
-QCOW format features not supported at the moment:
+Unsupported QCOW format features:
 * backing file-based snapshots
 * in-image snapshots
 
 Work in progress:
-* Python bindings
 * Dokan library support
-* Thread-safety in file API functions
-
-Planned:
 * Python 3 support
+* Thread-safety in file API functions
 
 For more information see:
 * Project documentation: https://github.com/libyal/libqcow/wiki/Home

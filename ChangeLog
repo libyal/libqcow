@@ -22,6 +22,10 @@ Tests:
 * add concurrent seek test ?
 * add password for encrypted QCOW images
 
+20141221
+* worked on Python 3 support
+* worked on tests
+
 20141205
 * worked on test scripts
 

@@ -32,10 +32,8 @@
 #include "pyqcow_unused.h"
 
 PyTypeObject pyqcow_encryption_types_type_object = {
-	PyObject_HEAD_INIT( NULL )
+	PyVarObject_HEAD_INIT( NULL, 0 )
 
-	/* ob_size */
-	0,
 	/* tp_name */
 	"pyqcow.encryption_types",
 	/* tp_basicsize */
@@ -134,6 +132,8 @@ PyTypeObject pyqcow_encryption_types_type_object = {
 int pyqcow_encryption_types_init_type(
      PyTypeObject *type_object )
 {
+	PyObject *value_object = NULL;
+
 	if( type_object == NULL )
 	{
 		return( -1 );
@@ -144,19 +144,31 @@ int pyqcow_encryption_types_init_type(
 	{
 		return( -1 );
 	}
+#if PY_MAJOR_VERSION >= 3
+	value_object = PyLong_FromLong(
+	                LIBQCOW_ENCRYPTION_METHOD_NONE );
+#else
+	value_object = PyInt_FromLong(
+	                LIBQCOW_ENCRYPTION_METHOD_NONE );
+#endif
 	if( PyDict_SetItemString(
 	     type_object->tp_dict,
 	     "NONE",
-	     PyInt_FromLong(
-	      LIBQCOW_ENCRYPTION_METHOD_NONE ) ) != 0 )
+	     value_object ) != 0 )
 	{
 		goto on_error;
 	}
+#if PY_MAJOR_VERSION >= 3
+	value_object = PyLong_FromLong(
+	                LIBQCOW_ENCRYPTION_METHOD_AES_128_CBC );
+#else
+	value_object = PyInt_FromLong(
+	                LIBQCOW_ENCRYPTION_METHOD_AES_128_CBC );
+#endif
 	if( PyDict_SetItemString(
 	     type_object->tp_dict,
 	     "AES_128_CBC",
-	     PyInt_FromLong(
-	      LIBQCOW_ENCRYPTION_METHOD_AES_128_CBC ) ) != 0 )
+	     value_object ) != 0 )
 	{
 		goto on_error;
 	}
@@ -241,7 +253,8 @@ int pyqcow_encryption_types_init(
 void pyqcow_encryption_types_free(
       pyqcow_encryption_types_t *pyqcow_encryption_types )
 {
-	static char *function = "pyqcow_encryption_types_free";
+	struct _typeobject *ob_type = NULL;
+	static char *function       = "pyqcow_encryption_types_free";
 
 	if( pyqcow_encryption_types == NULL )
 	{
@@ -252,25 +265,28 @@ void pyqcow_encryption_types_free(
 
 		return;
 	}
-	if( pyqcow_encryption_types->ob_type == NULL )
+	ob_type = Py_TYPE(
+	           pyqcow_encryption_types );
+
+	if( ob_type == NULL )
 	{
 		PyErr_Format(
-		 PyExc_TypeError,
-		 "%s: invalid encryption types - missing ob_type.",
+		 PyExc_ValueError,
+		 "%s: missing ob_type.",
 		 function );
 
 		return;
 	}
-	if( pyqcow_encryption_types->ob_type->tp_free == NULL )
+	if( ob_type->tp_free == NULL )
 	{
 		PyErr_Format(
-		 PyExc_TypeError,
-		 "%s: invalid encryption types - invalid ob_type - missing tp_free.",
+		 PyExc_ValueError,
+		 "%s: invalid ob_type - missing tp_free.",
 		 function );
 
 		return;
 	}
-	pyqcow_encryption_types->ob_type->tp_free(
+	ob_type->tp_free(
 	 (PyObject*) pyqcow_encryption_types );
 }
 

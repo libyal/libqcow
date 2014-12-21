@@ -1,7 +1,7 @@
 /*
  * Error functions
  *
- * Copyright (c) 2010-2014, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2010-2014, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
@@ -28,11 +28,23 @@
 #include "pyqcow_libcerror.h"
 #include "pyqcow_python.h"
 
-#define PYQCOW_ERROR_STRING_SIZE	768
+#define PYQCOW_ERROR_STRING_SIZE		768
 
 #if defined( __cplusplus )
 extern "C" {
 #endif
+
+void pyqcow_error_fetch(
+      libcerror_error_t **error,
+      int error_domain,
+      int error_code,
+      const char *format_string,
+      ... );
+
+void pyqcow_error_fetch_and_raise(
+      PyObject *exception_object,
+      const char *format_string,
+      ... );
 
 void pyqcow_error_raise(
       libcerror_error_t *error,

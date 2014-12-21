@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# qcowinfo tool testing script
+# Python-bindings seek testing script
 #
-# Copyright (C) 2010-2014, Joachim Metz <joachim.metz@gmail.com>
+# Copyright (c) 2010-2014, Joachim Metz <joachim.metz@gmail.com>
 #
 # Refer to AUTHORS for acknowledgements.
 #
@@ -40,32 +40,22 @@ list_contains()
 	return ${EXIT_FAILURE};
 }
 
-test_info()
+test_seek()
 { 
-	DIRNAME=$1;
-	INPUT_FILE=$2;
-	OPTIONS=$3;
-	BASENAME=`basename ${INPUT_FILE}`;
-	RESULT=${EXIT_FAILURE};
+	INPUT_FILE=$1;
 
 	rm -rf tmp;
 	mkdir tmp;
 
-	# Note that options should not contain spaces otherwise the test_runner
-	# will fail parsing the arguments.
-	${TEST_RUNNER} ${QCOWINFO} ${OPTIONS} ${INPUT_FILE} | sed '1,2d' > tmp/${BASENAME}.log;
+	echo "Testing seek of input: ${INPUT_FILE}";
 
-	RESULT=$?;
-
-	if test -f "input/.qcowinfo/${DIRNAME}/${BASENAME}.log.gz";
+	if test `uname -s` = 'Darwin';
 	then
-		zdiff "input/.qcowinfo/${DIRNAME}/${BASENAME}.log.gz" "tmp/${BASENAME}.log";
-
+		DYLD_LIBRARY_PATH="../libqcow/.libs/" PYTHONPATH="../pyqcow/.libs/" ${PYTHON} ${SCRIPT} ${INPUT_FILE};
 		RESULT=$?;
 	else
-		mv "tmp/${BASENAME}.log" "input/.qcowinfo/${DIRNAME}";
-
-		gzip "input/.qcowinfo/${DIRNAME}/${BASENAME}.log";
+		LD_LIBRARY_PATH="../libqcow/.libs/" PYTHONPATH="../pyqcow/.libs/" ${PYTHON} ${SCRIPT} ${INPUT_FILE};
+		RESULT=$?;
 	fi
 
 	rm -rf tmp;
@@ -73,7 +63,7 @@ test_info()
 	return ${RESULT};
 }
 
-test_info_password()
+test_seek_password()
 { 
 	DIRNAME=$1;
 	INPUT_FILE=$2;
@@ -83,49 +73,37 @@ test_info_password()
 
 	if test -f "${PASSWORDFILE}";
 	then
+		rm -rf tmp;
+		mkdir tmp;
+
 		PASSWORD=`cat "${PASSWORDFILE}" | head -n 1 | sed 's/[\r\n]*$//'`;
 
-		if test_info "${DIRNAME}" "${INPUT_FILE}" "-p${PASSWORD}";
+		echo "Testing seek with password of input: ${INPUT_FILE}";
+
+		if test `uname -s` = 'Darwin';
 		then
-			RESULT=${EXIT_SUCCESS};
+			DYLD_LIBRARY_PATH="../libqcow/.libs/" PYTHONPATH="../pyqcow/.libs/" ${PYTHON} ${SCRIPT} -p${PASSWORD} ${INPUT_FILE};
+			RESULT=$?;
+		else
+			LD_LIBRARY_PATH="../libqcow/.libs/" PYTHONPATH="../pyqcow/.libs/" ${PYTHON} ${SCRIPT} -p${PASSWORD} ${INPUT_FILE};
+			RESULT=$?;
 		fi
-	fi
 
-	echo -n "Testing qcowinfo with password of input: ${INPUT_FILE} ";
+		rm -rf tmp;
 
-	if test ${RESULT} -ne ${EXIT_SUCCESS};
-	then
-		echo " (FAIL)";
+		echo "";
 	else
-		echo " (PASS)";
+		echo "Testing seek with password of input: ${INPUT_FILE} (FAIL)";
 	fi
+
 	return ${RESULT};
 }
 
-QCOWINFO="../qcowtools/qcowinfo";
+PYTHON=`which python${PYTHON_VERSION} 2> /dev/null`;
 
-if ! test -x ${QCOWINFO};
+if ! test -x ${PYTHON};
 then
-	QCOWINFO="../qcowtools/qcowinfo.exe";
-fi
-
-if ! test -x ${QCOWINFO};
-then
-	echo "Missing executable: ${QCOWINFO}";
-
-	exit ${EXIT_FAILURE};
-fi
-
-TEST_RUNNER="tests/test_runner.sh";
-
-if ! test -x ${TEST_RUNNER};
-then
-	TEST_RUNNER="./test_runner.sh";
-fi
-
-if ! test -x ${TEST_RUNNER};
-then
-	echo "Missing test runner: ${TEST_RUNNER}";
+	echo "Missing executable: ${PYTHON}";
 
 	exit ${EXIT_FAILURE};
 fi
@@ -135,6 +113,15 @@ then
 	echo "No input directory found.";
 
 	exit ${EXIT_IGNORE};
+fi
+
+SCRIPT="pyqcow_test_seek.py";
+
+if ! test -f ${SCRIPT};
+then
+	echo "Missing script: ${SCRIPT}";
+
+	exit ${EXIT_FAILURE};
 fi
 
 OLDIFS=${IFS};
@@ -151,13 +138,9 @@ then
 else
 	IGNORELIST="";
 
-	if ! test -d "input/.qcowinfo";
+	if test -f "input/.pyqcow/ignore";
 	then
-		mkdir "input/.qcowinfo";
-	fi
-	if test -f "input/.qcowinfo/ignore";
-	then
-		IGNORELIST=`cat input/.qcowinfo/ignore | sed '/^#/d'`;
+		IGNORELIST=`cat input/.pyqcow/ignore | sed '/^#/d'`;
 	fi
 	for TESTDIR in input/*;
 	do
@@ -167,28 +150,24 @@ else
 
 			if ! list_contains "${IGNORELIST}" "${DIRNAME}";
 			then
-				if ! test -d "input/.qcowinfo/${DIRNAME}";
+				if test -f "input/.pyqcow/${DIRNAME}/files";
 				then
-					mkdir "input/.qcowinfo/${DIRNAME}";
-				fi
-				if test -f "input/.qcowinfo/${DIRNAME}/files";
-				then
-					TESTFILES=`cat input/.qcowinfo/${DIRNAME}/files | sed "s?^?${TESTDIR}/?"`;
+					TEST_FILES=`cat input/.pyqcow/${DIRNAME}/files | sed "s?^?${TESTDIR}/?"`;
 				else
-					TESTFILES=`ls ${TESTDIR}/*`;
+					TEST_FILES=`ls -1 ${TESTDIR}/* 2> /dev/null`;
 				fi
-				for TESTFILE in ${TESTFILES};
+				for TEST_FILE in ${TEST_FILES};
 				do
-					BASENAME=`basename ${TESTFILE}`;
+					BASENAME=`basename ${TEST_FILE}`;
 
 					if test -f "input/.qcowinfo/${DIRNAME}/${BASENAME}.password";
 					then
-						if ! test_info_password "${DIRNAME}" "${TESTFILE}";
+						if ! test_seek_password "${DIRNAME}" "${TEST_FILE}";
 						then
 							exit ${EXIT_FAILURE};
 						fi
 					else
-						if ! test_info "${DIRNAME}" "${TESTFILE}";
+						if ! test_seek "${TEST_FILE}";
 						then
 							exit ${EXIT_FAILURE};
 						fi

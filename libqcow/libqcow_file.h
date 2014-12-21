@@ -200,6 +200,13 @@ ssize_t libqcow_file_read_buffer_at_offset(
 
 #ifdef TODO_WRITE_SUPPORT
 
+ssize_t libqcow_internal_file_write_buffer_to_file_io_handle(
+         libqcow_internal_file_t *internal_file,
+         libbfio_handle_t *file_io_handle,
+         void *buffer,
+         size_t buffer_size,
+         libcerror_error_t **error );
+
 LIBQCOW_EXTERN \
 ssize_t libqcow_file_write_buffer(
          libqcow_file_t *file,
