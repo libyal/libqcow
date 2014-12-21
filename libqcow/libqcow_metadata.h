@@ -39,6 +39,18 @@ int libqcow_file_get_media_size(
      size64_t *media_size,
      libcerror_error_t **error );
 
+LIBQCOW_EXTERN \
+int libqcow_file_get_format_version(
+     libqcow_file_t *file,
+     uint32_t *format_version,
+     libcerror_error_t **error );
+
+LIBQCOW_EXTERN \
+int libqcow_file_get_encryption_method(
+     libqcow_file_t *file,
+     uint32_t *encryption_method,
+     libcerror_error_t **error );
+
 #if defined( __cplusplus )
 }
 #endif
