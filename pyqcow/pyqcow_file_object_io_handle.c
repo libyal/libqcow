@@ -1270,7 +1270,6 @@ int pyqcow_file_object_get_size(
 {
 	PyObject *method_name   = NULL;
 	PyObject *method_result = NULL;
-	char *error_string      = NULL;
 	static char *function   = "pyqcow_file_object_get_size";
 
 	if( file_object == NULL )

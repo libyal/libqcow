@@ -69,7 +69,7 @@ test_seek_password()
 	INPUT_FILE=$2;
 	BASENAME=`basename ${INPUT_FILE}`;
 	RESULT=${EXIT_FAILURE};
-	PASSWORDFILE="input/.qcowinfo/${DIRNAME}/${BASENAME}.password";
+	PASSWORDFILE="input/.pyqcow/${DIRNAME}/${BASENAME}.password";
 
 	if test -f "${PASSWORDFILE}";
 	then
@@ -160,7 +160,7 @@ else
 				do
 					BASENAME=`basename ${TEST_FILE}`;
 
-					if test -f "input/.qcowinfo/${DIRNAME}/${BASENAME}.password";
+					if test -f "input/.pyqcow/${DIRNAME}/${BASENAME}.password";
 					then
 						if ! test_seek_password "${DIRNAME}" "${TEST_FILE}";
 						then
