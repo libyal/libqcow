@@ -29,14 +29,15 @@ SUBDIRS = \
 DPKG_FILES = \
 	dpkg/changelog \
 	dpkg/changelog.in \
-       	dpkg/compat \
-       	dpkg/control \
-       	dpkg/copyright \
-       	dpkg/copyright.in \
-       	dpkg/rules \
-       	dpkg/libqcow-dev.docs \
-       	dpkg/libqcow.docs \
-       	dpkg/libqcow-tools.docs
+	dpkg/compat \
+	dpkg/control \
+	dpkg/copyright \
+	dpkg/copyright.in \
+	dpkg/rules \
+	dpkg/libqcow-dev.docs \
+	dpkg/libqcow.docs \
+	dpkg/libqcow-tools.docs \
+	dpkg/source/format
 
 GETTEXT_FILES = \
 	config.rpath \

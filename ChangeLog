@@ -22,6 +22,11 @@ Tests:
 * add concurrent seek test ?
 * add password for encrypted QCOW images
 
+20141229
+* updated dpkg files
+* updated dependencies
+* updated .gitignore
+
 20141226
 * changes for updated dependencies
 
