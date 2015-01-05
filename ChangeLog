@@ -2,7 +2,6 @@ TODO
 * add snapshot support
   - backing filename
   - in-image snapshots
-* update man pages
 * pyqcow
   - add function to set the keys
 * add write support ?
@@ -21,6 +20,9 @@ Tests:
 * add concurrent open close test
 * add concurrent seek test ?
 * add password for encrypted QCOW images
+
+20150105
+* 2015 update
 
 20141229
 * updated dpkg files

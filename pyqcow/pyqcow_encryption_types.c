@@ -1,7 +1,7 @@
 /*
  * Python object definition of the libqcow encryption types
  *
- * Copyright (C) 2010-2014, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2010-2015, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
@@ -228,7 +228,7 @@ on_error:
 	return( NULL );
 }
 
-/* Intializes a encryption types object
+/* Intializes an encryption types object
  * Returns 0 if successful or -1 on error
  */
 int pyqcow_encryption_types_init(
@@ -248,7 +248,7 @@ int pyqcow_encryption_types_init(
 	return( 0 );
 }
 
-/* Frees a encryption types object
+/* Frees an encryption types object
  */
 void pyqcow_encryption_types_free(
       pyqcow_encryption_types_t *pyqcow_encryption_types )
