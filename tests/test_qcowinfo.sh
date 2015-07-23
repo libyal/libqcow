@@ -175,10 +175,10 @@ run_tests()
 		else
 			INPUT_FILES=`ls ${INPUT_DIR}/*`;
 		fi
+		TESTED_WITH_OPTIONS=0;
 
 		for INPUT_FILE in ${INPUT_FILES};
 		do
-			TESTED_WITH_OPTIONS=0;
 			INPUT_NAME=`basename ${INPUT_FILE}`;
 
 			for OPTION_SET in `echo ${OPTION_SETS} | tr ' ' '\n'`;
