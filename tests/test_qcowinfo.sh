@@ -18,20 +18,22 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
-#
 
 EXIT_SUCCESS=0;
 EXIT_FAILURE=1;
 EXIT_IGNORE=77;
+
+TEST_PREFIX="qcow";
+OPTION_SETS="password";
 
 list_contains()
 {
 	LIST=$1;
 	SEARCH=$2;
 
-	for LINE in $LIST;
+	for LINE in ${LIST};
 	do
-		if test $LINE = $SEARCH;
+		if test ${LINE} = ${SEARCH};
 		then
 			return ${EXIT_SUCCESS};
 		fi
@@ -40,58 +42,70 @@ list_contains()
 	return ${EXIT_FAILURE};
 }
 
-test_info()
+run_test()
 { 
-	DIRNAME=$1;
-	INPUT_FILE=$2;
-	OPTIONS=$3;
-	BASENAME=`basename ${INPUT_FILE}`;
-	RESULT=${EXIT_FAILURE};
+	TEST_SET_DIR=$1;
+	TEST_DESCRIPTION=$2;
+	TEST_EXECUTABLE=$3;
+	INPUT_FILE=$4;
+	OPTION_SET=$5;
 
-	rm -rf tmp;
-	mkdir tmp;
+	TEST_RUNNER="tests/test_runner.sh";
+
+	if ! test -x "${TEST_RUNNER}";
+	then
+		TEST_RUNNER="./test_runner.sh";
+	fi
+
+	if ! test -x "${TEST_RUNNER}";
+	then
+		echo "Missing test runner: ${TEST_RUNNER}";
+
+		return ${EXIT_FAILURE};
+	fi
+
+	INPUT_NAME=`basename ${INPUT_FILE}`;
+
+	if test -z "${OPTION_SET}";
+	then
+		OPTIONS="";
+		TEST_OUTPUT="${INPUT_NAME}";
+	else
+		OPTIONS=`cat "${TEST_SET_DIR}/${INPUT_NAME}.${OPTION_SET}" | head -n 1 | sed 's/[\r\n]*$//'`;
+		TEST_OUTPUT="${INPUT_NAME}-${OPTION_SET}";
+	fi
+	TMPDIR="tmp$$";
+
+	rm -rf ${TMPDIR};
+	mkdir ${TMPDIR};
+
+	STORED_TEST_RESULTS="${TEST_SET_DIR}/${TEST_OUTPUT}.log.gz";
+	TEST_RESULTS="${TMPDIR}/${TEST_OUTPUT}.log";
 
 	# Note that options should not contain spaces otherwise the test_runner
 	# will fail parsing the arguments.
-	${TEST_RUNNER} ${QCOWINFO} ${OPTIONS} ${INPUT_FILE} | sed '1,2d' > tmp/${BASENAME}.log;
+	${TEST_RUNNER} ${TMPDIR} ${TEST_EXECUTABLE} ${OPTIONS} ${INPUT_FILE} | sed '1,2d' > ${TEST_RESULTS};
 
 	RESULT=$?;
 
-	if test -f "input/.qcowinfo/${DIRNAME}/${BASENAME}.log.gz";
+	if test -f "${STORED_TEST_RESULTS}";
 	then
-		zdiff "input/.qcowinfo/${DIRNAME}/${BASENAME}.log.gz" "tmp/${BASENAME}.log";
+		zdiff ${STORED_TEST_RESULTS} ${TEST_RESULTS};
 
 		RESULT=$?;
 	else
-		mv "tmp/${BASENAME}.log" "input/.qcowinfo/${DIRNAME}";
+		gzip ${TEST_RESULTS};
 
-		gzip "input/.qcowinfo/${DIRNAME}/${BASENAME}.log";
+		mv "${TEST_RESULTS}.gz" ${TEST_SET_DIR};
 	fi
+	rm -rf ${TMPDIR};
 
-	rm -rf tmp;
-
-	return ${RESULT};
-}
-
-test_info_password()
-{ 
-	DIRNAME=$1;
-	INPUT_FILE=$2;
-	BASENAME=`basename ${INPUT_FILE}`;
-	RESULT=${EXIT_FAILURE};
-	PASSWORDFILE="input/.qcowinfo/${DIRNAME}/${BASENAME}.password";
-
-	if test -f "${PASSWORDFILE}";
+	if test -z "${OPTION_SET}";
 	then
-		PASSWORD=`cat "${PASSWORDFILE}" | head -n 1 | sed 's/[\r\n]*$//'`;
-
-		if test_info "${DIRNAME}" "${INPUT_FILE}" "-p${PASSWORD}";
-		then
-			RESULT=${EXIT_SUCCESS};
-		fi
+		echo -n "Testing ${TEST_DESCRIPTION} with input: ${INPUT_FILE}";
+	else
+		echo -n "Testing ${TEST_DESCRIPTION} with option: ${OPTION_SET} and input: ${INPUT_FILE}";
 	fi
-
-	echo -n "Testing qcowinfo with password of input: ${INPUT_FILE} ";
 
 	if test ${RESULT} -ne ${EXIT_SUCCESS};
 	then
@@ -102,106 +116,123 @@ test_info_password()
 	return ${RESULT};
 }
 
-QCOWINFO="../qcowtools/qcowinfo";
+run_tests()
+{
+	TEST_PROFILE=$1;
+	TEST_DESCRIPTION=$2;
+	TEST_EXECUTABLE=$3;
 
-if ! test -x ${QCOWINFO};
+	if ! test -d "input";
+	then
+		echo "No input directory found.";
+
+		return ${EXIT_IGNORE};
+	fi
+	RESULT=`ls input/* | tr ' ' '\n' | wc -l`;
+
+	if test ${RESULT} -eq 0;
+	then
+		echo "No files or directories found in the input directory.";
+
+		return ${EXIT_IGNORE};
+	fi
+	TEST_PROFILE_DIR="input/.${TEST_PROFILE}";
+
+	if ! test -d "${TEST_PROFILE_DIR}";
+	then
+		mkdir ${TEST_PROFILE_DIR};
+	fi
+	IGNORE_FILE="${TEST_PROFILE_DIR}/ignore";
+	IGNORE_LIST="";
+
+	if test -f "${IGNORE_FILE}";
+	then
+		IGNORE_LIST=`cat ${IGNORE_FILE} | sed '/^#/d'`;
+	fi
+
+	for INPUT_DIR in input/*;
+	do
+		if ! test -d "${INPUT_DIR}";
+		then
+			continue
+		fi
+		INPUT_NAME=`basename ${INPUT_DIR}`;
+
+		if list_contains "${IGNORE_LIST}" "${INPUT_NAME}";
+		then
+			continue
+		fi
+		TEST_SET_DIR="${TEST_PROFILE_DIR}/${INPUT_NAME}";
+
+		if ! test -d "${TEST_SET_DIR}";
+		then
+			mkdir "${TEST_SET_DIR}";
+		fi
+
+		if test -f "${TEST_SET_DIR}/files";
+		then
+			INPUT_FILES=`cat ${TEST_SET_DIR}/files | sed "s?^?${INPUT_DIR}/?"`;
+		else
+			INPUT_FILES=`ls ${INPUT_DIR}/*`;
+		fi
+
+		for INPUT_FILE in ${INPUT_FILES};
+		do
+			TESTED_WITH_OPTIONS=0;
+			INPUT_NAME=`basename ${INPUT_FILE}`;
+
+			for OPTION_SET in `echo ${OPTION_SETS} | tr ' ' '\n'`;
+			do
+				OPTION_FILE="${TEST_SET_DIR}/${INPUT_NAME}.${OPTION_SET}";
+
+				if ! test -f "${OPTION_FILE}";
+				then
+					continue
+				fi
+
+				if ! run_test "${TEST_SET_DIR}" "${TEST_DESCRIPTION}" "${TEST_EXECUTABLE}" "${INPUT_FILE}" "${OPTION_SET}";
+				then
+					return ${EXIT_FAILURE};
+				fi
+				TESTED_WITH_OPTIONS=1;
+			done
+
+			if test ${TESTED_WITH_OPTIONS} -eq 0;
+			then
+				if ! run_test "${TEST_SET_DIR}" "${TEST_DESCRIPTION}" "${TEST_EXECUTABLE}" "${INPUT_FILE}" "";
+				then
+					return ${EXIT_FAILURE};
+				fi
+			fi
+		done
+	done
+
+	return ${EXIT_SUCCESS};
+}
+
+INFO_TOOL="../${TEST_PREFIX}tools/${TEST_PREFIX}info";
+
+if ! test -x "${INFO_TOOL}";
 then
-	QCOWINFO="../qcowtools/qcowinfo.exe";
+	INFO_TOOL="../${TEST_PREFIX}tools/${TEST_PREFIX}info";
 fi
 
-if ! test -x ${QCOWINFO};
+if ! test -x "${INFO_TOOL}";
 then
-	echo "Missing executable: ${QCOWINFO}";
+	echo "Missing executable: ${INFO_TOOL}";
 
 	exit ${EXIT_FAILURE};
-fi
-
-TEST_RUNNER="tests/test_runner.sh";
-
-if ! test -x ${TEST_RUNNER};
-then
-	TEST_RUNNER="./test_runner.sh";
-fi
-
-if ! test -x ${TEST_RUNNER};
-then
-	echo "Missing test runner: ${TEST_RUNNER}";
-
-	exit ${EXIT_FAILURE};
-fi
-
-if ! test -d "input";
-then
-	echo "No input directory found.";
-
-	exit ${EXIT_IGNORE};
 fi
 
 OLDIFS=${IFS};
 IFS="
 ";
 
-RESULT=`ls input/* | tr ' ' '\n' | wc -l`;
+run_tests "${TEST_PREFIX}info" "${TEST_PREFIX}info" "${INFO_TOOL}";
 
-if test ${RESULT} -eq 0;
-then
-	echo "No files or directories found in the input directory.";
-
-	EXIT_RESULT=${EXIT_IGNORE};
-else
-	IGNORELIST="";
-
-	if ! test -d "input/.qcowinfo";
-	then
-		mkdir "input/.qcowinfo";
-	fi
-	if test -f "input/.qcowinfo/ignore";
-	then
-		IGNORELIST=`cat input/.qcowinfo/ignore | sed '/^#/d'`;
-	fi
-	for TESTDIR in input/*;
-	do
-		if test -d "${TESTDIR}";
-		then
-			DIRNAME=`basename ${TESTDIR}`;
-
-			if ! list_contains "${IGNORELIST}" "${DIRNAME}";
-			then
-				if ! test -d "input/.qcowinfo/${DIRNAME}";
-				then
-					mkdir "input/.qcowinfo/${DIRNAME}";
-				fi
-				if test -f "input/.qcowinfo/${DIRNAME}/files";
-				then
-					TESTFILES=`cat input/.qcowinfo/${DIRNAME}/files | sed "s?^?${TESTDIR}/?"`;
-				else
-					TESTFILES=`ls ${TESTDIR}/*`;
-				fi
-				for TESTFILE in ${TESTFILES};
-				do
-					BASENAME=`basename ${TESTFILE}`;
-
-					if test -f "input/.qcowinfo/${DIRNAME}/${BASENAME}.password";
-					then
-						if ! test_info_password "${DIRNAME}" "${TESTFILE}";
-						then
-							exit ${EXIT_FAILURE};
-						fi
-					else
-						if ! test_info "${DIRNAME}" "${TESTFILE}";
-						then
-							exit ${EXIT_FAILURE};
-						fi
-					fi
-				done
-			fi
-		fi
-	done
-
-	EXIT_RESULT=${EXIT_SUCCESS};
-fi
+RESULT=$?;
 
 IFS=${OLDIFS};
 
-exit ${EXIT_RESULT};
+exit ${RESULT};
 
