@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# qcowinfo tool testing script
+# Info tool testing script
 #
 # Copyright (C) 2010-2015, Joachim Metz <joachim.metz@gmail.com>
 #

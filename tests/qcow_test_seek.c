@@ -107,11 +107,11 @@ int qcow_test_seek_offset(
 	{
 		if( result != 1 )
 		{
-			libqcow_error_backtrace_fprint(
+			libcerror_error_backtrace_fprint(
 			 error,
 			 stderr );
 		}
-		libqcow_error_free(
+		libcerror_error_free(
 		 &error );
 	}
 	return( result );
@@ -632,11 +632,11 @@ int qcow_test_seek_file_no_open(
 	{
 		if( result != 1 )
 		{
-			libqcow_error_backtrace_fprint(
+			libcerror_error_backtrace_fprint(
 			 *error,
 			 stderr );
 		}
-		libqcow_error_free(
+		libcerror_error_free(
 		 error );
 	}
 	if( libqcow_file_free(
@@ -745,10 +745,10 @@ int main( int argc, char * const argv[] )
 on_error:
 	if( error != NULL )
 	{
-		libqcow_error_backtrace_fprint(
+		libcerror_error_backtrace_fprint(
 		 error,
 		 stderr );
-		libqcow_error_free(
+		libcerror_error_free(
 		 &error );
 	}
 	return( EXIT_FAILURE );
