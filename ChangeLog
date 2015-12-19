@@ -21,6 +21,9 @@ Tests:
 * add concurrent seek test ?
 * add password for encrypted QCOW images
 
+20151219
+* updated dependencies
+
 20150905
 * updated dependencies
 
