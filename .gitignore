@@ -115,7 +115,6 @@ stamp-h[1-9]
 /libqcow/libqcow_definitions.h
 /qcowtools/qcowinfo
 /qcowtools/qcowmount
-/pyqcow/setup.py
 /tests/input
 /tests/qcow_test_open_close
 /tests/qcow_test_read

@@ -2,7 +2,7 @@ AC_PREREQ( 2.59 )
 
 AC_INIT(
  [libqcow],
- [20151219],
+ [20151223],
  [joachim.metz@gmail.com])
 
 AC_CONFIG_SRCDIR(
@@ -231,7 +231,6 @@ AC_CONFIG_FILES([common/types.h])
 AC_CONFIG_FILES([dpkg/changelog])
 AC_CONFIG_FILES([dpkg/copyright])
 AC_CONFIG_FILES([libqcow/libqcow.rc])
-AC_CONFIG_FILES([pyqcow/setup.py])
 AC_CONFIG_FILES([libqcow.pc])
 AC_CONFIG_FILES([libqcow.spec])
 dnl Have configure write its configuration
