@@ -28,7 +28,7 @@
 #include "pyqcow_libcerror.h"
 #include "pyqcow_python.h"
 
-#define PYQCOW_ERROR_STRING_SIZE		768
+#define PYQCOW_ERROR_STRING_SIZE		2048
 
 #if defined( __cplusplus )
 extern "C" {
