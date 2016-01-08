@@ -21,6 +21,9 @@ Tests:
 * add concurrent seek test ?
 * add password for encrypted QCOW images
 
+20160108
+* 2016 update
+
 201512223
 * Changes to Python bindings
 
