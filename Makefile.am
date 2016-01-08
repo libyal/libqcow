@@ -21,6 +21,8 @@ SUBDIRS = \
 	libcsystem \
 	qcowtools \
 	pyqcow \
+	pyqcow2 \
+	pyqcow3 \
 	po \
 	manuals \
 	tests \
@@ -34,8 +36,10 @@ DPKG_FILES = \
 	dpkg/copyright \
 	dpkg/copyright.in \
 	dpkg/rules \
-	dpkg/libqcow-dev.docs \
 	dpkg/libqcow.docs \
+	dpkg/libqcow-dev.docs \
+	dpkg/libqcow-python.docs \
+	dpkg/libqcow-python3.docs \
 	dpkg/libqcow-tools.docs \
 	dpkg/source/format
 
