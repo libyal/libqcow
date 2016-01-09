@@ -55,15 +55,15 @@ pyqcow_la_CPPFLAGS = $(PYTHON3_CPPFLAGS)
 pyqcow_la_LDFLAGS  = -module -avoid-version $(PYTHON3_LDFLAGS)
 
 $(BUILT_SOURCES):
-	/bin/cp -f $(top_srcdir)/pyqcow/pyqcow*.[ch] .
-
-clean-local:
-	/bin/rm -f pyqcow*.[ch]
+	/bin/cp -f $(top_srcdir)/pyqcow/$@ $@
 
 endif
 
 MAINTAINERCLEANFILES = \
 	Makefile.in
+
+clean-local:
+	/bin/rm -f pyqcow*.[ch]
 
 distclean: clean
 	/bin/rm -f Makefile
