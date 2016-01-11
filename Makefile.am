@@ -21,8 +21,8 @@ SUBDIRS = \
 	libcsystem \
 	qcowtools \
 	pyqcow \
-	pyqcow2 \
-	pyqcow3 \
+	pyqcow-python2 \
+	pyqcow-python3 \
 	po \
 	manuals \
 	tests \

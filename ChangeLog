@@ -21,13 +21,16 @@ Tests:
 * add concurrent seek test ?
 * add password for encrypted QCOW images
 
+20160111
+* Changes to Python bindings
+
 20160109
 * fixes for rpmbuild
 
 20160108
 * 2016 update
 
-201512223
+20151223
 * Changes to Python bindings
 
 20151219

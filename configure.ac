@@ -2,7 +2,7 @@ AC_PREREQ( 2.59 )
 
 AC_INIT(
  [libqcow],
- [20160109],
+ [20160111],
  [joachim.metz@gmail.com])
 
 AC_CONFIG_SRCDIR(
@@ -218,8 +218,8 @@ AC_CONFIG_FILES([libqcow/Makefile])
 AC_CONFIG_FILES([libcsystem/Makefile])
 AC_CONFIG_FILES([qcowtools/Makefile])
 AC_CONFIG_FILES([pyqcow/Makefile])
-AC_CONFIG_FILES([pyqcow2/Makefile])
-AC_CONFIG_FILES([pyqcow3/Makefile])
+AC_CONFIG_FILES([pyqcow-python2/Makefile])
+AC_CONFIG_FILES([pyqcow-python3/Makefile])
 AC_CONFIG_FILES([po/Makefile.in])
 AC_CONFIG_FILES([po/Makevars])
 AC_CONFIG_FILES([manuals/Makefile])
