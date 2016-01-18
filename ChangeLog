@@ -21,6 +21,12 @@ Tests:
 * add concurrent seek test ?
 * add password for encrypted QCOW images
 
+20160118
+* worked on fallback inflate implementation
+
+20160117
+* worked on fallback inflate implementation
+
 20160111
 * Changes to Python bindings
 

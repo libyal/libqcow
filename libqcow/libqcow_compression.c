@@ -35,6 +35,7 @@
 
 #include "libqcow_compression.h"
 #include "libqcow_definitions.h"
+#include "libqcow_deflate.h"
 #include "libqcow_libcerror.h"
 #include "libqcow_libcnotify.h"
 
@@ -255,14 +256,24 @@ int libqcow_decompress_data(
 			}
 		}
 #else
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_UNSUPPORTED_VALUE,
-		 "%s: missing support for deflate compression.",
-		 function );
+		result = libqcow_deflate_decompress(
+		          compressed_data,
+		          compressed_data_size,
+		          uncompressed_data,
+		          uncompressed_data_size,
+		          error );
 
-		return( -1 );
+		if( result != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_ENCRYPTION,
+			 LIBCERROR_ENCRYPTION_ERROR_GENERIC,
+			 "%s: unable to decompress deflate compressed data.",
+			 function );
+
+			return( -1 );
+		}
 #endif /* defined( HAVE_ZLIB ) || defined( ZLIB_DLL ) */
 	}
 	else

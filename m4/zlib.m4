@@ -1,6 +1,6 @@
 dnl Functions for zlib
 dnl
-dnl Version: 20131204
+dnl Version: 20160117
 
 dnl Function to detect if zlib is available
 AC_DEFUN([AX_ZLIB_CHECK_LIB],
@@ -145,5 +145,10 @@ AC_DEFUN([AX_ZLIB_CHECK_ENABLE],
    [ax_zlib_spec_build_requires],
    [zlib-devel])
   ])
+
+ AS_IF(
+  [test "x$ac_cv_zlib" = xno],
+  [ac_cv_deflate="local"],
+  [ac_cv_deflate="$ac_cv_zlib"])
  ])
 

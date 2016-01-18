@@ -30,6 +30,7 @@ libqcow_la_SOURCES = \
 	libqcow_compression.c libqcow_compression.h \
 	libqcow_debug.c libqcow_debug.h \
 	libqcow_definitions.h \
+	libqcow_deflate.c libqcow_deflate.h \
 	libqcow_encryption.c libqcow_encryption.h \
 	libqcow_error.c libqcow_error.h \
 	libqcow_extern.h \

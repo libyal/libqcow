@@ -760,7 +760,7 @@ int libqcow_io_handle_read_level2_table(
 		 "%s: invalid element data size value exceeds maximum.",
 		 function );
 
-		goto on_error;
+		return( -1 );
 	}
 	if( libqcow_cluster_table_initialize(
 	     &level2_table,
@@ -798,7 +798,7 @@ int libqcow_io_handle_read_level2_table(
 	     element_index,
 	     (intptr_t *) level2_table,
 	     (int (*)(intptr_t **, libcerror_error_t **)) &libqcow_cluster_table_free,
-	     LIBFDATA_LIST_ELEMENT_VALUE_FLAG_MANAGED,
+	     LIBFDATA_VECTOR_ELEMENT_VALUE_FLAG_MANAGED,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -894,7 +894,7 @@ int libqcow_io_handle_read_cluster_block(
 	     element_index,
 	     (intptr_t *) cluster_block,
 	     (int (*)(intptr_t **, libcerror_error_t **)) &libqcow_cluster_block_free,
-	     LIBFDATA_LIST_ELEMENT_VALUE_FLAG_MANAGED,
+	     LIBFDATA_VECTOR_ELEMENT_VALUE_FLAG_MANAGED,
 	     error ) != 1 )
 	{
 		libcerror_error_set(

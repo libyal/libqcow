@@ -192,6 +192,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\libqcow\libqcow_deflate.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\libqcow\libqcow_encryption.c"
 				>
 			</File>
@@ -251,6 +255,10 @@
 			</File>
 			<File
 				RelativePath="..\..\libqcow\libqcow_definitions.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\libqcow\libqcow_deflate.h"
 				>
 			</File>
 			<File
