@@ -865,7 +865,7 @@ int libqcow_deflate_decode_huffman(
 		}
 		if( code_value < 256 )
 		{
-			if( ( data_offset + 1 ) > uncompressed_data_size )
+			if( data_offset >= uncompressed_data_size )
 			{
 				libcerror_error_set(
 				 error,
@@ -1010,6 +1010,7 @@ int libqcow_deflate_decompress(
 	uint32_t value_32bit            = 0;
 	uint8_t block_type              = 0;
 	uint8_t last_block_flag         = 0;
+	uint8_t skip_bits               = 0;
 
 	if( compressed_data == NULL )
 	{
@@ -1066,7 +1067,7 @@ int libqcow_deflate_decompress(
 
 		return( -1 );
 	}
-	if( ( compressed_data_offset + 1 ) >= compressed_data_size )
+	if( compressed_data_offset >= compressed_data_size )
 	{
 		libcerror_error_set(
 		 error,
@@ -1123,24 +1124,31 @@ int libqcow_deflate_decompress(
 		switch( block_type )
 		{
 			case LIBQCOW_DEFLATE_BLOCK_TYPE_UNCOMPRESSED:
-				if( libqcow_deflate_bit_stream_get_value(
-				     &bit_stream,
-				     5,
-				     &value_32bit,
-				     error ) != 1 )
-				{
-					libcerror_error_set(
-					 error,
-					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-					 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-					 "%s: unable to retrieve value from bit stream.",
-					 function );
+				/* Ignore the bits in the buffer upto the next byte
+				 */
+				skip_bits = bit_stream.bit_buffer_size & 0x07;
 
-					return( -1 );
+				if( skip_bits > 0 )
+				{
+					if( libqcow_deflate_bit_stream_get_value(
+					     &bit_stream,
+					     skip_bits,
+					     &value_32bit,
+					     error ) != 1 )
+					{
+						libcerror_error_set(
+						 error,
+						 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+						 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+						 "%s: unable to retrieve value from bit stream.",
+						 function );
+
+						return( -1 );
+					}
 				}
 				if( libqcow_deflate_bit_stream_get_value(
 				     &bit_stream,
-				     16,
+				     32,
 				     &block_size,
 				     error ) != 1 )
 				{
@@ -1153,22 +1161,8 @@ int libqcow_deflate_decompress(
 
 					return( -1 );
 				}
-				if( libqcow_deflate_bit_stream_get_value(
-				     &bit_stream,
-				     16,
-				     &block_size_copy,
-				     error ) != 1 )
-				{
-					libcerror_error_set(
-					 error,
-					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-					 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-					 "%s: unable to retrieve value from bit stream.",
-					 function );
-
-					return( -1 );
-				}
-				block_size_copy = ~( (int16_t) block_size_copy );
+				block_size_copy = ( block_size >> 16 ) ^ 0x0000ffffUL;
+				block_size     &= 0x0000ffffUL;
 
 				if( block_size != block_size_copy )
 				{
@@ -1182,6 +1176,10 @@ int libqcow_deflate_decompress(
 					 block_size_copy );
 
 					return( -1 );
+				}
+				if( block_size == 0 )
+				{
+					break;
 				}
 				if( (size_t) block_size > ( bit_stream.byte_stream_size - bit_stream.byte_stream_offset ) )
 				{

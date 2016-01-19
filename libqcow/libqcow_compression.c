@@ -55,8 +55,6 @@ int libqcow_decompress_data(
 
 #if defined( HAVE_ZLIB ) || defined( ZLIB_DLL )
 	z_stream zlib_stream;
-
-	uLongf zlib_uncompressed_data_size = 0;
 #endif
 
 	if( compressed_data == NULL )
@@ -172,9 +170,13 @@ int libqcow_decompress_data(
 		          &zlib_stream,
 		          Z_FINISH );
 
+		if( result != Z_OK )
+		{
+			fprintf( stderr, "X: %d, %zd\n", result, zlib_stream.total_out );
+		}
 		if( result == Z_STREAM_END )
 		{
-			*uncompressed_data_size = (size_t) zlib_uncompressed_data_size;
+			*uncompressed_data_size = (size_t) zlib_stream.total_out;
 
 			result = 1;
 		}

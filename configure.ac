@@ -2,7 +2,7 @@ AC_PREREQ( 2.59 )
 
 AC_INIT(
  [libqcow],
- [20160118],
+ [20160119],
  [joachim.metz@gmail.com])
 
 AC_CONFIG_SRCDIR(
@@ -101,6 +101,7 @@ AX_LIBCAES_CHECK_ENABLE
 
 dnl Check for zlib compression support
 AX_ZLIB_CHECK_ENABLE
+AX_ZLIB_CHECK_INFLATE
 
 dnl Check for enabling libcsystem for cross-platform C generic system functions
 AX_LIBCSYSTEM_CHECK_ENABLE
@@ -261,7 +262,7 @@ Building:
    libfdata support:                          $ac_cv_libfdata
    libcaes support:                           $ac_cv_libcaes
    AES support:                               $ac_cv_libcaes_aes
-   DEFLATE compression support:               $ac_cv_deflate
+   DEFLATE compression support:               $ac_cv_inflate
    libcsystem support:                        $ac_cv_libcsystem
    FUSE support:                              $ac_cv_libfuse
 

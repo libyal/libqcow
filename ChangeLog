@@ -1,4 +1,6 @@
 TODO
+* fallback inflate implementation
+  - add addler32 support
 * add snapshot support
   - backing filename
   - in-image snapshots
@@ -20,6 +22,9 @@ Tests:
 * add concurrent open close test
 * add concurrent seek test ?
 * add password for encrypted QCOW images
+
+20160119
+* worked on fallback inflate implementation
 
 20160118
 * worked on fallback inflate implementation

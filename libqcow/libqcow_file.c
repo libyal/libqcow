@@ -1536,7 +1536,7 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 		if( libcnotify_verbose != 0 )
 		{
 			libcnotify_printf(
-			 "%s: level 1 table index\t\t\t\t: %" PRIu64 "\n",
+			 "%s: level 1 table index\t\t\t: %" PRIu64 "\n",
 			 function,
 			 level1_table_index );
 		}
@@ -1572,7 +1572,7 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 		if( libcnotify_verbose != 0 )
 		{
 			libcnotify_printf(
-			 "%s: level 2 table file offset\t\t\t: 0x%08" PRIx64 "\n",
+			 "%s: level 2 table file offset\t\t: 0x%08" PRIx64 "\n",
 			 function,
 			 level1_table_index );
 		}
@@ -1608,7 +1608,7 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 			if( libcnotify_verbose != 0 )
 			{
 				libcnotify_printf(
-				 "%s: level 2 table index\t\t\t\t: %" PRIu64 "\n",
+				 "%s: level 2 table index\t\t\t: %" PRIu64 "\n",
 				 function,
 				 level2_table_index );
 			}
@@ -1651,7 +1651,7 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 		if( libcnotify_verbose != 0 )
 		{
 			libcnotify_printf(
-			 "%s: cluster block file offset\t\t\t: 0x%08" PRIx64 "\n",
+			 "%s: cluster block file offset\t\t: 0x%08" PRIx64 "\n",
 			 function,
 			 cluster_block_file_offset );
 		}
@@ -1753,7 +1753,7 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 				 compressed_cluster_block_offset );
 
 				libcnotify_printf(
-				 "%s: compressed cluster block size\t\t\t: %" PRIzd "\n",
+				 "%s: compressed cluster block size\t\t: %" PRIzd "\n",
 				 function,
 				 compressed_cluster_block_size );
 			}
@@ -1786,8 +1786,9 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 					 error,
 					 LIBCERROR_ERROR_DOMAIN_IO,
 					 LIBCERROR_IO_ERROR_READ_FAILED,
-					 "%s: unable to read compressed cluster block.",
-					 function );
+					 "%s: unable to read compressed cluster block at offset: 0x%08" PRIx64".",
+					 function,
+					 compressed_cluster_block_offset );
 
 					libqcow_cluster_block_free(
 					 &cluster_block,
@@ -1851,12 +1852,25 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 					 error,
 					 LIBCERROR_ERROR_DOMAIN_ENCRYPTION,
 					 LIBCERROR_ENCRYPTION_ERROR_GENERIC,
-					 "%s: unable to decompress cluster block data.",
+					 "%s: unable to decompress cluster block data at offset: 0x%08" PRIx64".",
+					 function,
+					 compressed_cluster_block_offset );
+
+					return( -1 );
+				}
+/* TODO check cluster_block_data_size
+				if( cluster_block_data_size != cluster_block->data_size )
+				{
+					libcerror_error_set(
+					 error,
+					 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+					 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
+					 "%s: invalid cluster block size value out of bounds.",
 					 function );
 
 					return( -1 );
 				}
-/* TODO check cluster_block_data_size */
+*/
 			}
 			if( memory_copy(
 			     &( ( (uint8_t *) buffer )[ buffer_offset ] ),
@@ -1888,12 +1902,12 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 				if( libcnotify_verbose != 0 )
 				{
 					libcnotify_printf(
-					 "%s: last cluster block offset\t\t\t: 0x%08" PRIx64 "\n",
+					 "%s: last cluster block offset\t\t: 0x%08" PRIx64 "\n",
 					 function,
 					 cluster_block_file_offset );
 
 					libcnotify_printf(
-					 "%s: last cluster block size\t\t\t\t: %" PRIzd "\n",
+					 "%s: last cluster block size\t\t\t: %" PRIzd "\n",
 					 function,
 					 compressed_cluster_block_size );
 				}
