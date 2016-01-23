@@ -23,6 +23,9 @@ Tests:
 * add concurrent seek test ?
 * add password for encrypted QCOW images
 
+20160123
+* worked on fallback inflate implementation
+
 20160119
 * worked on fallback inflate implementation
 

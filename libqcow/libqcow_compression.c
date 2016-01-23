@@ -170,10 +170,6 @@ int libqcow_decompress_data(
 		          &zlib_stream,
 		          Z_FINISH );
 
-		if( result != Z_OK )
-		{
-			fprintf( stderr, "X: %d, %zd\n", result, zlib_stream.total_out );
-		}
 		if( result == Z_STREAM_END )
 		{
 			*uncompressed_data_size = (size_t) zlib_stream.total_out;
