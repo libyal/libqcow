@@ -189,6 +189,11 @@ run_tests()
 	return ${EXIT_SUCCESS};
 }
 
+if ! test -z ${SKIP_LIBRARY_TESTS};
+then
+	exit ${EXIT_IGNORE};
+fi
+
 TEST_READ="./${TEST_PREFIX}_test_read";
 
 if ! test -x "${TEST_READ}";

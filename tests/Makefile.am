@@ -16,7 +16,7 @@ AM_CPPFLAGS = \
 	@PTHREAD_CPPFLAGS@ \
 	@LIBQCOW_DLL_IMPORT@
 
-if HAVE_PYTHON
+if HAVE_PYTHON_TESTS
 TESTS_PYQCOW = \
 	test_pyqcow_open_close.sh \
 	test_pyqcow_seek.sh
@@ -52,6 +52,7 @@ qcow_test_open_close_SOURCES = \
 	qcow_test_libcerror.h \
 	qcow_test_libcstring.h \
 	qcow_test_libcsystem.h \
+	qcow_test_libcthreads.h \
 	qcow_test_libqcow.h \
 	qcow_test_open_close.c \
 	qcow_test_unused.h
@@ -59,6 +60,7 @@ qcow_test_open_close_SOURCES = \
 qcow_test_open_close_LDADD = \
 	@LIBCSYSTEM_LIBADD@ \
 	../libqcow/libqcow.la \
+	@LIBCTHREADS_LIBADD@ \
 	@LIBCERROR_LIBADD@ \
 	@LIBCSTRING_LIBADD@ \
 	@PTHREAD_LIBADD@

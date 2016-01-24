@@ -210,6 +210,11 @@ run_tests()
 	return ${EXIT_SUCCESS};
 }
 
+if ! test -z ${SKIP_TOOLS_TESTS};
+then
+	exit ${EXIT_IGNORE};
+fi
+
 INFO_TOOL="../${TEST_PREFIX}tools/${TEST_PREFIX}info";
 
 if ! test -x "${INFO_TOOL}";

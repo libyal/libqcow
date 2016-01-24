@@ -722,7 +722,7 @@ int qcow_test_read_from_file_multi_thread(
 
 		expected_offset = (off64_t) number_of_iterations * QCOW_TEST_READ_BUFFER_SIZE;
 
-		if( expected_offset > media_size )
+		if( (size64_t) expected_offset > media_size )
 		{
 			expected_offset = media_size;
 

@@ -198,6 +198,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\tests\qcow_test_libcthreads.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\tests\qcow_test_libqcow.h"
 				>
 			</File>

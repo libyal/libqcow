@@ -99,6 +99,11 @@ test_seek_password()
 	return ${RESULT};
 }
 
+if ! test -z ${SKIP_PYTHON_TESTS};
+then
+	exit ${EXIT_IGNORE};
+fi
+
 PYTHON=`which python${PYTHON_VERSION} 2> /dev/null`;
 
 if ! test -x ${PYTHON};

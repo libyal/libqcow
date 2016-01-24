@@ -53,7 +53,7 @@ int libqcow_decompress_data(
 	static char *function              = "libqcow_decompress_data";
 	int result                         = 0;
 
-#if defined( HAVE_ZLIB ) || defined( ZLIB_DLL )
+#if ( defined( HAVE_ZLIB ) && defined( HAVE_ZLIB_INFLATE ) ) || defined( ZLIB_DLL )
 	z_stream zlib_stream;
 #endif
 
@@ -103,7 +103,7 @@ int libqcow_decompress_data(
 	}
 	if( compression_method == LIBQCOW_COMPRESSION_METHOD_DEFLATE )
 	{
-#if defined( HAVE_ZLIB ) || defined( ZLIB_DLL )
+#if ( defined( HAVE_ZLIB ) && defined( HAVE_ZLIB_INFLATE ) ) || defined( ZLIB_DLL )
 		if( compressed_data_size > (size_t) ULONG_MAX )
 		{
 			libcerror_error_set(
@@ -154,7 +154,6 @@ int libqcow_decompress_data(
 		          &zlib_stream,
 		          -12 );
 #endif
-
 		if( result != Z_OK )
 		{
 			libcerror_error_set(
@@ -272,7 +271,7 @@ int libqcow_decompress_data(
 
 			return( -1 );
 		}
-#endif /* defined( HAVE_ZLIB ) || defined( ZLIB_DLL ) */
+#endif /* ( defined( HAVE_ZLIB ) && defined( HAVE_ZLIB_INFLATE ) ) || defined( ZLIB_DLL ) */
 	}
 	else
 	{
