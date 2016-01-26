@@ -25,6 +25,7 @@ EXIT_IGNORE=77;
 
 TEST_PREFIX="qcow";
 OPTION_SETS="password";
+INPUT_GLOB="*";
 
 list_contains()
 {
@@ -173,7 +174,7 @@ run_tests()
 		then
 			INPUT_FILES=`cat ${TEST_SET_DIR}/files | sed "s?^?${INPUT_DIR}/?"`;
 		else
-			INPUT_FILES=`ls ${INPUT_DIR}/*`;
+			INPUT_FILES=`ls ${INPUT_DIR}/${INPUT_GLOB}`;
 		fi
 
 		for INPUT_FILE in ${INPUT_FILES};

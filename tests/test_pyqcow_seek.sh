@@ -1,28 +1,14 @@
 #!/bin/bash
-#
 # Python-bindings seek testing script
 #
-# Copyright (C) 2010-2016, Joachim Metz <joachim.metz@gmail.com>
-#
-# Refer to AUTHORS for acknowledgements.
-#
-# This software is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This software is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this software.  If not, see <http://www.gnu.org/licenses/>.
-#
+# Version: 20160124
 
 EXIT_SUCCESS=0;
 EXIT_FAILURE=1;
 EXIT_IGNORE=77;
+
+TEST_PREFIX="qcow";
+INPUT_GLOB="*";
 
 list_contains()
 {
@@ -51,10 +37,10 @@ test_seek()
 
 	if test `uname -s` = 'Darwin';
 	then
-		DYLD_LIBRARY_PATH="../libqcow/.libs/" PYTHONPATH="../pyqcow/.libs/" ${PYTHON} ${SCRIPT} ${INPUT_FILE};
+		DYLD_LIBRARY_PATH="../lib${TEST_PREFIX}/.libs/" PYTHONPATH="../py${TEST_PREFIX}/.libs/" ${PYTHON} ${SCRIPT} ${INPUT_FILE};
 		RESULT=$?;
 	else
-		LD_LIBRARY_PATH="../libqcow/.libs/" PYTHONPATH="../pyqcow/.libs/" ${PYTHON} ${SCRIPT} ${INPUT_FILE};
+		LD_LIBRARY_PATH="../lib${TEST_PREFIX}/.libs/" PYTHONPATH="../py${TEST_PREFIX}/.libs/" ${PYTHON} ${SCRIPT} ${INPUT_FILE};
 		RESULT=$?;
 	fi
 
@@ -69,7 +55,7 @@ test_seek_password()
 	INPUT_FILE=$2;
 	BASENAME=`basename ${INPUT_FILE}`;
 	RESULT=${EXIT_FAILURE};
-	PASSWORDFILE="input/.pyqcow/${DIRNAME}/${BASENAME}.password";
+	PASSWORDFILE="input/.py${TEST_PREFIX}/${DIRNAME}/${BASENAME}.password";
 
 	if test -f "${PASSWORDFILE}";
 	then
@@ -82,10 +68,10 @@ test_seek_password()
 
 		if test `uname -s` = 'Darwin';
 		then
-			DYLD_LIBRARY_PATH="../libqcow/.libs/" PYTHONPATH="../pyqcow/.libs/" ${PYTHON} ${SCRIPT} -p${PASSWORD} ${INPUT_FILE};
+			DYLD_LIBRARY_PATH="../lib${TEST_PREFIX}/.libs/" PYTHONPATH="../py${TEST_PREFIX}/.libs/" ${PYTHON} ${SCRIPT} -p${PASSWORD} ${INPUT_FILE};
 			RESULT=$?;
 		else
-			LD_LIBRARY_PATH="../libqcow/.libs/" PYTHONPATH="../pyqcow/.libs/" ${PYTHON} ${SCRIPT} -p${PASSWORD} ${INPUT_FILE};
+			LD_LIBRARY_PATH="../lib${TEST_PREFIX}/.libs/" PYTHONPATH="../py${TEST_PREFIX}/.libs/" ${PYTHON} ${SCRIPT} -p${PASSWORD} ${INPUT_FILE};
 			RESULT=$?;
 		fi
 
@@ -120,7 +106,7 @@ then
 	exit ${EXIT_IGNORE};
 fi
 
-SCRIPT="pyqcow_test_seek.py";
+SCRIPT="py${TEST_PREFIX}_test_seek.py";
 
 if ! test -f ${SCRIPT};
 then
@@ -143,9 +129,9 @@ then
 else
 	IGNORELIST="";
 
-	if test -f "input/.pyqcow/ignore";
+	if test -f "input/.py${TEST_PREFIX}/ignore";
 	then
-		IGNORELIST=`cat input/.pyqcow/ignore | sed '/^#/d'`;
+		IGNORELIST=`cat input/.py${TEST_PREFIX}/ignore | sed '/^#/d'`;
 	fi
 	for TESTDIR in input/*;
 	do
@@ -155,17 +141,17 @@ else
 
 			if ! list_contains "${IGNORELIST}" "${DIRNAME}";
 			then
-				if test -f "input/.pyqcow/${DIRNAME}/files";
+				if test -f "input/.py${TEST_PREFIX}/${DIRNAME}/files";
 				then
-					TEST_FILES=`cat input/.pyqcow/${DIRNAME}/files | sed "s?^?${TESTDIR}/?"`;
+					TEST_FILES=`cat input/.py${TEST_PREFIX}/${DIRNAME}/files | sed "s?^?${TESTDIR}/?"`;
 				else
-					TEST_FILES=`ls -1 ${TESTDIR}/* 2> /dev/null`;
+					TEST_FILES=`ls -1 ${TESTDIR}/${INPUT_GLOB} 2> /dev/null`;
 				fi
 				for TEST_FILE in ${TEST_FILES};
 				do
 					BASENAME=`basename ${TEST_FILE}`;
 
-					if test -f "input/.pyqcow/${DIRNAME}/${BASENAME}.password";
+					if test -f "input/.py${TEST_PREFIX}/${DIRNAME}/${BASENAME}.password";
 					then
 						if ! test_seek_password "${DIRNAME}" "${TEST_FILE}";
 						then
