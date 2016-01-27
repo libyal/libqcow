@@ -1,13 +1,16 @@
 #!/bin/bash
 # Library read testing script
 #
-# Version: 20160124
+# Version: 20160126
 
 EXIT_SUCCESS=0;
 EXIT_FAILURE=1;
 EXIT_IGNORE=77;
 
-TEST_PREFIX="qcow";
+TEST_PREFIX=`pwd`;
+TEST_PREFIX=`dirname ${TEST_PREFIX}`;
+TEST_PREFIX=`basename ${TEST_PREFIX} | sed 's/^lib//'`;
+
 TEST_EXECUTABLE="${TEST_PREFIX}_test_read";
 OPTION_SETS="password";
 INPUT_GLOB="*";

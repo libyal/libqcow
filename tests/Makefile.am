@@ -19,7 +19,8 @@ AM_CPPFLAGS = \
 if HAVE_PYTHON_TESTS
 TESTS_PYQCOW = \
 	test_pyqcow_open_close.sh \
-	test_pyqcow_seek.sh
+	test_pyqcow_seek.sh \
+	test_pyqcow_read.sh
 endif
 
 TESTS = \
@@ -31,9 +32,11 @@ TESTS = \
 
 check_SCRIPTS = \
 	pyqcow_test_open_close.py \
+	pyqcow_test_read.py \
 	pyqcow_test_seek.py \
 	test_open_close.sh \
 	test_pyqcow_open_close.sh \
+	test_pyqcow_read.sh \
 	test_pyqcow_seek.sh \
 	test_qcowinfo.sh \
 	test_read.sh \

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Python-bindings seek testing script
+# Python-bindings read testing script
 #
 # Version: 20160127
 
@@ -11,7 +11,7 @@ TEST_PREFIX=`pwd`;
 TEST_PREFIX=`dirname ${TEST_PREFIX}`;
 TEST_PREFIX=`basename ${TEST_PREFIX} | sed 's/^lib//'`;
 
-TEST_SCRIPT="py${TEST_PREFIX}_test_seek.py";
+TEST_SCRIPT="py${TEST_PREFIX}_test_read.py";
 OPTION_SETS="password";
 INPUT_GLOB="*";
 
@@ -196,7 +196,7 @@ OLDIFS=${IFS};
 IFS="
 ";
 
-run_tests "py${TEST_PREFIX}" "seek" "${TEST_SEEK}";
+run_tests "py${TEST_PREFIX}" "read" "${TEST_SEEK}";
 
 RESULT=$?;
 
