@@ -33,15 +33,15 @@
 
 /* The following type definitions hide internal data structures
  */
-#if defined( HAVE_DEBUG_OUTPUT )
-typedef struct libqcow_file {}		libqcow_file_t;
+#if defined( HAVE_DEBUG_OUTPUT ) && !defined( WINAPI )
+typedef struct libqcow_file {}	libqcow_file_t;
 
 #else
 typedef intptr_t libqcow_file_t;
 
-#endif
+#endif /* defined( HAVE_DEBUG_OUTPUT ) && !defined( WINAPI ) */
 
 #endif /* defined( HAVE_LOCAL_LIBQCOW ) */
 
-#endif
+#endif /* !defined( _LIBQCOW_INTERNAL_TYPES_H ) */
 

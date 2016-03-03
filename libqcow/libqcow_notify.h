@@ -53,11 +53,11 @@ LIBQCOW_EXTERN \
 int libqcow_notify_stream_close(
      libcerror_error_t **error );
 
-#endif
+#endif /* !defined( HAVE_LOCAL_LIBQCOW ) */
 
 #if defined( __cplusplus )
 }
 #endif
 
-#endif
+#endif /* !defined( _LIBQCOW_NOTIFY_H ) */
 

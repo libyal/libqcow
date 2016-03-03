@@ -80,11 +80,11 @@ enum LIBQCOW_CODEPAGES
 	LIBQCOW_CODEPAGE_WINDOWS_1258			= 1258
 };
 
-#endif
+#endif /* !defined( HAVE_LOCAL_LIBQCOW ) */
 
 #if defined( __cplusplus )
 }
 #endif
 
-#endif
+#endif /* !defined( _LIBQCOW_INTERNAL_CODEPAGE_H ) */
 

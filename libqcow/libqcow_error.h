@@ -64,11 +64,11 @@ int libqcow_error_backtrace_sprint(
      char *string,
      size_t size );
 
-#endif
+#endif /* !defined( HAVE_LOCAL_LIBQCOW ) */
 
 #if defined( __cplusplus )
 }
 #endif
 
-#endif
+#endif /* !defined( _LIBQCOW_INTERNAL_ERROR_H ) */
 
