@@ -33,5 +33,5 @@
 
 #include <libqcow.h>
 
-#endif
+#endif /* !defined( _QCOW_TEST_LIBQCOW_H ) */
 
