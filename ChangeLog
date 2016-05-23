@@ -10,6 +10,8 @@ File format:
 * reference count support
 
 Tools:
+* qcowmount - fuse version
+  - fuse multi thread support
 * qcowmount - dokan version
   - have it run in background (using CreateProcess)?
   - what about unmount?
@@ -24,6 +26,7 @@ Tests:
 * libqcow_get_codepage
 * libqcow_set_codepage
 * libqcow_check_file_signature and libqcow_check_file_signature_wide
+* thread-safety
 
 20160403
 * worked on tests

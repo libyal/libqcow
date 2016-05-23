@@ -30,32 +30,45 @@
 #include "qcow_test_libqcow.h"
 #include "qcow_test_unused.h"
 
+/* Tests retrieving the library version
+ * Returns 1 if successful or 0 if not
+ */
+int qcow_test_get_version(
+     void )
+{
+	const char *version_string = NULL;
+	int result                 = 0;
+
+	version_string = libqcow_get_version();
+
+	result = libcstring_narrow_string_compare(
+	          version_string,
+	          LIBQCOW_VERSION_STRING,
+	          9 );
+
+	if( result != 0 )
+	{
+		return( 0 );
+	}
+	return( 1 );
+}
+
 /* The main program
  */
 #if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
-int wmain( int argc, wchar_t * const argv[] QCOW_TEST_ATTRIBUTE_UNUSED )
+int wmain(
+     int argc QCOW_TEST_ATTRIBUTE_UNUSED,
+     wchar_t * const argv[] QCOW_TEST_ATTRIBUTE_UNUSED )
 #else
-int main( int argc, char * const argv[] QCOW_TEST_ATTRIBUTE_UNUSED )
+int main(
+     int argc QCOW_TEST_ATTRIBUTE_UNUSED,
+     char * const argv[] QCOW_TEST_ATTRIBUTE_UNUSED )
 #endif
 {
-	const char *version_string = NULL;
-
+	QCOW_TEST_UNREFERENCED_PARAMETER( argc )
 	QCOW_TEST_UNREFERENCED_PARAMETER( argv )
 
-	if( argc != 1 )
-	{
-		fprintf(
-		 stderr,
-		 "Unsupported number of arguments.\n" );
-
-		return( EXIT_FAILURE );
-	}
-	version_string = libqcow_get_version();
-
-	if( libcstring_narrow_string_compare(
-	     version_string,
-	     LIBQCOW_VERSION_STRING,
-	     9 ) != 0 )
+	if( qcow_test_get_version() != 1 )
 	{
 		return( EXIT_FAILURE );
 	}

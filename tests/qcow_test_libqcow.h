@@ -24,10 +24,10 @@
 
 #include <common.h>
 
-/* If Cygwin libtool DLL support is enabled set LIBQCOW_DLL_IMPORT
- * before including libqcow.h
+/* If Cygwin libtool DLL support is enabled and do not want to create static
+ * executables set LIBQCOW_DLL_IMPORT before including libqcow.h
  */
-#if defined( _WIN32 ) && defined( DLL_EXPORT )
+#if defined( _WIN32 ) && defined( DLL_EXPORT ) && !defined( HAVE_STATIC_EXECUTABLES )
 #define LIBQCOW_DLL_IMPORT
 #endif
 
