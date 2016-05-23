@@ -27,6 +27,7 @@ TESTS = \
 	$(TESTS_PYQCOW)
 
 check_SCRIPTS = \
+	pyqcow_test_get_version.py \
 	pyqcow_test_open_close.py \
 	pyqcow_test_read.py \
 	pyqcow_test_seek.py \
