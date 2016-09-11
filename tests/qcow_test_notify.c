@@ -1,5 +1,5 @@
 /*
- * Library get version test program
+ * Library notification functions test program
  *
  * Copyright (C) 2010-2016, Joachim Metz <joachim.metz@gmail.com>
  *
@@ -25,36 +25,67 @@
 #include <stdlib.h>
 #endif
 
-#include "qcow_test_libcstring.h"
+#include "qcow_test_libcerror.h"
 #include "qcow_test_libqcow.h"
 #include "qcow_test_macros.h"
 #include "qcow_test_unused.h"
 
-/* Tests retrieving the library version
+/* Tests the libqcow_notify_set_verbose function
  * Returns 1 if successful or 0 if not
  */
-int qcow_test_get_version(
+int qcow_test_notify_set_verbose(
      void )
 {
-	const char *version_string = NULL;
-	int result                 = 0;
-
-	version_string = libqcow_get_version();
-
-	result = libcstring_narrow_string_compare(
-	          version_string,
-	          LIBQCOW_VERSION_STRING,
-	          9 );
-
-	QCOW_TEST_ASSERT_EQUAL_INT(
-	 "result",
-	 result,
+	/* Test invocation of function only
+	 */
+	libqcow_notify_set_verbose(
 	 0 );
 
 	return( 1 );
+}
 
-on_error:
-	return( 0 );
+/* Tests the libqcow_notify_set_stream function
+ * Returns 1 if successful or 0 if not
+ */
+int qcow_test_notify_set_stream(
+     void )
+{
+	/* Test invocation of function only
+	 */
+	libqcow_notify_set_stream(
+	 NULL,
+	 NULL );
+
+	return( 1 );
+}
+
+/* Tests the libqcow_notify_stream_open function
+ * Returns 1 if successful or 0 if not
+ */
+int qcow_test_notify_stream_open(
+     void )
+{
+	/* Test invocation of function only
+	 */
+	libqcow_notify_stream_open(
+	 NULL,
+	 NULL );
+
+	return( 1 );
+}
+
+/* Tests the libqcow_notify_stream_close function
+ * Returns 1 if successful or 0 if not
+ */
+int qcow_test_notify_stream_close(
+     void )
+{
+	/* Test invocation of function only
+	 */
+	libqcow_notify_stream_close(
+	 NULL );
+
+	return( 1 );
 }
 
 /* The main program
@@ -73,8 +104,20 @@ int main(
 	QCOW_TEST_UNREFERENCED_PARAMETER( argv )
 
 	QCOW_TEST_RUN(
-	 "libqcow_get_version",
-	 qcow_test_get_version() )
+	 "libqcow_notify_set_verbose",
+	 qcow_test_notify_set_verbose() )
+
+	QCOW_TEST_RUN(
+	 "libqcow_notify_set_stream",
+	 qcow_test_notify_set_stream() )
+
+	QCOW_TEST_RUN(
+	 "libqcow_notify_stream_open",
+	 qcow_test_notify_stream_open() )
+
+	QCOW_TEST_RUN(
+	 "libqcow_notify_stream_close",
+	 qcow_test_notify_stream_close() )
 
 	return( EXIT_SUCCESS );
 

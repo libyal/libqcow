@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9,00"
-	Name="qcow_test_get_version"
-	ProjectGUID="{F673B502-EC2F-42B6-9303-B1E50200794E}"
-	RootNamespace="qcow_test_get_version"
+	Name="qcow_test_error"
+	ProjectGUID="{D3AB031E-167D-4F14-8ACD-3BE3B4B91C73}"
+	RootNamespace="qcow_test_error"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="131072"
 	>
@@ -176,7 +176,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\tests\qcow_test_get_version.c"
+				RelativePath="..\..\tests\qcow_test_error.c"
 				>
 			</File>
 		</Filter>

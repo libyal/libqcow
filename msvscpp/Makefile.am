@@ -17,6 +17,7 @@ MSVSCPP_FILES = \
 	libqcow/libqcow.vcproj \
 	libuna/libuna.vcproj \
 	pyqcow/pyqcow.vcproj \
+	qcow_test_error/qcow_test_error.vcproj \
 	qcow_test_file_get_values/qcow_test_file_get_values.vcproj \
 	qcow_test_get_version/qcow_test_get_version.vcproj \
 	qcow_test_open_close/qcow_test_open_close.vcproj \
@@ -27,17 +28,8 @@ MSVSCPP_FILES = \
 	zlib/zlib.vcproj \
 	libqcow.sln
 
-SCRIPT_FILES = \
-	scripts/vs2008_x64.sh \
-	scripts/vs2008_x64_sln.sed \
-	scripts/vs2008_x64_vcproj.sed \
-	scripts/vs2010_x64.sh \
-	scripts/vs2010_x64_sln.sed \
-	scripts/vs2010_x64_vcxproj.sed
-
 EXTRA_DIST = \
-	$(MSVSCPP_FILES) \
-	$(SCRIPT_FILES)
+	$(MSVSCPP_FILES)
 
 MAINTAINERCLEANFILES = \
 	Makefile.in
