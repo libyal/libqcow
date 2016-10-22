@@ -126,11 +126,11 @@ stamp-h[1-9]
 /tests/input
 /tests/qcow_test_error
 /tests/qcow_test_file_get_values
-/tests/qcow_test_get_version
 /tests/qcow_test_notify
 /tests/qcow_test_open_close
 /tests/qcow_test_read
 /tests/qcow_test_seek
+/tests/qcow_test_support
 /tests/tmp*
 
 # Local library dependencies specific files

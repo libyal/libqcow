@@ -19,10 +19,11 @@ MSVSCPP_FILES = \
 	pyqcow/pyqcow.vcproj \
 	qcow_test_error/qcow_test_error.vcproj \
 	qcow_test_file_get_values/qcow_test_file_get_values.vcproj \
-	qcow_test_get_version/qcow_test_get_version.vcproj \
+	qcow_test_notify/qcow_test_notify.vcproj \
 	qcow_test_open_close/qcow_test_open_close.vcproj \
 	qcow_test_read/qcow_test_read.vcproj \
 	qcow_test_seek/qcow_test_seek.vcproj \
+	qcow_test_support/qcow_test_support.vcproj \
 	qcowinfo/qcowinfo.vcproj \
 	qcowmount/qcowmount.vcproj \
 	zlib/zlib.vcproj \
