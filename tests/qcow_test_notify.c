@@ -105,19 +105,19 @@ int main(
 
 	QCOW_TEST_RUN(
 	 "libqcow_notify_set_verbose",
-	 qcow_test_notify_set_verbose() )
+	 qcow_test_notify_set_verbose )
 
 	QCOW_TEST_RUN(
 	 "libqcow_notify_set_stream",
-	 qcow_test_notify_set_stream() )
+	 qcow_test_notify_set_stream )
 
 	QCOW_TEST_RUN(
 	 "libqcow_notify_stream_open",
-	 qcow_test_notify_stream_open() )
+	 qcow_test_notify_stream_open )
 
 	QCOW_TEST_RUN(
 	 "libqcow_notify_stream_close",
-	 qcow_test_notify_stream_close() )
+	 qcow_test_notify_stream_close )
 
 	return( EXIT_SUCCESS );
 

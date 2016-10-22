@@ -123,23 +123,23 @@ int main(
 
 	QCOW_TEST_RUN(
 	 "libqcow_error_free",
-	 qcow_test_error_free() )
+	 qcow_test_error_free );
 
 	QCOW_TEST_RUN(
 	 "libqcow_error_fprint",
-	 qcow_test_error_fprint() )
+	 qcow_test_error_fprint );
 
 	QCOW_TEST_RUN(
 	 "libqcow_error_sprint",
-	 qcow_test_error_sprint() )
+	 qcow_test_error_sprint );
 
 	QCOW_TEST_RUN(
 	 "libqcow_error_backtrace_fprint",
-	 qcow_test_error_backtrace_fprint() )
+	 qcow_test_error_backtrace_fprint );
 
 	QCOW_TEST_RUN(
 	 "libqcow_error_backtrace_sprint",
-	 qcow_test_error_backtrace_sprint() )
+	 qcow_test_error_backtrace_sprint );
 
 	return( EXIT_SUCCESS );
 
