@@ -18,12 +18,19 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
-#
 
+from __future__ import print_function
 import argparse
 import sys
 
 import pyqcow
+
+
+def get_filename_string(filename):
+  """Retrieves a human readable string representation of the filename."""
+  if not filename:
+    return "None"
+  return filename
 
 
 def get_mode_string(mode):
@@ -37,21 +44,18 @@ def get_mode_string(mode):
   return mode_string
 
 
-def pyqcow_test_single_open_close_file(filename, mode, password=None):
-  if not filename:
-    filename_string = "None"
-  else:
-    filename_string = filename
+def pyqcow_test_single_open_close_file(filename, mode):
+  """Tests a single open and close."""
+  description = (
+      "Testing single open close of: {0:s} with access: {1:s}"
+      "\t").format(get_filename_string(filename), get_mode_string(mode))
+  print(description, end="")
 
-  print("Testing single open close of: {0:s} with access: {1:s}\t".format(
-      filename_string, get_mode_string(mode)))
-
+  error_string = None
   result = True
+
   try:
     qcow_file = pyqcow.file()
-
-    if password:
-      qcow_file.set_password(password)
 
     qcow_file.open(filename, mode)
     qcow_file.close()
@@ -65,7 +69,7 @@ def pyqcow_test_single_open_close_file(filename, mode, password=None):
       pass
 
     else:
-      print(str(exception))
+      error_string = str(exception)
       result = False
 
   except ValueError as exception:
@@ -74,30 +78,35 @@ def pyqcow_test_single_open_close_file(filename, mode, password=None):
             "pyqcow_file_open")
 
     if mode != "w" or str(exception) != expected_message:
-      print(str(exception))
+      error_string = str(exception)
       result = False
 
   except Exception as exception:
-    print(str(exception))
+    error_string = str(exception)
     result = False
 
   if not result:
     print("(FAIL)")
   else:
     print("(PASS)")
+
+  if error_string:
+    print(error_string)
   return result
 
 
-def pyqcow_test_multi_open_close_file(filename, mode, password=None):
-  print("Testing multi open close of: {0:s} with access: {1:s}\t".format(
-      filename, get_mode_string(mode)))
+def pyqcow_test_multi_open_close_file(filename, mode):
+  """Tests multiple open and close."""
+  description = (
+      "Testing multi open close of: {0:s} with access: {1:s}"
+      "\t").format(get_filename_string(filename), get_mode_string(mode))
+  print(description, end="")
 
+  error_string = None
   result = True
+
   try:
     qcow_file = pyqcow.file()
-
-    if password:
-      qcow_file.set_password(password)
 
     qcow_file.open(filename, mode)
     qcow_file.close()
@@ -105,82 +114,98 @@ def pyqcow_test_multi_open_close_file(filename, mode, password=None):
     qcow_file.close()
 
   except Exception as exception:
-    print(str(exception))
+    error_string = str(exception)
     result = False
 
   if not result:
     print("(FAIL)")
   else:
     print("(PASS)")
+
+  if error_string:
+    print(error_string)
   return result
 
 
-def pyqcow_test_single_open_close_file_object(filename, mode, password=None):
-  print(("Testing single open close of file-like object of: {0:s} "
-         "with access: {1:s}\t").format(filename, get_mode_string(mode)))
+def pyqcow_test_single_open_close_file_object(filename, mode):
+  """Tests a single file-like object open and close."""
+  description = (
+      "Testing single open close of file-like object of: {0:s} with access: "
+      "{1:s}\t").format(get_filename_string(filename), get_mode_string(mode))
+  print(description, end="")
 
+  error_string = None
   result = True
+
   try:
     file_object = open(filename, "rb")
     qcow_file = pyqcow.file()
-
-    if password:
-      qcow_file.set_password(password)
 
     qcow_file.open_file_object(file_object, mode)
     qcow_file.close()
 
   except Exception as exception:
-    print(str(exception))
+    error_string = str(exception)
     result = False
 
   if not result:
     print("(FAIL)")
   else:
     print("(PASS)")
+
+  if error_string:
+    print(error_string)
   return result
 
 
 def pyqcow_test_single_open_close_file_object_with_dereference(
-    filename, mode, password=None):
-  print(("Testing single open close of file-like object with dereference "
-         "of: {0:s} with access: {1:s}\t").format(
-      filename, get_mode_string(mode)))
+    filename, mode):
+  """Tests single file-like object open and close with dereference."""
+  description = (
+      "Testing single open close of file-like object with dereference of: "
+      "{0:s} with access: {1:s}\t").format(
+          get_filename_string(filename), get_mode_string(mode))
+  print(description, end="")
 
+  error_string = None
   result = True
+
   try:
     file_object = open(filename, "rb")
     qcow_file = pyqcow.file()
-
-    if password:
-      qcow_file.set_password(password)
 
     qcow_file.open_file_object(file_object, mode)
     del file_object
     qcow_file.close()
 
   except Exception as exception:
-    print(str(exception))
+    error_string = str(exception)
     result = False
 
   if not result:
     print("(FAIL)")
   else:
     print("(PASS)")
+
+  if error_string:
+    print(error_string)
   return result
 
 
-def pyqcow_test_multi_open_close_file_object(filename, mode, password=None):
-  print(("Testing multi open close of file-like object of: {0:s} "
-         "with access: {1:s}\t").format(filename, get_mode_string(mode)))
+def pyqcow_test_multi_open_close_file_object(filename, mode):
+  """Tests multiple file-like object open and close."""
+  description = (
+      "Testing multi open close of file-like object of: {0:s} "
+      "with access: {1:s}\t").format(
+          get_filename_string(filename), get_mode_string(mode))
+  print(description, end="")
 
+  error_string = None
   result = True
+
   try:
     file_object = open(filename, "rb")
     qcow_file = pyqcow.file()
-
-    if password:
-      qcow_file.set_password(password)
 
     qcow_file.open_file_object(file_object, mode)
     qcow_file.close()
@@ -188,27 +213,26 @@ def pyqcow_test_multi_open_close_file_object(filename, mode, password=None):
     qcow_file.close()
 
   except Exception as exception:
-    print(str(exception))
+    error_string = str(exception)
     result = False
 
   if not result:
     print("(FAIL)")
   else:
     print("(PASS)")
+
+  if error_string:
+    print(error_string)
   return result
 
 
 def main():
-  args_parser = argparse.ArgumentParser(description=(
-      "Tests open and close."))
+  args_parser = argparse.ArgumentParser(
+      description="Tests open and close.")
 
   args_parser.add_argument(
       "source", nargs="?", action="store", metavar="FILENAME",
       default=None, help="The source filename.")
-
-  args_parser.add_argument(
-      "-p", dest="password", action="store", metavar="PASSWORD",
-      default=None, help="The password.")
 
   options = args_parser.parse_args()
 
@@ -219,32 +243,27 @@ def main():
     print("")
     return False
 
-  if not pyqcow_test_single_open_close_file(
-      options.source, "r", password=options.password):
+  if not pyqcow_test_single_open_close_file(options.source, "r"):
     return False
 
-  if not pyqcow_test_single_open_close_file(
-      None, "r", password=options.password):
+  if not pyqcow_test_single_open_close_file(None, "r"):
     return False
 
-  if not pyqcow_test_single_open_close_file(
-      options.source, "w", password=options.password):
+  if not pyqcow_test_single_open_close_file(options.source, "w"):
     return False
 
-  if not pyqcow_test_multi_open_close_file(
-      options.source, "r", password=options.password):
+  if not pyqcow_test_multi_open_close_file(options.source, "r"):
     return False
 
-  if not pyqcow_test_single_open_close_file_object(
-      options.source, "r", password=options.password):
+  if not pyqcow_test_single_open_close_file_object(options.source, "r"):
     return False
 
   if not pyqcow_test_single_open_close_file_object_with_dereference(
-      options.source, "r", password=options.password):
+      options.source, "r"):
     return False
 
   if not pyqcow_test_multi_open_close_file_object(
-      options.source, "r", password=options.password):
+      options.source, "r"):
     return False
 
   return True
@@ -255,4 +274,3 @@ if __name__ == "__main__":
     sys.exit(1)
   else:
     sys.exit(0)
-

@@ -2,7 +2,6 @@ if HAVE_PYTHON
 AM_CFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/common \
-	@LIBCSTRING_CPPFLAGS@ \
 	@LIBCERROR_CPPFLAGS@ \
 	@LIBCDATA_CPPFLAGS@ \
 	@LIBCLOCALE_CPPFLAGS@ \
@@ -24,13 +23,11 @@ pyqcow_la_SOURCES = \
 	pyqcow_libbfio.h \
 	pyqcow_libcerror.h \
 	pyqcow_libclocale.h \
-	pyqcow_libcstring.h \
 	pyqcow_libqcow.h \
 	pyqcow_python.h \
 	pyqcow_unused.h
 
 pyqcow_la_LIBADD = \
-	@LIBCSTRING_LIBADD@ \
 	@LIBCERROR_LIBADD@ \
 	../libqcow/libqcow.la \
 	@LIBCDATA_LIBADD@ \

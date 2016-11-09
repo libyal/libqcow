@@ -28,7 +28,6 @@
 #include "pyqcow_integer.h"
 #include "pyqcow_libbfio.h"
 #include "pyqcow_libcerror.h"
-#include "pyqcow_libcstring.h"
 #include "pyqcow_python.h"
 
 /* Creates a file object IO handle

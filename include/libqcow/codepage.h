@@ -118,5 +118,5 @@ enum LIBQCOW_CODEPAGES
 }
 #endif
 
-#endif
+#endif /* !defined( _LIBQCOW_CODEPAGE_H ) */
 

@@ -27,7 +27,6 @@
 #include "info_handle.h"
 #include "qcowtools_libcerror.h"
 #include "qcowtools_libcnotify.h"
-#include "qcowtools_libcstring.h"
 #include "qcowtools_libqcow.h"
 
 #define INFO_HANDLE_NOTIFY_STREAM		stdout
@@ -211,7 +210,7 @@ int info_handle_signal_abort(
  */
 int info_handle_open_input(
      info_handle_t *info_handle,
-     const libcstring_system_character_t *filename,
+     const system_character_t *filename,
      libcerror_error_t **error )
 {
 	static char *function = "info_handle_open_input";
@@ -228,7 +227,7 @@ int info_handle_open_input(
 
 		return( -1 );
 	}
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 	result = libqcow_file_open_wide(
 	          info_handle->input_file,
 	          filename,

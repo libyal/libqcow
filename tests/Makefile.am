@@ -1,7 +1,6 @@
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/common \
-	@LIBCSTRING_CPPFLAGS@ \
 	@LIBCERROR_CPPFLAGS@ \
 	@LIBCTHREADS_CPPFLAGS@ \
 	@LIBCDATA_CPPFLAGS@ \
@@ -50,42 +49,35 @@ check_PROGRAMS = \
 
 qcow_test_error_SOURCES = \
 	qcow_test_error.c \
-	qcow_test_libcstring.h \
 	qcow_test_libqcow.h \
 	qcow_test_macros.h \
 	qcow_test_unused.h
 
 qcow_test_error_LDADD = \
-	../libqcow/libqcow.la \
-	@LIBCSTRING_LIBADD@
+	../libqcow/libqcow.la
 
 qcow_test_file_get_values_SOURCES = \
 	qcow_test_file_get_values.c \
 	qcow_test_libcerror.h \
-	qcow_test_libcstring.h \
 	qcow_test_libqcow.h \
 	qcow_test_unused.h
 
 qcow_test_file_get_values_LDADD = \
 	@LIBCSYSTEM_LIBADD@ \
 	../libqcow/libqcow.la \
-	@LIBCERROR_LIBADD@ \
-	@LIBCSTRING_LIBADD@
+	@LIBCERROR_LIBADD@
 
 qcow_test_notify_SOURCES = \
-	qcow_test_libcstring.h \
 	qcow_test_libqcow.h \
 	qcow_test_macros.h \
 	qcow_test_notify.c \
 	qcow_test_unused.h
 
 qcow_test_notify_LDADD = \
-	../libqcow/libqcow.la \
-	@LIBCSTRING_LIBADD@
+	../libqcow/libqcow.la
 
 qcow_test_open_close_SOURCES = \
 	qcow_test_libcerror.h \
-	qcow_test_libcstring.h \
 	qcow_test_libcsystem.h \
 	qcow_test_libcthreads.h \
 	qcow_test_libqcow.h \
@@ -96,13 +88,11 @@ qcow_test_open_close_LDADD = \
 	@LIBCSYSTEM_LIBADD@ \
 	../libqcow/libqcow.la \
 	@LIBCTHREADS_LIBADD@ \
-	@LIBCERROR_LIBADD@ \
-	@LIBCSTRING_LIBADD@ \
+	@LIBCERROR_LIBADD@
 	@PTHREAD_LIBADD@
 
 qcow_test_read_SOURCES = \
 	qcow_test_libcerror.h \
-	qcow_test_libcstring.h \
 	qcow_test_libcsystem.h \
 	qcow_test_libcthreads.h \
 	qcow_test_libqcow.h \
@@ -113,13 +103,11 @@ qcow_test_read_LDADD = \
 	@LIBCSYSTEM_LIBADD@ \
 	../libqcow/libqcow.la \
 	@LIBCTHREADS_LIBADD@ \
-	@LIBCERROR_LIBADD@ \
-	@LIBCSTRING_LIBADD@ \
+	@LIBCERROR_LIBADD@
 	@PTHREAD_LIBADD@
 
 qcow_test_seek_SOURCES = \
 	qcow_test_libcerror.h \
-	qcow_test_libcstring.h \
 	qcow_test_libcsystem.h \
 	qcow_test_libqcow.h \
 	qcow_test_seek.c \
@@ -128,20 +116,17 @@ qcow_test_seek_SOURCES = \
 qcow_test_seek_LDADD = \
 	@LIBCSYSTEM_LIBADD@ \
 	../libqcow/libqcow.la \
-	@LIBCERROR_LIBADD@ \
-	@LIBCSTRING_LIBADD@ \
+	@LIBCERROR_LIBADD@
 	@PTHREAD_LIBADD@
 
 qcow_test_support_SOURCES = \
-	qcow_test_libcstring.h \
 	qcow_test_libqcow.h \
 	qcow_test_macros.h \
 	qcow_test_support.c \
 	qcow_test_unused.h
 
 qcow_test_support_LDADD = \
-	../libqcow/libqcow.la \
-	@LIBCSTRING_LIBADD@
+	../libqcow/libqcow.la
 
 MAINTAINERCLEANFILES = \
 	Makefile.in

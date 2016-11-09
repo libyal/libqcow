@@ -27,7 +27,6 @@
 
 #include "pyqcow_libbfio.h"
 #include "pyqcow_libcerror.h"
-#include "pyqcow_libcstring.h"
 #include "pyqcow_python.h"
 
 #if defined( __cplusplus )

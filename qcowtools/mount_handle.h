@@ -29,7 +29,6 @@
 #include "qcowtools_libcdata.h"
 #include "qcowtools_libcerror.h"
 #include "qcowtools_libcnotify.h"
-#include "qcowtools_libcstring.h"
 #include "qcowtools_libqcow.h"
 
 #if defined( __cplusplus )
@@ -42,13 +41,13 @@ struct mount_handle
 {
 	/* The basename
 	 */
-	libcstring_system_character_t *basename;
+	system_character_t *basename;
 
 	/* The basename size
 	 */
 	size_t basename_size;
 
-	/* The input files arry
+	/* The input files array
 	 */
 	libcdata_array_t *input_files_array;
 
@@ -62,7 +61,7 @@ struct mount_handle
 
 	/* The password
 	 */
-	const libcstring_system_character_t *password;
+	const system_character_t *password;
 
 	/* The password length
 	 */
@@ -87,17 +86,17 @@ int mount_handle_signal_abort(
 
 int mount_handle_set_keys(
      mount_handle_t *mount_handle,
-     const libcstring_system_character_t *string,
+     const system_character_t *string,
      libcerror_error_t **error );
 
 int mount_handle_set_password(
      mount_handle_t *mount_handle,
-     const libcstring_system_character_t *string,
+     const system_character_t *string,
      libcerror_error_t **error );
 
 int mount_handle_open_input(
      mount_handle_t *mount_handle,
-     const libcstring_system_character_t *filename,
+     const system_character_t *filename,
      libcerror_error_t **error );
 
 int mount_handle_close(
@@ -131,7 +130,7 @@ int mount_handle_get_number_of_input_files(
 
 int mount_handle_set_basename(
      mount_handle_t *mount_handle,
-     const libcstring_system_character_t *basename,
+     const system_character_t *basename,
      size_t basename_size,
      libcerror_error_t **error );
 

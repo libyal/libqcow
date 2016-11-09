@@ -24,6 +24,10 @@
 
 #include <common.h>
 
+/* Define HAVE_LOCAL_LIBQCOW for local use of libqcow
+ */
+#if !defined( HAVE_LOCAL_LIBQCOW )
+
 /* If libtool DLL support is enabled set LIBQCOW_DLL_EXPORT
  * before including libqcow/extern.h
  */
@@ -33,5 +37,10 @@
 
 #include <libqcow/extern.h>
 
+#else
+#define LIBQCOW_EXTERN	extern
+
 #endif
+
+#endif /* !defined( _LIBQCOW_INTERNAL_EXTERN_H ) */
 

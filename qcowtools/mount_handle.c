@@ -21,7 +21,10 @@
 
 #include <common.h>
 #include <memory.h>
+#include <narrow_string.h>
+#include <system_string.h>
 #include <types.h>
+#include <wide_string.h>
 
 #include "mount_handle.h"
 #include "qcowtools_libcpath.h"
@@ -262,7 +265,7 @@ int mount_handle_signal_abort(
  */
 int mount_handle_set_keys(
      mount_handle_t *mount_handle,
-     const libcstring_system_character_t *string,
+     const system_character_t *string,
      libcerror_error_t **error )
 {
 	static char *function   = "mount_handle_set_keys";
@@ -280,7 +283,7 @@ int mount_handle_set_keys(
 
 		return( -1 );
 	}
-	string_length = libcstring_system_string_length(
+	string_length = system_string_length(
 	                 string );
 
 	if( memory_set(
@@ -299,7 +302,7 @@ int mount_handle_set_keys(
 	}
 	base16_variant = LIBUNA_BASE16_VARIANT_RFC4648;
 
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 	if( _BYTE_STREAM_HOST_IS_ENDIAN_BIG )
 	{
 		base16_variant |= LIBUNA_BASE16_VARIANT_ENCODING_UTF16_BIG_ENDIAN;
@@ -358,7 +361,7 @@ on_error:
  */
 int mount_handle_set_password(
      mount_handle_t *mount_handle,
-     const libcstring_system_character_t *string,
+     const system_character_t *string,
      libcerror_error_t **error )
 {
 	static char *function = "mount_handle_set_password";
@@ -386,7 +389,7 @@ int mount_handle_set_password(
 		return( -1 );
 	}
 	mount_handle->password        = string;
-	mount_handle->password_length = libcstring_system_string_length(
+	mount_handle->password_length = system_string_length(
 	                                 mount_handle->password );
 
 	return( 1 );
@@ -397,15 +400,15 @@ int mount_handle_set_password(
  */
 int mount_handle_open_input(
      mount_handle_t *mount_handle,
-     const libcstring_system_character_t *filename,
+     const system_character_t *filename,
      libcerror_error_t **error )
 {
-	libcstring_system_character_t *basename_end = NULL;
-	libqcow_file_t *input_file                  = NULL;
-	static char *function                       = "mount_handle_open_input";
-	size_t basename_length                      = 0;
-	size_t filename_length                      = 0;
-	int entry_index                             = 0;
+	libqcow_file_t *input_file       = NULL;
+	system_character_t *basename_end = NULL;
+	static char *function            = "mount_handle_open_input";
+	size_t basename_length           = 0;
+	size_t filename_length           = 0;
+	int entry_index                  = 0;
 
 	if( mount_handle == NULL )
 	{
@@ -429,12 +432,12 @@ int mount_handle_open_input(
 
 		return( -1 );
 	}
-	filename_length = libcstring_system_string_length(
+	filename_length = system_string_length(
 	                   filename );
 
-	basename_end = libcstring_system_string_search_character_reverse(
+	basename_end = system_string_search_character_reverse(
 	                filename,
-	                (libcstring_system_character_t) LIBCPATH_SEPARATOR,
+	                (system_character_t) LIBCPATH_SEPARATOR,
 	                filename_length + 1 );
 
 	if( basename_end != NULL )
@@ -492,7 +495,7 @@ int mount_handle_open_input(
 	}
 	else if( mount_handle->password != NULL )
 	{
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 		if( libqcow_file_set_utf16_password(
 		     input_file,
 		     (uint16_t *) mount_handle->password,
@@ -516,7 +519,7 @@ int mount_handle_open_input(
 			goto on_error;
 		}
 	}
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 	if( libqcow_file_open_wide(
 	     input_file,
 	     filename,
@@ -885,7 +888,7 @@ int mount_handle_get_number_of_input_files(
  */
 int mount_handle_set_basename(
      mount_handle_t *mount_handle,
-     const libcstring_system_character_t *basename,
+     const system_character_t *basename,
      size_t basename_size,
      libcerror_error_t **error )
 {
@@ -925,7 +928,7 @@ int mount_handle_set_basename(
 		goto on_error;
 	}
 	if( ( basename_size > (size_t) SSIZE_MAX )
-	 || ( ( sizeof( libcstring_system_character_t ) * basename_size ) > (size_t) SSIZE_MAX ) )
+	 || ( ( sizeof( system_character_t ) * basename_size ) > (size_t) SSIZE_MAX ) )
 	{
 		libcerror_error_set(
 		 error,
@@ -944,7 +947,7 @@ int mount_handle_set_basename(
 		mount_handle->basename      = NULL;
 		mount_handle->basename_size = 0;
 	}
-	mount_handle->basename = libcstring_system_string_allocate(
+	mount_handle->basename = system_string_allocate(
 	                          basename_size );
 
 	if( mount_handle->basename == NULL )
@@ -958,7 +961,7 @@ int mount_handle_set_basename(
 
 		goto on_error;
 	}
-	if( libcstring_system_string_copy(
+	if( system_string_copy(
 	     mount_handle->basename,
 	     basename,
 	     basename_size ) == NULL )

@@ -20,6 +20,7 @@
  */
 
 #include <common.h>
+#include <narrow_string.h>
 #include <types.h>
 
 #if defined( HAVE_STDLIB_H ) || defined( HAVE_WINAPI )
@@ -32,7 +33,6 @@
 #include "pyqcow_libbfio.h"
 #include "pyqcow_libcerror.h"
 #include "pyqcow_libclocale.h"
-#include "pyqcow_libcstring.h"
 #include "pyqcow_libqcow.h"
 #include "pyqcow_python.h"
 #include "pyqcow_unused.h"
@@ -520,7 +520,7 @@ PyObject *pyqcow_file_open(
 	char *mode                   = NULL;
 	int result                   = 0;
 
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 	const wchar_t *filename_wide = NULL;
 #else
 	PyObject *utf8_string_object = NULL;
@@ -580,7 +580,7 @@ PyObject *pyqcow_file_open(
 	{
 		PyErr_Clear();
 
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 		filename_wide = (wchar_t *) PyUnicode_AsUnicode(
 		                             string_object );
 		Py_BEGIN_ALLOW_THREADS
@@ -1334,7 +1334,7 @@ PyObject *pyqcow_file_set_password(
 
 		return( NULL );
 	}
-	password_string_length = libcstring_narrow_string_length(
+	password_string_length = narrow_string_length(
 	                          password_string );
 
 	Py_BEGIN_ALLOW_THREADS

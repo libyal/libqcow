@@ -1,7 +1,6 @@
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/common \
-	@LIBCSTRING_CPPFLAGS@ \
 	@LIBCERROR_CPPFLAGS@ \
 	@LIBCDATA_CPPFLAGS@ \
 	@LIBCLOCALE_CPPFLAGS@ \
@@ -32,7 +31,6 @@ qcowinfo_SOURCES = \
 	qcowtools_libcerror.h \
 	qcowtools_libclocale.h \
 	qcowtools_libcnotify.h \
-	qcowtools_libcstring.h \
 	qcowtools_libcsystem.h \
 	qcowtools_libqcow.h \
 	qcowtools_libuna.h
@@ -43,7 +41,6 @@ qcowinfo_LDADD = \
 	@LIBCNOTIFY_LIBADD@ \
 	@LIBCLOCALE_LIBADD@ \
 	@LIBCERROR_LIBADD@ \
-	@LIBCSTRING_LIBADD@ \
 	@LIBINTL@
 
 qcowmount_SOURCES = \
@@ -56,7 +53,6 @@ qcowmount_SOURCES = \
 	qcowtools_libclocale.h \
 	qcowtools_libcnotify.h \
 	qcowtools_libcpath.h \
-	qcowtools_libcstring.h \
 	qcowtools_libcsystem.h \
 	qcowtools_libqcow.h \
 	qcowtools_libuna.h
@@ -70,7 +66,6 @@ qcowmount_LDADD = \
 	@LIBCLOCALE_LIBADD@ \
 	@LIBCDATA_LIBADD@ \
 	@LIBCERROR_LIBADD@ \
-	@LIBCSTRING_LIBADD@ \
 	@LIBINTL@
 
 MAINTAINERCLEANFILES = \

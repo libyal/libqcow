@@ -21,13 +21,14 @@
 
 #include <common.h>
 #include <file_stream.h>
+#include <system_string.h>
+#include <types.h>
 
 #if defined( HAVE_STDLIB_H ) || defined( WINAPI )
 #include <stdlib.h>
 #endif
 
 #include "qcow_test_libcerror.h"
-#include "qcow_test_libcstring.h"
 #include "qcow_test_libcsystem.h"
 #include "qcow_test_libqcow.h"
 
@@ -35,16 +36,49 @@
  * Returns 1 if successful, 0 if not or -1 on error
  */
 int qcow_test_single_open_close_file(
-     libcstring_system_character_t *filename,
-     const libcstring_system_character_t *password,
+     system_character_t *filename,
      int access_flags,
      int expected_result )
 {
 	libcerror_error_t *error = NULL;
-	libqcow_file_t *file     = NULL;
+	libqcow_file_t *file      = NULL;
 	static char *function    = "qcow_test_single_open_close_file";
-	size_t string_length     = 0;
+	char *access_string      = NULL;
 	int result               = 0;
+
+	if( access_flags == LIBQCOW_OPEN_READ )
+	{
+		access_string = "read";
+	}
+	else if( access_flags == LIBQCOW_OPEN_WRITE )
+	{
+		access_string = "write";
+	}
+	else
+	{
+		access_string = "UNKNOWN";
+	}
+	fprintf(
+	 stdout,
+	 "Testing single open close of: " );
+
+	if( filename != NULL )
+	{
+		fprintf(
+		 stdout,
+		 "%" PRIs_SYSTEM "",
+		 filename );
+	}
+	else
+	{
+		fprintf(
+		 stdout,
+		 "NULL" );
+	}
+	fprintf(
+	 stdout,
+	 " with access: %s\t",
+	 access_string );
 
 	if( libqcow_file_initialize(
 	     &file,
@@ -59,36 +93,7 @@ int qcow_test_single_open_close_file(
 
 		goto on_error;
 	}
-	if( password != NULL )
-	{
-		string_length = libcstring_system_string_length(
-		                 password );
-
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
-		if( libqcow_file_set_utf16_password(
-		     file,
-		     (uint16_t *) password,
-		     string_length,
-		     &error ) != 1 )
-#else
-		if( libqcow_file_set_utf8_password(
-		     file,
-		     (uint8_t *) password,
-		     string_length,
-		     &error ) != 1 )
-#endif
-		{
-			libcerror_error_set(
-			 &error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
-			 "%s: unable to set password.",
-			 function );
-
-			goto on_error;
-		}
-	}
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 	result = libqcow_file_open_wide(
 	          file,
 	          filename,
@@ -180,16 +185,49 @@ on_error:
  * Returns 1 if successful, 0 if not or -1 on error
  */
 int qcow_test_multi_open_close_file(
-     libcstring_system_character_t *filename,
-     const libcstring_system_character_t *password,
+     system_character_t *filename,
      int access_flags,
      int expected_result )
 {
 	libcerror_error_t *error = NULL;
-	libqcow_file_t *file     = NULL;
+	libqcow_file_t *file      = NULL;
 	static char *function    = "qcow_test_multi_open_close_file";
-	size_t string_length     = 0;
+	char *access_string      = NULL;
 	int result               = 0;
+
+	if( access_flags == LIBQCOW_OPEN_READ )
+	{
+		access_string = "read";
+	}
+	else if( access_flags == LIBQCOW_OPEN_WRITE )
+	{
+		access_string = "write";
+	}
+	else
+	{
+		access_string = "UNKNOWN";
+	}
+	fprintf(
+	 stdout,
+	 "Testing multi open close of: " );
+
+	if( filename != NULL )
+	{
+		fprintf(
+		 stdout,
+		 "%" PRIs_SYSTEM "",
+		 filename );
+	}
+	else
+	{
+		fprintf(
+		 stdout,
+		 "NULL" );
+	}
+	fprintf(
+	 stdout,
+	 " with access: %s\t",
+	 access_string );
 
 	if( libqcow_file_initialize(
 	     &file,
@@ -204,36 +242,7 @@ int qcow_test_multi_open_close_file(
 
 		goto on_error;
 	}
-	if( password != NULL )
-	{
-		string_length = libcstring_system_string_length(
-		                 password );
-
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
-		if( libqcow_file_set_utf16_password(
-		     file,
-		     (uint16_t *) password,
-		     string_length,
-		     &error ) != 1 )
-#else
-		if( libqcow_file_set_utf8_password(
-		     file,
-		     (uint8_t *) password,
-		     string_length,
-		     &error ) != 1 )
-#endif
-		{
-			libcerror_error_set(
-			 &error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
-			 "%s: unable to set password.",
-			 function );
-
-			goto on_error;
-		}
-	}
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 	result = libqcow_file_open_wide(
 	          file,
 	          filename,
@@ -261,7 +270,7 @@ int qcow_test_multi_open_close_file(
 
 			goto on_error;
 		}
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 		result = libqcow_file_open_wide(
 		          file,
 		          filename,
@@ -352,37 +361,30 @@ on_error:
 
 /* The main program
  */
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 int wmain( int argc, wchar_t * const argv[] )
 #else
 int main( int argc, char * const argv[] )
 #endif
 {
-	libcerror_error_t *error                       = NULL;
-	libcstring_system_character_t *option_password = NULL;
-	libcstring_system_character_t *source          = NULL;
-	libcstring_system_integer_t option             = 0;
+	system_character_t *source = NULL;
+	system_integer_t option    = 0;
 
 	while( ( option = libcsystem_getopt(
 	                   argc,
 	                   argv,
-	                   _LIBCSTRING_SYSTEM_STRING( "p:" ) ) ) != (libcstring_system_integer_t) -1 )
+	                   _SYSTEM_STRING( "" ) ) ) != (system_integer_t) -1 )
 	{
 		switch( option )
 		{
-			case (libcstring_system_integer_t) '?':
+			case (system_integer_t) '?':
 			default:
 				fprintf(
 				 stderr,
-				 "Invalid argument: %" PRIs_LIBCSTRING_SYSTEM ".\n",
+				 "Invalid argument: %" PRIs_SYSTEM ".\n",
 				 argv[ optind - 1 ] );
 
 				return( EXIT_FAILURE );
-
-			case (libcstring_system_integer_t) 'p':
-				option_password = optarg;
-
-				break;
 		}
 	}
 	if( optind == argc )
@@ -405,14 +407,8 @@ int main( int argc, char * const argv[] )
 
 	/* Case 0: single open and close of a file using filename
 	 */
-	fprintf(
-	 stdout,
-	 "Testing single open close of: %s with access: read\t",
-	 source );
-
 	if( qcow_test_single_open_close_file(
 	     source,
-	     option_password,
 	     LIBQCOW_OPEN_READ,
 	     1 ) != 1 )
 	{
@@ -422,13 +418,8 @@ int main( int argc, char * const argv[] )
 
 		return( EXIT_FAILURE );
 	}
-	fprintf(
-	 stdout,
-	 "Testing single open close of: NULL with access: read\t" );
-
 	if( qcow_test_single_open_close_file(
 	     NULL,
-	     option_password,
 	     LIBQCOW_OPEN_READ,
 	     -1 ) != 1 )
 	{
@@ -438,14 +429,8 @@ int main( int argc, char * const argv[] )
 
 		return( EXIT_FAILURE );
 	}
-	fprintf(
-	 stdout,
-	 "Testing single open close of: %s with access: write\t",
-	 source );
-
 	if( qcow_test_single_open_close_file(
 	     source,
-	     option_password,
 	     LIBQCOW_OPEN_WRITE,
 	     -1 ) != 1 )
 	{
@@ -457,14 +442,8 @@ int main( int argc, char * const argv[] )
 	}
 	/* Case 1: multiple open and close of a file using filename
 	 */
-	fprintf(
-	 stdout,
-	 "Testing multi open close of: %s with access: read\t",
-	 source );
-
 	if( qcow_test_multi_open_close_file(
 	     source,
-	     option_password,
 	     LIBQCOW_OPEN_READ,
 	     1 ) != 1 )
 	{

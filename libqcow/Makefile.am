@@ -2,7 +2,6 @@ AM_CPPFLAGS = \
 	-DLOCALEDIR=\"$(datadir)/locale\" \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/common \
-	@LIBCSTRING_CPPFLAGS@ \
 	@LIBCERROR_CPPFLAGS@ \
 	@LIBCTHREADS_CPPFLAGS@ \
 	@LIBCDATA_CPPFLAGS@ \
@@ -42,7 +41,6 @@ libqcow_la_SOURCES = \
 	libqcow_libcerror.h \
 	libqcow_libclocale.h \
 	libqcow_libcnotify.h \
-	libqcow_libcstring.h \
 	libqcow_libcthreads.h \
 	libqcow_libfcache.h \
 	libqcow_libfdata.h \
@@ -55,7 +53,6 @@ libqcow_la_SOURCES = \
 	qcow_file_header.h
 
 libqcow_la_LIBADD = \
-	@LIBCSTRING_LIBADD@ \
 	@LIBCERROR_LIBADD@ \
 	@LIBCTHREADS_LIBADD@ \
 	@LIBCDATA_LIBADD@ \

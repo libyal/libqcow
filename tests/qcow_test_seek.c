@@ -21,13 +21,14 @@
 
 #include <common.h>
 #include <file_stream.h>
+#include <system_string.h>
+#include <types.h>
 
 #if defined( HAVE_STDLIB_H ) || defined( WINAPI )
 #include <stdlib.h>
 #endif
 
 #include "qcow_test_libcerror.h"
-#include "qcow_test_libcstring.h"
 #include "qcow_test_libcsystem.h"
 #include "qcow_test_libqcow.h"
 #include "qcow_test_unused.h"
@@ -119,32 +120,35 @@ int qcow_test_seek_offset(
 /* Tests seeking in a file
  * Returns 1 if successful, 0 if not or -1 on error
  */
-int qcow_test_seek(
+int qcow_test_seek_file(
      libqcow_file_t *file,
-     size64_t media_size )
+     size64_t file_size )
 {
-	int result = 0;
+	size64_t seek_offset = 0;
+	int result           = 0;
 
 	if( file == NULL )
 	{
 		return( -1 );
 	}
-	if( media_size > (size64_t) INT64_MAX )
+	if( file_size > (size64_t) INT64_MAX )
 	{
 		fprintf(
 		 stderr,
-		 "Media size exceeds maximum.\n" );
+		 "File size exceeds maximum.\n" );
 
 		return( -1 );
 	}
 	/* Test: SEEK_SET offset: 0
 	 * Expected result: 0
 	 */
+	seek_offset = 0;
+
 	result = qcow_test_seek_offset(
 	          file,
-	          0,
+	          seek_offset,
 	          SEEK_SET,
-	          0 );
+	          seek_offset );
 
 	if( result != 1 )
 	{
@@ -154,14 +158,16 @@ int qcow_test_seek(
 
 		return( result );
 	}
-	/* Test: SEEK_SET offset: <media_size>
-	 * Expected result: <media_size>
+	/* Test: SEEK_SET offset: <file_size>
+	 * Expected result: <file_size>
 	 */
+	seek_offset = (off64_t) file_size;
+
 	result = qcow_test_seek_offset(
 	          file,
-	          (off64_t) media_size,
+	          seek_offset,
 	          SEEK_SET,
-	          (off64_t) media_size );
+	          seek_offset );
 
 	if( result != 1 )
 	{
@@ -171,14 +177,16 @@ int qcow_test_seek(
 
 		return( result );
 	}
-	/* Test: SEEK_SET offset: <media_size / 5>
-	 * Expected result: <media_size / 5>
+	/* Test: SEEK_SET offset: <file_size / 5>
+	 * Expected result: <file_size / 5>
 	 */
+	seek_offset = (off64_t) ( file_size / 5 );
+
 	result = qcow_test_seek_offset(
 	          file,
-	          (off64_t) ( media_size / 5 ),
+	          seek_offset,
 	          SEEK_SET,
-	          (off64_t) ( media_size / 5 ) );
+	          seek_offset );
 
 	if( result != 1 )
 	{
@@ -188,14 +196,16 @@ int qcow_test_seek(
 
 		return( result );
 	}
-	/* Test: SEEK_SET offset: <media_size + 987>
-	 * Expected result: <media_size + 987>
+	/* Test: SEEK_SET offset: <file_size + 987>
+	 * Expected result: <file_size + 987>
 	 */
+	seek_offset = (off64_t) ( file_size + 987 );
+
 	result = qcow_test_seek_offset(
 	          file,
-	          (off64_t) ( media_size + 987 ),
+	          seek_offset,
 	          SEEK_SET,
-	          (off64_t) ( media_size + 987 ) );
+	          seek_offset );
 
 	if( result != 1 )
 	{
@@ -208,9 +218,11 @@ int qcow_test_seek(
 	/* Test: SEEK_SET offset: -987
 	 * Expected result: -1
 	 */
+	seek_offset = -987;
+
 	result = qcow_test_seek_offset(
 	          file,
-	          -987,
+	          seek_offset,
 	          SEEK_SET,
 	          -1 );
 
@@ -223,13 +235,15 @@ int qcow_test_seek(
 		return( result );
 	}
 	/* Test: SEEK_CUR offset: 0
-	 * Expected result: <media_size + 987>
+	 * Expected result: <file_size + 987>
 	 */
+	seek_offset = 0;
+
 	result = qcow_test_seek_offset(
 	          file,
-	          0,
+	          seek_offset,
 	          SEEK_CUR,
-	          (off64_t) ( media_size + 987 ) );
+	          (off64_t) ( file_size + 987 ) );
 
 	if( result != 1 )
 	{
@@ -239,12 +253,14 @@ int qcow_test_seek(
 
 		return( result );
 	}
-	/* Test: SEEK_CUR offset: <-1 * (media_size + 987)>
+	/* Test: SEEK_CUR offset: <-1 * (file_size + 987)>
 	 * Expected result: 0
 	 */
+	seek_offset = -1 * (off64_t) ( file_size + 987 );
+
 	result = qcow_test_seek_offset(
 	          file,
-	          -1 * (off64_t) ( media_size + 987 ),
+	          seek_offset,
 	          SEEK_CUR,
 	          0 );
 
@@ -256,14 +272,16 @@ int qcow_test_seek(
 
 		return( result );
 	}
-	/* Test: SEEK_CUR offset: <media_size / 3>
-	 * Expected result: <media_size / 3>
+	/* Test: SEEK_CUR offset: <file_size / 3>
+	 * Expected result: <file_size / 3>
 	 */
+	seek_offset = (off64_t) ( file_size / 3 );
+
 	result = qcow_test_seek_offset(
 	          file,
-	          (off64_t) ( media_size / 3 ),
+	          seek_offset,
 	          SEEK_CUR,
-	          (off64_t) ( media_size / 3 ) );
+	          seek_offset );
 
 	if( result != 1 )
 	{
@@ -273,14 +291,16 @@ int qcow_test_seek(
 
 		return( result );
 	}
-	if( media_size == 0 )
+	seek_offset = -2 * (off64_t) ( file_size / 3 );
+
+	if( file_size == 0 )
 	{
-		/* Test: SEEK_CUR offset: <-2 * (media_size / 3)>
+		/* Test: SEEK_CUR offset: <-2 * (file_size / 3)>
 		 * Expected result: 0
 		 */
 		result = qcow_test_seek_offset(
 		          file,
-		          -2 * (off64_t) ( media_size / 3 ),
+		          seek_offset,
 		          SEEK_CUR,
 		          0 );
 
@@ -295,12 +315,12 @@ int qcow_test_seek(
 	}
 	else
 	{
-		/* Test: SEEK_CUR offset: <-2 * (media_size / 3)>
+		/* Test: SEEK_CUR offset: <-2 * (file_size / 3)>
 		 * Expected result: -1
 		 */
 		result = qcow_test_seek_offset(
 		          file,
-		          -2 * (off64_t) ( media_size / 3 ),
+		          seek_offset,
 		          SEEK_CUR,
 		          -1 );
 
@@ -314,13 +334,15 @@ int qcow_test_seek(
 		}
 	}
 	/* Test: SEEK_END offset: 0
-	 * Expected result: <media_size>
+	 * Expected result: <file_size>
 	 */
+	seek_offset = 0;
+
 	result = qcow_test_seek_offset(
 	          file,
-	          0,
+	          seek_offset,
 	          SEEK_END,
-	          (off64_t) media_size );
+	          (off64_t) file_size );
 
 	if( result != 1 )
 	{
@@ -330,12 +352,14 @@ int qcow_test_seek(
 
 		return( result );
 	}
-	/* Test: SEEK_END offset: <-1 * media_size>
+	/* Test: SEEK_END offset: <-1 * file_size>
 	 * Expected result: 0
 	 */
+	seek_offset = -1 * (off64_t) file_size;
+
 	result = qcow_test_seek_offset(
 	          file,
-	          -1 * (off64_t) media_size,
+	          seek_offset,
 	          SEEK_END,
 	          0 );
 
@@ -347,14 +371,16 @@ int qcow_test_seek(
 
 		return( result );
 	}
-	/* Test: SEEK_END offset: <-1 * (media_size / 4)>
-	 * Expected result: <media_size - (media_size / 4)>
+	/* Test: SEEK_END offset: <-1 * (file_size / 4)>
+	 * Expected result: <file_size - (file_size / 4)>
 	 */
+	seek_offset = (off64_t) ( file_size / 4 );
+
 	result = qcow_test_seek_offset(
 	          file,
-	          -1 * (off64_t) ( media_size / 4 ),
+	          -1 * seek_offset,
 	          SEEK_END,
-	          (off64_t) media_size - (off64_t) ( media_size / 4 ) );
+	          (off64_t) file_size - seek_offset );
 
 	if( result != 1 )
 	{
@@ -365,13 +391,15 @@ int qcow_test_seek(
 		return( result );
 	}
 	/* Test: SEEK_END offset: 542
-	 * Expected result: <media_size + 542>
+	 * Expected result: <file_size + 542>
 	 */
+	seek_offset = 542;
+
 	result = qcow_test_seek_offset(
 	          file,
-	          542,
+	          seek_offset,
 	          SEEK_END,
-	          (off64_t) ( media_size + 542 ) );
+	          (off64_t) ( file_size + 542 ) );
 
 	if( result != 1 )
 	{
@@ -381,12 +409,14 @@ int qcow_test_seek(
 
 		return( result );
 	}
-	/* Test: SEEK_END offset: <-1 * (media_size + 542)>
+	/* Test: SEEK_END offset: <-1 * (file_size + 542)>
 	 * Expected result: -1
 	 */
+	seek_offset = -1 * (off64_t) ( file_size + 542 );
+
 	result = qcow_test_seek_offset(
 	          file,
-	          -1 * (off64_t) ( media_size + 542 ),
+	          seek_offset,
 	          SEEK_END,
 	          -1 );
 
@@ -421,14 +451,12 @@ int qcow_test_seek(
 /* Tests seeking in a file
  * Returns 1 if successful, 0 if not or -1 on error
  */
-int qcow_test_seek_file(
-     libcstring_system_character_t *source,
-     libcstring_system_character_t *password,
+int qcow_test_seek(
+     system_character_t *source,
      libcerror_error_t **error )
 {
 	libqcow_file_t *file = NULL;
-	size64_t media_size  = 0;
-	size_t string_length = 0;
+	size64_t file_size   = 0;
 	int result           = 0;
 
 	if( libqcow_file_initialize(
@@ -441,33 +469,7 @@ int qcow_test_seek_file(
 
 		goto on_error;
 	}
-	if( password != NULL )
-	{
-		string_length = libcstring_system_string_length(
-		                 password );
-
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
-		if( libqcow_file_set_utf16_password(
-		     file,
-		     (uint16_t *) password,
-		     string_length,
-		     error ) != 1 )
-#else
-		if( libqcow_file_set_utf8_password(
-		     file,
-		     (uint8_t *) password,
-		     string_length,
-		     error ) != 1 )
-#endif
-		{
-			fprintf(
-			 stderr,
-			 "Unable to set password." );
-
-			goto on_error;
-		}
-	}
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 	if( libqcow_file_open_wide(
 	     file,
 	     source,
@@ -489,18 +491,18 @@ int qcow_test_seek_file(
 	}
 	if( libqcow_file_get_media_size(
 	     file,
-	     &media_size,
+	     &file_size,
 	     error ) != 1 )
 	{
 		fprintf(
 		 stderr,
-		 "Unable to retrieve media size.\n" );
+		 "Unable to retrieve file size.\n" );
 
 		goto on_error;
 	}
-	result = qcow_test_seek(
+	result = qcow_test_seek_file(
 	          file,
-	          media_size );
+	          file_size );
 
 	if( result == -1 )
 	{
@@ -548,13 +550,11 @@ on_error:
 /* Tests seeking in a file without opening it
  * Returns 1 if successful, 0 if not or -1 on error
  */
-int qcow_test_seek_file_no_open(
-     libcstring_system_character_t *source QCOW_TEST_ATTRIBUTE_UNUSED,
-     libcstring_system_character_t *password,
+int qcow_test_seek_no_open(
+     system_character_t *source QCOW_TEST_ATTRIBUTE_UNUSED,
      libcerror_error_t **error )
 {
 	libqcow_file_t *file  = NULL;
-	size_t string_length  = 0;
 	off64_t result_offset = 0;
 	int result            = 0;
 
@@ -569,32 +569,6 @@ int qcow_test_seek_file_no_open(
 		 "Unable to create file.\n" );
 
 		goto on_error;
-	}
-	if( password != NULL )
-	{
-		string_length = libcstring_system_string_length(
-		                 password );
-
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
-		if( libqcow_file_set_utf16_password(
-		     file,
-		     (uint16_t *) password,
-		     string_length,
-		     error ) != 1 )
-#else
-		if( libqcow_file_set_utf8_password(
-		     file,
-		     (uint8_t *) password,
-		     string_length,
-		     error ) != 1 )
-#endif
-		{
-			fprintf(
-			 stderr,
-			 "Unable to set password." );
-
-			goto on_error;
-		}
 	}
 	fprintf(
 	 stdout,
@@ -662,38 +636,32 @@ on_error:
 
 /* The main program
  */
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 int wmain( int argc, wchar_t * const argv[] )
 #else
 int main( int argc, char * const argv[] )
 #endif
 {
-	libcerror_error_t *error                       = NULL;
-	libcstring_system_character_t *option_password = NULL;
-	libcstring_system_character_t *source          = NULL;
-	libcstring_system_integer_t option             = 0;
-	int result                                     = 0;
+	libcerror_error_t *error   = NULL;
+	system_character_t *source = NULL;
+	system_integer_t option    = 0;
+	int result                 = 0;
 
 	while( ( option = libcsystem_getopt(
 	                   argc,
 	                   argv,
-	                   _LIBCSTRING_SYSTEM_STRING( "p:" ) ) ) != (libcstring_system_integer_t) -1 )
+	                   _SYSTEM_STRING( "" ) ) ) != (system_integer_t) -1 )
 	{
 		switch( option )
 		{
-			case (libcstring_system_integer_t) '?':
+			case (system_integer_t) '?':
 			default:
 				fprintf(
 				 stderr,
-				 "Invalid argument: %" PRIs_LIBCSTRING_SYSTEM ".\n",
+				 "Invalid argument: %" PRIs_SYSTEM ".\n",
 				 argv[ optind - 1 ] );
 
 				return( EXIT_FAILURE );
-
-			case (libcstring_system_integer_t) 'p':
-				option_password = optarg;
-
-				break;
 		}
 	}
 	if( optind == argc )
@@ -713,12 +681,9 @@ int main( int argc, char * const argv[] )
 	 stderr,
 	 NULL );
 #endif
-	result = qcow_test_seek_file(
-	          source,
-	          option_password,
-	          &error );
-
-	if( result != 1 )
+	if( qcow_test_seek(
+	     source,
+	     &error ) != 1 )
 	{
 		fprintf(
 		 stderr,
@@ -726,12 +691,9 @@ int main( int argc, char * const argv[] )
 
 		goto on_error;
 	}
-	result = qcow_test_seek_file_no_open(
-	          source,
-	          option_password,
-	          &error );
-
-	if( result != 1 )
+	if( qcow_test_seek_no_open(
+	     source,
+	     &error ) != 1 )
 	{
 		fprintf(
 		 stderr,

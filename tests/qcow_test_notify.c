@@ -20,12 +20,13 @@
  */
 
 #include <common.h>
+#include <file_stream.h>
+#include <types.h>
 
 #if defined( HAVE_STDLIB_H ) || defined( WINAPI )
 #include <stdlib.h>
 #endif
 
-#include "qcow_test_libcerror.h"
 #include "qcow_test_libqcow.h"
 #include "qcow_test_macros.h"
 #include "qcow_test_unused.h"
@@ -90,7 +91,7 @@ int qcow_test_notify_stream_close(
 
 /* The main program
  */
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 int wmain(
      int argc QCOW_TEST_ATTRIBUTE_UNUSED,
      wchar_t * const argv[] QCOW_TEST_ATTRIBUTE_UNUSED )

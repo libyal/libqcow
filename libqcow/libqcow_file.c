@@ -21,7 +21,9 @@
 
 #include <common.h>
 #include <memory.h>
+#include <narrow_string.h>
 #include <types.h>
+#include <wide_string.h>
 
 #include "libqcow_cluster_block.h"
 #include "libqcow_cluster_table.h"
@@ -36,7 +38,6 @@
 #include "libqcow_libbfio.h"
 #include "libqcow_libcerror.h"
 #include "libqcow_libcnotify.h"
-#include "libqcow_libcstring.h"
 #include "libqcow_libcthreads.h"
 #include "libqcow_libfcache.h"
 #include "libqcow_libfdata.h"
@@ -377,7 +378,7 @@ int libqcow_file_open(
 	if( libbfio_file_set_name(
 	     file_io_handle,
 	     filename,
-	     libcstring_narrow_string_length(
+	     narrow_string_length(
 	      filename ) + 1,
 	     error ) != 1 )
 	{
@@ -544,7 +545,7 @@ int libqcow_file_open_wide(
 	if( libbfio_file_set_name_wide(
 	     file_io_handle,
 	     filename,
-	     libcstring_wide_string_length(
+	     wide_string_length(
 	      filename ) + 1,
 	     error ) != 1 )
 	{

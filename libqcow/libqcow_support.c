@@ -21,14 +21,15 @@
 
 #include <common.h>
 #include <memory.h>
+#include <narrow_string.h>
 #include <types.h>
+#include <wide_string.h>
 
 #include "libqcow_definitions.h"
 #include "libqcow_io_handle.h"
 #include "libqcow_libbfio.h"
 #include "libqcow_libcerror.h"
 #include "libqcow_libclocale.h"
-#include "libqcow_libcstring.h"
 #include "libqcow_support.h"
 
 #if !defined( HAVE_LOCAL_LIBQCOW )
@@ -142,7 +143,7 @@ int libqcow_check_file_signature(
 
 		return( -1 );
 	}
-	filename_length = libcstring_narrow_string_length(
+	filename_length = narrow_string_length(
 	                   filename );
 
 	if( filename_length == 0 )
@@ -249,7 +250,7 @@ int libqcow_check_file_signature_wide(
 
 		return( -1 );
 	}
-	filename_length = libcstring_wide_string_length(
+	filename_length = wide_string_length(
 	                   filename );
 
 	if( filename_length == 0 )

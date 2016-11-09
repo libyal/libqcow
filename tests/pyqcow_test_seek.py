@@ -18,7 +18,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
-#
 
 from __future__ import print_function
 import argparse
@@ -43,11 +42,12 @@ def get_whence_string(whence):
 
 def pyqcow_test_seek_offset(
     qcow_file, input_offset, input_whence, expected_offset):
+  """Tests seeking an offset."""
+  description = "Testing seek of offset: {0:d} and whence: {1:s}\t".format(
+      input_offset, get_whence_string(input_whence))
+  print(description, end="")
 
-  print("Testing seek of offset: {0:d} and whence: {1:s}\t".format(
-      input_offset, get_whence_string(input_whence)), end="")
-
-  error_string = ""
+  error_string = None
   result = True
   try:
     qcow_file.seek(input_offset, input_whence)
@@ -72,29 +72,37 @@ def pyqcow_test_seek_offset(
 
 
 def pyqcow_test_seek(qcow_file):
-  media_size = qcow_file.media_size
+  """Tests the seek function."""
+  file_size = qcow_file.size
 
   # Test: SEEK_SET offset: 0
   # Expected result: 0
-  if not pyqcow_test_seek_offset(qcow_file, 0, os.SEEK_SET, 0):
-    return False
+  seek_offset = 0
 
-  # Test: SEEK_SET offset: <media_size>
-  # Expected result: <media_size>
-  if not pyqcow_test_seek_offset(
-      qcow_file, media_size, os.SEEK_SET, media_size):
-    return False
-
-  # Test: SEEK_SET offset: <media_size / 5>
-  # Expected result: <media_size / 5>
-  seek_offset, _ = divmod(media_size, 5)
   if not pyqcow_test_seek_offset(
       qcow_file, seek_offset, os.SEEK_SET, seek_offset):
     return False
 
-  # Test: SEEK_SET offset: <media_size + 987>
-  # Expected result: <media_size + 987>
-  seek_offset = media_size + 987
+  # Test: SEEK_SET offset: <file_size>
+  # Expected result: <file_size>
+  seek_offset = file_size
+
+  if not pyqcow_test_seek_offset(
+      qcow_file, seek_offset, os.SEEK_SET, seek_offset):
+    return False
+
+  # Test: SEEK_SET offset: <file_size / 5>
+  # Expected result: <file_size / 5>
+  seek_offset, _ = divmod(file_size, 5)
+
+  if not pyqcow_test_seek_offset(
+      qcow_file, seek_offset, os.SEEK_SET, seek_offset):
+    return False
+
+  # Test: SEEK_SET offset: <file_size + 987>
+  # Expected result: <file_size + 987>
+  seek_offset = file_size + 987
+
   if not pyqcow_test_seek_offset(
       qcow_file, seek_offset, os.SEEK_SET, seek_offset):
     return False
@@ -102,83 +110,105 @@ def pyqcow_test_seek(qcow_file):
   # Test: SEEK_SET offset: -987
   # Expected result: -1
   seek_offset = -987
-  if not pyqcow_test_seek_offset(qcow_file, seek_offset, os.SEEK_SET, -1):
+
+  if not pyqcow_test_seek_offset(
+      qcow_file, seek_offset, os.SEEK_SET, -1):
     return False
 
   # Test: SEEK_CUR offset: 0
-  # Expected result: <media_size + 987>
-  if not pyqcow_test_seek_offset(qcow_file, 0, os.SEEK_CUR, media_size + 987):
-    return False
+  # Expected result: <file_size + 987>
+  seek_offset = 0
 
-  # Test: SEEK_CUR offset: <-1 * (media_size + 987)>
-  # Expected result: 0
   if not pyqcow_test_seek_offset(
-      qcow_file, -1 * (media_size + 987), os.SEEK_CUR, 0):
+      qcow_file, seek_offset, os.SEEK_CUR, file_size + 987):
     return False
 
-  # Test: SEEK_CUR offset: <media_size / 3>
-  # Expected result: <media_size / 3>
-  seek_offset, _ = divmod(media_size, 3)
+  # Test: SEEK_CUR offset: <-1 * (file_size + 987)>
+  # Expected result: 0
+  seek_offset = -1 * (file_size + 987)
+
+  if not pyqcow_test_seek_offset(
+      qcow_file, seek_offset, os.SEEK_CUR, 0):
+    return False
+
+  # Test: SEEK_CUR offset: <file_size / 3>
+  # Expected result: <file_size / 3>
+  seek_offset, _ = divmod(file_size, 3)
+
   if not pyqcow_test_seek_offset(
       qcow_file, seek_offset, os.SEEK_CUR, seek_offset):
     return False
 
-  if media_size == 0:
-    # Test: SEEK_CUR offset: <-2 * (media_size / 3)>
+  if file_size == 0:
+    # Test: SEEK_CUR offset: <-2 * (file_size / 3)>
     # Expected result: 0
-    seek_offset, _ = divmod(media_size, 3)
-    if not pyqcow_test_seek_offset(qcow_file, -2 * seek_offset, os.SEEK_CUR, 0):
+    seek_offset, _ = divmod(file_size, 3)
+
+    if not pyqcow_test_seek_offset(
+        qcow_file, -2 * seek_offset, os.SEEK_CUR, 0):
       return False
 
   else:
-    # Test: SEEK_CUR offset: <-2 * (media_size / 3)>
+    # Test: SEEK_CUR offset: <-2 * (file_size / 3)>
     # Expected result: -1
-    seek_offset, _ = divmod(media_size, 3)
+    seek_offset, _ = divmod(file_size, 3)
+
     if not pyqcow_test_seek_offset(
         qcow_file, -2 * seek_offset, os.SEEK_CUR, -1):
       return False
 
   # Test: SEEK_END offset: 0
-  # Expected result: <media_size>
-  if not pyqcow_test_seek_offset(qcow_file, 0, os.SEEK_END, media_size):
-    return False
+  # Expected result: <file_size>
+  seek_offset = 0
 
-  # Test: SEEK_END offset: <-1 * media_size>
-  # Expected result: 0
-  if not pyqcow_test_seek_offset(qcow_file, -1 * media_size, os.SEEK_END, 0):
-    return False
-
-  # Test: SEEK_END offset: <-1 * (media_size / 4)>
-  # Expected result: <media_size - (media_size / 4)>
-  seek_offset, _ = divmod(media_size, 4)
   if not pyqcow_test_seek_offset(
-      qcow_file, -1 * seek_offset, os.SEEK_END, media_size - seek_offset):
+      qcow_file, seek_offset, os.SEEK_END, file_size):
+    return False
+
+  # Test: SEEK_END offset: <-1 * file_size>
+  # Expected result: 0
+  seek_offset = -1 * file_size
+
+  if not pyqcow_test_seek_offset(
+      qcow_file, seek_offset, os.SEEK_END, 0):
+    return False
+
+  # Test: SEEK_END offset: <-1 * (file_size / 4)>
+  # Expected result: <file_size - (file_size / 4)>
+  seek_offset, _ = divmod(file_size, 4)
+
+  if not pyqcow_test_seek_offset(
+      qcow_file, -1 * seek_offset, os.SEEK_END, file_size - seek_offset):
     return False
 
   # Test: SEEK_END offset: 542
-  # Expected result: <media_size + 542>
-  if not pyqcow_test_seek_offset(qcow_file, 542, os.SEEK_END, media_size + 542):
+  # Expected result: <file_size + 542>
+  seek_offset = 542
+
+  if not pyqcow_test_seek_offset(
+      qcow_file, seek_offset, os.SEEK_END, file_size + 542):
     return False
 
-  # Test: SEEK_END offset: <-1 * (media_size + 542)>
+  # Test: SEEK_END offset: <-1 * (file_size + 542)>
   # Expected result: -1
+  seek_offset = -1 * (file_size + 542)
+
   if not pyqcow_test_seek_offset(
-      qcow_file, -1 * (media_size + 542), os.SEEK_END, -1):
+      qcow_file, seek_offset, os.SEEK_END, -1):
     return False
 
   # Test: UNKNOWN (88) offset: 0
   # Expected result: -1
-  if not pyqcow_test_seek_offset(qcow_file, 0, 88, -1):
+  if not pyqcow_test_seek_offset(
+      qcow_file, 0, 88, -1):
     return False
 
   return True
 
 
-def pyqcow_test_seek_file(filename, password=None):
+def pyqcow_test_seek_file(filename):
+  """Tests the seek function with a file."""
   qcow_file = pyqcow.file()
-
-  if password:
-    qcow_file.set_password(password)
 
   qcow_file.open(filename, "r")
   result = pyqcow_test_seek(qcow_file)
@@ -187,12 +217,10 @@ def pyqcow_test_seek_file(filename, password=None):
   return result
 
 
-def pyqcow_test_seek_file_object(filename, password=None):
+def pyqcow_test_seek_file_object(filename):
+  """Tests the seek function with a file-like object."""
   file_object = open(filename, "rb")
   qcow_file = pyqcow.file()
-
-  if password:
-    qcow_file.set_password(password)
 
   qcow_file.open_file_object(file_object, "r")
   result = pyqcow_test_seek(qcow_file)
@@ -201,15 +229,14 @@ def pyqcow_test_seek_file_object(filename, password=None):
   return result
 
 
-def pyqcow_test_seek_file_no_open(filename, password=None):
-  print("Testing seek of offset without open:\t", end="")
+def pyqcow_test_seek_file_no_open(filename):
+  """Tests the seek function with a file without open."""
+  description = "Testing seek of offset without open:\t"
+  print(description, end="")
 
   qcow_file = pyqcow.file()
 
-  if password:
-    qcow_file.set_password(password)
-
-  error_string = ""
+  error_string = None
   result = False
   try:
     qcow_file.seek(0, os.SEEK_SET)
@@ -228,16 +255,12 @@ def pyqcow_test_seek_file_no_open(filename, password=None):
 
 
 def main():
-  args_parser = argparse.ArgumentParser(description=(
-      "Tests seek."))
+  args_parser = argparse.ArgumentParser(
+      description="Tests seek.")
 
   args_parser.add_argument(
       "source", nargs="?", action="store", metavar="FILENAME",
       default=None, help="The source filename.")
-
-  args_parser.add_argument(
-      "-p", dest="password", action="store", metavar="PASSWORD",
-      default=None, help="The password.")
 
   options = args_parser.parse_args()
 
@@ -248,15 +271,13 @@ def main():
     print("")
     return False
 
-  if not pyqcow_test_seek_file(options.source, password=options.password):
+  if not pyqcow_test_seek_file(options.source):
     return False
 
-  if not pyqcow_test_seek_file_object(
-      options.source, password=options.password):
+  if not pyqcow_test_seek_file_object(options.source):
     return False
 
-  if not pyqcow_test_seek_file_no_open(
-      options.source, password=options.password):
+  if not pyqcow_test_seek_file_no_open(options.source):
     return False
 
   return True
@@ -267,4 +288,3 @@ if __name__ == "__main__":
     sys.exit(1)
   else:
     sys.exit(0)
-
