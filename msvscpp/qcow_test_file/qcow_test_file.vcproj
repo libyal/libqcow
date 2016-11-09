@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9,00"
-	Name="qcow_test_support"
-	ProjectGUID="{BCCF5091-04EB-42C6-89AF-5093A5840CE4}"
-	RootNamespace="qcow_test_support"
+	Name="qcow_test_file"
+	ProjectGUID="{F55714ED-6A5F-4137-9E5A-12C3221A2F74}"
+	RootNamespace="qcow_test_file"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="131072"
 	>
@@ -176,7 +176,11 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\tests\qcow_test_support.c"
+				RelativePath="..\..\tests\qcow_test_file.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\tests\qcow_test_memory.c"
 				>
 			</File>
 		</Filter>
@@ -206,7 +210,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\tests\qcow_test_macros.h"
+				RelativePath="..\..\tests\qcow_test_memory.h"
 				>
 			</File>
 			<File

@@ -126,6 +126,7 @@ stamp-h[1-9]
 /qcowtools/qcowmount
 /tests/input
 /tests/qcow_test_error
+/tests/qcow_test_file
 /tests/qcow_test_file_get_values
 /tests/qcow_test_notify
 /tests/qcow_test_open_close

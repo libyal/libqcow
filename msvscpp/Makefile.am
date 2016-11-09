@@ -17,6 +17,7 @@ MSVSCPP_FILES = \
 	libuna/libuna.vcproj \
 	pyqcow/pyqcow.vcproj \
 	qcow_test_error/qcow_test_error.vcproj \
+	qcow_test_file/qcow_test_file.vcproj \
 	qcow_test_file_get_values/qcow_test_file_get_values.vcproj \
 	qcow_test_notify/qcow_test_notify.vcproj \
 	qcow_test_open_close/qcow_test_open_close.vcproj \

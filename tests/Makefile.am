@@ -40,6 +40,7 @@ EXTRA_DIST = \
 
 check_PROGRAMS = \
 	qcow_test_error \
+	qcow_test_file \
 	qcow_test_file_get_values \
 	qcow_test_notify \
 	qcow_test_open_close \
@@ -55,6 +56,25 @@ qcow_test_error_SOURCES = \
 
 qcow_test_error_LDADD = \
 	../libqcow/libqcow.la
+
+qcow_test_file_SOURCES = \
+	qcow_test_file.c \
+	qcow_test_libcerror.h \
+	qcow_test_libclocale.h \
+	qcow_test_libcsystem.h \
+	qcow_test_libqcow.h \
+	qcow_test_libuna.h \
+	qcow_test_memory.c qcow_test_memory.h \
+	qcow_test_unused.h
+
+qcow_test_file_LDADD = \
+	@LIBCSYSTEM_LIBADD@ \
+	@LIBUNA_LIBADD@ \
+	@LIBCNOTIFY_LIBADD@ \
+	@LIBCLOCALE_LIBADD@ \
+	@LIBCDATA_LIBADD@ \
+	../libqcow/libqcow.la \
+	@LIBCERROR_LIBADD@
 
 qcow_test_file_get_values_SOURCES = \
 	qcow_test_file_get_values.c \
@@ -120,13 +140,23 @@ qcow_test_seek_LDADD = \
 	@PTHREAD_LIBADD@
 
 qcow_test_support_SOURCES = \
+	qcow_test_libcerror.h \
+	qcow_test_libclocale.h \
+	qcow_test_libcsystem.h \
 	qcow_test_libqcow.h \
+	qcow_test_libuna.h \
 	qcow_test_macros.h \
 	qcow_test_support.c \
 	qcow_test_unused.h
 
 qcow_test_support_LDADD = \
-	../libqcow/libqcow.la
+	@LIBCSYSTEM_LIBADD@ \
+	@LIBUNA_LIBADD@ \
+	@LIBCNOTIFY_LIBADD@ \
+	@LIBCLOCALE_LIBADD@ \
+	@LIBCDATA_LIBADD@ \
+	../libqcow/libqcow.la \
+	@LIBCERROR_LIBADD@
 
 MAINTAINERCLEANFILES = \
 	Makefile.in
