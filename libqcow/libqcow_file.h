@@ -35,14 +35,6 @@
 #include "libqcow_libfcache.h"
 #include "libqcow_libfdata.h"
 
-#if defined( _MSC_VER ) || defined( __BORLANDC__ ) || defined( __MINGW32_VERSION ) || defined( __MINGW64_VERSION_MAJOR )
-
-/* This inclusion is needed otherwise some linkers
- * mess up exporting the metadata functions
- */
-#include "libqcow_metadata.h"
-#endif
-
 #if defined( __cplusplus )
 extern "C" {
 #endif
@@ -262,6 +254,24 @@ int libqcow_file_set_utf16_password(
      libqcow_file_t *file,
      const uint16_t *utf16_string,
      size_t utf16_string_length,
+     libcerror_error_t **error );
+
+LIBQCOW_EXTERN \
+int libqcow_file_get_media_size(
+     libqcow_file_t *file,
+     size64_t *media_size,
+     libcerror_error_t **error );
+
+LIBQCOW_EXTERN \
+int libqcow_file_get_format_version(
+     libqcow_file_t *file,
+     uint32_t *format_version,
+     libcerror_error_t **error );
+
+LIBQCOW_EXTERN \
+int libqcow_file_get_encryption_method(
+     libqcow_file_t *file,
+     uint32_t *encryption_method,
      libcerror_error_t **error );
 
 #if defined( __cplusplus )

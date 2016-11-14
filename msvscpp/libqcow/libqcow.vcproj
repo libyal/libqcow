@@ -216,10 +216,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\libqcow\libqcow_metadata.c"
-				>
-			</File>
-			<File
 				RelativePath="..\..\libqcow\libqcow_notify.c"
 				>
 			</File>
@@ -319,10 +315,6 @@
 			</File>
 			<File
 				RelativePath="..\..\libqcow\libqcow_libuna.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\libqcow\libqcow_metadata.h"
 				>
 			</File>
 			<File

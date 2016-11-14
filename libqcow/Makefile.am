@@ -45,7 +45,6 @@ libqcow_la_SOURCES = \
 	libqcow_libfcache.h \
 	libqcow_libfdata.h \
 	libqcow_libuna.h \
-	libqcow_metadata.c libqcow_metadata.h \
 	libqcow_notify.c libqcow_notify.h \
 	libqcow_support.c libqcow_support.h \
 	libqcow_types.h \
