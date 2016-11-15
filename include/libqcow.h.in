@@ -409,5 +409,5 @@ int libqcow_file_get_media_size(
 }
 #endif
 
-#endif
+#endif /* !defined( _LIBQCOW_H ) */
 

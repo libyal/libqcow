@@ -131,5 +131,5 @@ int libqcow_deflate_decompress(
 }
 #endif
 
-#endif
+#endif /* !defined( _LIBQCOW_DEFLATE_COMPRESSION_H ) */
 

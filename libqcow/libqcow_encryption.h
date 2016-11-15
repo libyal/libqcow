@@ -84,5 +84,5 @@ int libqcow_encryption_crypt(
 }
 #endif
 
-#endif
+#endif /* !defined( _LIBQCOW_ENCRYPTION_H ) */
 

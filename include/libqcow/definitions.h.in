@@ -24,11 +24,11 @@
 
 #include <libqcow/types.h>
 
-#define LIBQCOW_VERSION						@VERSION@
+#define LIBQCOW_VERSION				@VERSION@
 
 /* The version string
  */
-#define LIBQCOW_VERSION_STRING					"@VERSION@"
+#define LIBQCOW_VERSION_STRING			"@VERSION@"
 
 /* The access flags definitions
  * bit 1        set to 1 for read access
@@ -37,25 +37,25 @@
  */
 enum LIBQCOW_ACCESS_FLAGS
 {
-	LIBQCOW_ACCESS_FLAG_READ				= 0x01,
+	LIBQCOW_ACCESS_FLAG_READ		= 0x01,
 /* Reserved: not supported yet */
-	LIBQCOW_ACCESS_FLAG_WRITE				= 0x02
+	LIBQCOW_ACCESS_FLAG_WRITE		= 0x02
 };
 
 /* The file access macros
  */
-#define LIBQCOW_OPEN_READ					( LIBQCOW_ACCESS_FLAG_READ )
+#define LIBQCOW_OPEN_READ			( LIBQCOW_ACCESS_FLAG_READ )
 /* Reserved: not supported yet */
-#define LIBQCOW_OPEN_WRITE					( LIBQCOW_ACCESS_FLAG_WRITE )
+#define LIBQCOW_OPEN_WRITE			( LIBQCOW_ACCESS_FLAG_WRITE )
 /* Reserved: not supported yet */
-#define LIBQCOW_OPEN_READ_WRITE					( LIBQCOW_ACCESS_FLAG_READ | LIBQCOW_ACCESS_FLAG_WRITE )
+#define LIBQCOW_OPEN_READ_WRITE			( LIBQCOW_ACCESS_FLAG_READ | LIBQCOW_ACCESS_FLAG_WRITE )
 
 /* The encryption method definitions
  */
 enum LIBQCOW_ENCRYPTION_METHODS
 {
-	LIBQCOW_ENCRYPTION_METHOD_NONE				= 0,
-	LIBQCOW_ENCRYPTION_METHOD_AES_128_CBC			= 1
+	LIBQCOW_ENCRYPTION_METHOD_NONE		= 0,
+	LIBQCOW_ENCRYPTION_METHOD_AES_128_CBC	= 1
 };
 
 #endif /* !defined( _LIBQCOW_DEFINITIONS_H ) */

@@ -52,5 +52,5 @@ int libqcow_decompress_data(
 }
 #endif
 
-#endif
+#endif /* !defined( _LIBQCOW_COMPRESSION_H ) */
 

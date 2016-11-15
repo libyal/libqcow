@@ -808,7 +808,7 @@ int main(
 
 #if defined( LIBQCOW_HAVE_BFIO )
 
-		/* TODO add test for libqcow_file_open_file_io_handle */
+		/* TODO add test for libqcow_check_file_file_io_handle */
 
 #endif /* defined( LIBQCOW_HAVE_BFIO ) */
 	}

@@ -165,5 +165,5 @@ struct qcow_file_header_v2
 }
 #endif
 
-#endif
+#endif /* !defined( _QCOW_FILE_HEADER_H ) */
 

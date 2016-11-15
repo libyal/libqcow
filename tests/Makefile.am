@@ -11,7 +11,12 @@ AM_CPPFLAGS = \
 	@LIBCFILE_CPPFLAGS@ \
 	@LIBCPATH_CPPFLAGS@ \
 	@LIBBFIO_CPPFLAGS@ \
+	@LIBCAES_CPPFLAGS@ \
+	@LIBFCACHE_CPPFLAGS@ \
+	@LIBFDATA_CPPFLAGS@ \
 	@LIBCSYSTEM_CPPFLAGS@ \
+	@ZLIB_CPPFLAGS@ \
+	@LIBCRYPTO_CPPFLAGS@ \
 	@PTHREAD_CPPFLAGS@ \
 	@LIBQCOW_DLL_IMPORT@
 
@@ -22,6 +27,7 @@ endif
 
 TESTS = \
 	test_api_functions.sh \
+	test_api_types.sh \
 	test_qcowinfo.sh \
 	$(TESTS_PYQCOW)
 
@@ -31,6 +37,7 @@ check_SCRIPTS = \
 	pyqcow_test_read.py \
 	pyqcow_test_seek.py \
 	test_api_functions.sh \
+	test_api_types.sh \
 	test_python_functions.sh \
 	test_qcowinfo.sh \
 	test_runner.sh
@@ -39,14 +46,39 @@ EXTRA_DIST = \
 	$(check_SCRIPTS)
 
 check_PROGRAMS = \
+	qcow_test_cluster_block \
+	qcow_test_cluster_table \
 	qcow_test_error \
 	qcow_test_file \
-	qcow_test_file_get_values \
+	qcow_test_io_handle \
 	qcow_test_notify \
-	qcow_test_open_close \
 	qcow_test_read \
 	qcow_test_seek \
 	qcow_test_support
+
+qcow_test_cluster_block_SOURCES = \
+	qcow_test_cluster_block.c \
+	qcow_test_libcerror.h \
+	qcow_test_libqcow.h \
+	qcow_test_macros.h \
+	qcow_test_memory.c qcow_test_memory.h \
+	qcow_test_unused.h
+
+qcow_test_cluster_block_LDADD = \
+	../libqcow/libqcow.la \
+	@LIBCERROR_LIBADD@
+
+qcow_test_cluster_table_SOURCES = \
+	qcow_test_cluster_table.c \
+	qcow_test_libcerror.h \
+	qcow_test_libqcow.h \
+	qcow_test_macros.h \
+	qcow_test_memory.c qcow_test_memory.h \
+	qcow_test_unused.h
+
+qcow_test_cluster_table_LDADD = \
+	../libqcow/libqcow.la \
+	@LIBCERROR_LIBADD@
 
 qcow_test_error_SOURCES = \
 	qcow_test_error.c \
@@ -64,8 +96,8 @@ qcow_test_file_SOURCES = \
 	qcow_test_libcsystem.h \
 	qcow_test_libqcow.h \
 	qcow_test_libuna.h \
-	qcow_test_memory.c qcow_test_memory.h \
-	qcow_test_unused.h
+	qcow_test_macros.h \
+	qcow_test_memory.c qcow_test_memory.h
 
 qcow_test_file_LDADD = \
 	@LIBCSYSTEM_LIBADD@ \
@@ -74,16 +106,19 @@ qcow_test_file_LDADD = \
 	@LIBCLOCALE_LIBADD@ \
 	@LIBCDATA_LIBADD@ \
 	../libqcow/libqcow.la \
-	@LIBCERROR_LIBADD@
+	@LIBCTHREADS_LIBADD@ \
+	@LIBCERROR_LIBADD@ \
+	@PTHREAD_LIBADD@
 
-qcow_test_file_get_values_SOURCES = \
-	qcow_test_file_get_values.c \
+qcow_test_io_handle_SOURCES = \
+	qcow_test_io_handle.c \
 	qcow_test_libcerror.h \
 	qcow_test_libqcow.h \
+	qcow_test_macros.h \
+	qcow_test_memory.c qcow_test_memory.h \
 	qcow_test_unused.h
 
-qcow_test_file_get_values_LDADD = \
-	@LIBCSYSTEM_LIBADD@ \
+qcow_test_io_handle_LDADD = \
 	../libqcow/libqcow.la \
 	@LIBCERROR_LIBADD@
 
@@ -95,21 +130,6 @@ qcow_test_notify_SOURCES = \
 
 qcow_test_notify_LDADD = \
 	../libqcow/libqcow.la
-
-qcow_test_open_close_SOURCES = \
-	qcow_test_libcerror.h \
-	qcow_test_libcsystem.h \
-	qcow_test_libcthreads.h \
-	qcow_test_libqcow.h \
-	qcow_test_open_close.c \
-	qcow_test_unused.h
-
-qcow_test_open_close_LDADD = \
-	@LIBCSYSTEM_LIBADD@ \
-	../libqcow/libqcow.la \
-	@LIBCTHREADS_LIBADD@ \
-	@LIBCERROR_LIBADD@
-	@PTHREAD_LIBADD@
 
 qcow_test_read_SOURCES = \
 	qcow_test_libcerror.h \
@@ -146,8 +166,7 @@ qcow_test_support_SOURCES = \
 	qcow_test_libqcow.h \
 	qcow_test_libuna.h \
 	qcow_test_macros.h \
-	qcow_test_support.c \
-	qcow_test_unused.h
+	qcow_test_support.c
 
 qcow_test_support_LDADD = \
 	@LIBCSYSTEM_LIBADD@ \

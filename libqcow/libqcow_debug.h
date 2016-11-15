@@ -44,5 +44,5 @@ int libqcow_debug_print_read_offsets(
 }
 #endif
 
-#endif
+#endif /* !defined( _LIBQCOW_DEBUG_H ) */
 

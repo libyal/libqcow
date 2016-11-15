@@ -157,5 +157,5 @@ int libqcow_io_handle_read_cluster_block(
 }
 #endif
 
-#endif
+#endif /* !defined( _LIBQCOW_IO_HANDLE_H ) */
 

@@ -51,5 +51,5 @@ int libqcow_i18n_initialize(
 }
 #endif
 
-#endif
+#endif /* !defined( _LIBQCOW_I18N_H ) */
 

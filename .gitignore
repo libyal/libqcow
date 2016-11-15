@@ -125,11 +125,12 @@ stamp-h[1-9]
 /qcowtools/qcowinfo
 /qcowtools/qcowmount
 /tests/input
+/tests/qcow_test_cluster_block
+/tests/qcow_test_cluster_table
 /tests/qcow_test_error
 /tests/qcow_test_file
-/tests/qcow_test_file_get_values
+/tests/qcow_test_io_handle
 /tests/qcow_test_notify
-/tests/qcow_test_open_close
 /tests/qcow_test_read
 /tests/qcow_test_seek
 /tests/qcow_test_support

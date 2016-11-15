@@ -75,5 +75,5 @@ int libqcow_cluster_table_read(
 }
 #endif
 
-#endif
+#endif /* !defined( _LIBQCOW_CLUSTER_TABLE_H ) */
 

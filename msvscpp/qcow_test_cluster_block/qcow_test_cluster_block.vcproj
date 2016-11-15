@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9,00"
-	Name="qcow_test_read"
-	ProjectGUID="{BF67310F-0D15-4A3E-8C8F-389742713753}"
-	RootNamespace="qcow_test_read"
+	Name="qcow_test_cluster_block"
+	ProjectGUID="{5FBCFA88-121B-4704-A268-99336713E3C9}"
+	RootNamespace="qcow_test_cluster_block"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="131072"
 	>
@@ -176,7 +176,11 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\tests\qcow_test_read.c"
+				RelativePath="..\..\tests\qcow_test_cluster_block.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\tests\qcow_test_memory.c"
 				>
 			</File>
 		</Filter>
@@ -190,15 +194,15 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\tests\qcow_test_libcsystem.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\tests\qcow_test_libcthreads.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\tests\qcow_test_libqcow.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\tests\qcow_test_macros.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\tests\qcow_test_memory.h"
 				>
 			</File>
 			<File
