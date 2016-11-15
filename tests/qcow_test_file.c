@@ -1232,21 +1232,19 @@ on_error:
 	return( 0 );
 }
 
-/* Tests the libqcow_file_get_offset function
+/* Tests the libqcow_file_signal_abort function
  * Returns 1 if successful or 0 if not
  */
-int qcow_test_file_get_offset(
+int qcow_test_file_signal_abort(
      libqcow_file_t *file )
 {
 	libcerror_error_t *error = NULL;
-	off64_t offset           = 0;
 	int result               = 0;
 
 	/* Test regular cases
 	 */
-	result = libqcow_file_get_offset(
+	result = libqcow_file_signal_abort(
 	          file,
-	          &offset,
 	          &error );
 
 	QCOW_TEST_ASSERT_EQUAL_INT(
@@ -1260,6 +1258,64 @@ int qcow_test_file_get_offset(
 
 	/* Test error cases
 	 */
+	result = libqcow_file_signal_abort(
+	          NULL,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+        QCOW_TEST_ASSERT_IS_NOT_NULL(
+         "error",
+         error );
+
+	libcerror_error_free(
+	 &error );
+
+	return( 1 );
+
+on_error:
+	if( error != NULL )
+	{
+		libcerror_error_free(
+		 &error );
+	}
+	return( 0 );
+}
+
+/* Tests the libqcow_file_get_offset function
+ * Returns 1 if successful or 0 if not
+ */
+int qcow_test_file_get_offset(
+     libqcow_file_t *file )
+{
+	libcerror_error_t *error = NULL;
+	off64_t offset           = 0;
+	int offset_is_set        = 0;
+	int result               = 0;
+
+	/* Test regular cases
+	 */
+	result = libqcow_file_get_offset(
+	          file,
+	          &offset,
+	          &error );
+
+	QCOW_TEST_ASSERT_NOT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
+
+	offset_is_set = result;
+
+	/* Test error cases
+	 */
 	result = libqcow_file_get_offset(
 	          NULL,
 	          &offset,
@@ -1270,30 +1326,32 @@ int qcow_test_file_get_offset(
 	 result,
 	 -1 );
 
-        QCOW_TEST_ASSERT_IS_NOT_NULL(
-         "error",
-         error );
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
 
 	libcerror_error_free(
 	 &error );
 
-	result = libqcow_file_get_offset(
-	          file,
-	          NULL,
-	          &error );
+	if( offset_is_set != 0 )
+	{
+		result = libqcow_file_get_offset(
+		          file,
+		          NULL,
+		          &error );
 
-	QCOW_TEST_ASSERT_EQUAL_INT(
-	 "result",
-	 result,
-	 -1 );
+		QCOW_TEST_ASSERT_EQUAL_INT(
+		 "result",
+		 result,
+		 -1 );
 
-        QCOW_TEST_ASSERT_IS_NOT_NULL(
-         "error",
-         error );
+		QCOW_TEST_ASSERT_IS_NOT_NULL(
+		 "error",
+		 error );
 
-	libcerror_error_free(
-	 &error );
-
+		libcerror_error_free(
+		 &error );
+	}
 	return( 1 );
 
 on_error:
@@ -1313,6 +1371,7 @@ int qcow_test_file_get_media_size(
 {
 	libcerror_error_t *error = NULL;
 	size64_t media_size      = 0;
+	int media_size_is_set    = 0;
 	int result               = 0;
 
 	/* Test regular cases
@@ -1322,14 +1381,16 @@ int qcow_test_file_get_media_size(
 	          &media_size,
 	          &error );
 
-	QCOW_TEST_ASSERT_EQUAL_INT(
+	QCOW_TEST_ASSERT_NOT_EQUAL_INT(
 	 "result",
 	 result,
-	 1 );
+	 -1 );
 
-        QCOW_TEST_ASSERT_IS_NULL(
-         "error",
-         error );
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
+
+	media_size_is_set = result;
 
 	/* Test error cases
 	 */
@@ -1343,30 +1404,32 @@ int qcow_test_file_get_media_size(
 	 result,
 	 -1 );
 
-        QCOW_TEST_ASSERT_IS_NOT_NULL(
-         "error",
-         error );
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
 
 	libcerror_error_free(
 	 &error );
 
-	result = libqcow_file_get_media_size(
-	          file,
-	          NULL,
-	          &error );
+	if( media_size_is_set != 0 )
+	{
+		result = libqcow_file_get_media_size(
+		          file,
+		          NULL,
+		          &error );
 
-	QCOW_TEST_ASSERT_EQUAL_INT(
-	 "result",
-	 result,
-	 -1 );
+		QCOW_TEST_ASSERT_EQUAL_INT(
+		 "result",
+		 result,
+		 -1 );
 
-        QCOW_TEST_ASSERT_IS_NOT_NULL(
-         "error",
-         error );
+		QCOW_TEST_ASSERT_IS_NOT_NULL(
+		 "error",
+		 error );
 
-	libcerror_error_free(
-	 &error );
-
+		libcerror_error_free(
+		 &error );
+	}
 	return( 1 );
 
 on_error:
@@ -1384,9 +1447,10 @@ on_error:
 int qcow_test_file_get_format_version(
      libqcow_file_t *file )
 {
-	libcerror_error_t *error = NULL;
-	uint32_t format_version  = 0;
-	int result               = 0;
+	libcerror_error_t *error  = NULL;
+	uint32_t format_version   = 0;
+	int format_version_is_set = 0;
+	int result                = 0;
 
 	/* Test regular cases
 	 */
@@ -1395,14 +1459,16 @@ int qcow_test_file_get_format_version(
 	          &format_version,
 	          &error );
 
-	QCOW_TEST_ASSERT_EQUAL_INT(
+	QCOW_TEST_ASSERT_NOT_EQUAL_INT(
 	 "result",
 	 result,
-	 1 );
+	 -1 );
 
-        QCOW_TEST_ASSERT_IS_NULL(
-         "error",
-         error );
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
+
+	format_version_is_set = result;
 
 	/* Test error cases
 	 */
@@ -1416,30 +1482,32 @@ int qcow_test_file_get_format_version(
 	 result,
 	 -1 );
 
-        QCOW_TEST_ASSERT_IS_NOT_NULL(
-         "error",
-         error );
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
 
 	libcerror_error_free(
 	 &error );
 
-	result = libqcow_file_get_format_version(
-	          file,
-	          NULL,
-	          &error );
+	if( format_version_is_set != 0 )
+	{
+		result = libqcow_file_get_format_version(
+		          file,
+		          NULL,
+		          &error );
 
-	QCOW_TEST_ASSERT_EQUAL_INT(
-	 "result",
-	 result,
-	 -1 );
+		QCOW_TEST_ASSERT_EQUAL_INT(
+		 "result",
+		 result,
+		 -1 );
 
-        QCOW_TEST_ASSERT_IS_NOT_NULL(
-         "error",
-         error );
+		QCOW_TEST_ASSERT_IS_NOT_NULL(
+		 "error",
+		 error );
 
-	libcerror_error_free(
-	 &error );
-
+		libcerror_error_free(
+		 &error );
+	}
 	return( 1 );
 
 on_error:
@@ -1457,9 +1525,10 @@ on_error:
 int qcow_test_file_get_encryption_method(
      libqcow_file_t *file )
 {
-	libcerror_error_t *error   = NULL;
-	uint32_t encryption_method = 0;
-	int result                 = 0;
+	libcerror_error_t *error     = NULL;
+	uint32_t encryption_method   = 0;
+	int encryption_method_is_set = 0;
+	int result                   = 0;
 
 	/* Test regular cases
 	 */
@@ -1468,14 +1537,16 @@ int qcow_test_file_get_encryption_method(
 	          &encryption_method,
 	          &error );
 
-	QCOW_TEST_ASSERT_EQUAL_INT(
+	QCOW_TEST_ASSERT_NOT_EQUAL_INT(
 	 "result",
 	 result,
-	 1 );
+	 -1 );
 
-        QCOW_TEST_ASSERT_IS_NULL(
-         "error",
-         error );
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
+
+	encryption_method_is_set = result;
 
 	/* Test error cases
 	 */
@@ -1489,30 +1560,32 @@ int qcow_test_file_get_encryption_method(
 	 result,
 	 -1 );
 
-        QCOW_TEST_ASSERT_IS_NOT_NULL(
-         "error",
-         error );
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
 
 	libcerror_error_free(
 	 &error );
 
-	result = libqcow_file_get_encryption_method(
-	          file,
-	          NULL,
-	          &error );
+	if( encryption_method_is_set != 0 )
+	{
+		result = libqcow_file_get_encryption_method(
+		          file,
+		          NULL,
+		          &error );
 
-	QCOW_TEST_ASSERT_EQUAL_INT(
-	 "result",
-	 result,
-	 -1 );
+		QCOW_TEST_ASSERT_EQUAL_INT(
+		 "result",
+		 result,
+		 -1 );
 
-        QCOW_TEST_ASSERT_IS_NOT_NULL(
-         "error",
-         error );
+		QCOW_TEST_ASSERT_IS_NOT_NULL(
+		 "error",
+		 error );
 
-	libcerror_error_free(
-	 &error );
-
+		libcerror_error_free(
+		 &error );
+	}
 	return( 1 );
 
 on_error:
@@ -1631,7 +1704,10 @@ int main(
 	         "error",
 	         error );
 
-		/* TODO: add tests for libqcow_file_signal_abort */
+		QCOW_TEST_RUN_WITH_ARGS(
+		 "libqcow_file_signal_abort",
+		 qcow_test_file_signal_abort,
+		 file );
 
 		/* TODO: add tests for libqcow_file_read_buffer */
 
