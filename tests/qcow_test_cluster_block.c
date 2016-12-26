@@ -1,5 +1,5 @@
 /*
- * Library cluster_block type testing program
+ * Library cluster_block type test program
  *
  * Copyright (C) 2010-2016, Joachim Metz <joachim.metz@gmail.com>
  *

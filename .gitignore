@@ -131,8 +131,6 @@ stamp-h[1-9]
 /tests/qcow_test_file
 /tests/qcow_test_io_handle
 /tests/qcow_test_notify
-/tests/qcow_test_read
-/tests/qcow_test_seek
 /tests/qcow_test_support
 /tests/tmp*
 

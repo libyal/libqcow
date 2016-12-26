@@ -22,8 +22,6 @@ MSVSCPP_FILES = \
 	qcow_test_file/qcow_test_file.vcproj \
 	qcow_test_io_handle/qcow_test_io_handle.vcproj \
 	qcow_test_notify/qcow_test_notify.vcproj \
-	qcow_test_read/qcow_test_read.vcproj \
-	qcow_test_seek/qcow_test_seek.vcproj \
 	qcow_test_support/qcow_test_support.vcproj \
 	qcowinfo/qcowinfo.vcproj \
 	qcowmount/qcowmount.vcproj \

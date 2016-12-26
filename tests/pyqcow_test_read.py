@@ -146,7 +146,7 @@ def pyqcow_test_read_buffer_at_offset(
 
 def pyqcow_test_read(qcow_file):
   """Tests the read function."""
-  file_size = qcow_file.size
+  file_size = qcow_file.media_size
 
   # Case 0: test full read
 

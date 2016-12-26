@@ -1,5 +1,5 @@
 /*
- * Library file type testing program
+ * Library file type test program
  *
  * Copyright (C) 2010-2016, Joachim Metz <joachim.metz@gmail.com>
  *
@@ -30,9 +30,9 @@
 #include <stdlib.h>
 #endif
 
+#include "qcow_test_getopt.h"
 #include "qcow_test_libcerror.h"
 #include "qcow_test_libclocale.h"
-#include "qcow_test_libcsystem.h"
 #include "qcow_test_libqcow.h"
 #include "qcow_test_libuna.h"
 #include "qcow_test_macros.h"
@@ -1285,6 +1285,334 @@ on_error:
 	return( 0 );
 }
 
+/* Tests the libqcow_file_read_buffer function
+ * Returns 1 if successful or 0 if not
+ */
+int qcow_test_file_read_buffer(
+     libqcow_file_t *file )
+{
+	uint8_t buffer[ 16 ];
+
+	libcerror_error_t *error = NULL;
+	size64_t size            = 0;
+	ssize_t read_count       = 0;
+	off64_t offset           = 0;
+
+	/* Determine size
+	 */
+	offset = libqcow_file_seek_offset(
+	          file,
+	          0,
+	          SEEK_END,
+	          &error );
+
+	QCOW_TEST_ASSERT_NOT_EQUAL_INT64(
+	 "offset",
+	 offset,
+	 (int64_t) -1 );
+
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
+
+	size = (size64_t) offset;
+
+	/* Reset offset to 0
+	 */
+	offset = libqcow_file_seek_offset(
+	          file,
+	          0,
+	          SEEK_SET,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT64(
+	 "offset",
+	 offset,
+	 (int64_t) 0 );
+
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
+
+	/* Test regular cases
+	 */
+	if( size > 16 )
+	{
+		read_count = libqcow_file_read_buffer(
+		              file,
+		              buffer,
+		              16,
+		              &error );
+
+		QCOW_TEST_ASSERT_EQUAL_SSIZE(
+		 "read_count",
+		 read_count,
+		 (ssize_t) 16 );
+
+		QCOW_TEST_ASSERT_IS_NULL(
+		 "error",
+		 error );
+	}
+/* TODO read on size boundary */
+/* TODO read beyond size boundary */
+
+	/* Reset offset to 0
+	 */
+	offset = libqcow_file_seek_offset(
+	          file,
+	          0,
+	          SEEK_SET,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT64(
+	 "offset",
+	 offset,
+	 (int64_t) 0 );
+
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
+
+	/* Test error cases
+	 */
+	read_count = libqcow_file_read_buffer(
+	              NULL,
+	              buffer,
+	              16,
+	              &error );
+
+	QCOW_TEST_ASSERT_EQUAL_SSIZE(
+	 "read_count",
+	 read_count,
+	 (ssize_t) -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	read_count = libqcow_file_read_buffer(
+	              file,
+	              NULL,
+	              16,
+	              &error );
+
+	QCOW_TEST_ASSERT_EQUAL_SSIZE(
+	 "read_count",
+	 read_count,
+	 (ssize_t) -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	read_count = libqcow_file_read_buffer(
+	              file,
+	              buffer,
+	              (size_t) SSIZE_MAX + 1,
+	              &error );
+
+	QCOW_TEST_ASSERT_EQUAL_SSIZE(
+	 "read_count",
+	 read_count,
+	 (ssize_t) -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	return( 1 );
+
+on_error:
+	if( error != NULL )
+	{
+		libcerror_error_free(
+		 &error );
+	}
+	return( 0 );
+}
+
+/* Tests the libqcow_file_seek_offset function
+ * Returns 1 if successful or 0 if not
+ */
+int qcow_test_file_seek_offset(
+     libqcow_file_t *file )
+{
+	libcerror_error_t *error = NULL;
+	size64_t size            = 0;
+	off64_t offset           = 0;
+
+	/* Test regular cases
+	 */
+	offset = libqcow_file_seek_offset(
+	          file,
+	          0,
+	          SEEK_END,
+	          &error );
+
+	QCOW_TEST_ASSERT_NOT_EQUAL_INT64(
+	 "offset",
+	 offset,
+	 (int64_t) -1 );
+
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
+
+	size = (size64_t) offset;
+
+	offset = libqcow_file_seek_offset(
+	          file,
+	          1024,
+	          SEEK_SET,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT64(
+	 "offset",
+	 offset,
+	 (int64_t) 1024 );
+
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
+
+	offset = libqcow_file_seek_offset(
+	          file,
+	          -512,
+	          SEEK_CUR,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT64(
+	 "offset",
+	 offset,
+	 (int64_t) 512 );
+
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
+
+	offset = libqcow_file_seek_offset(
+	          file,
+	          (off64_t) ( size + 512 ),
+	          SEEK_SET,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT64(
+	 "offset",
+	 offset,
+	 (int64_t) ( size + 512 ) );
+
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
+
+	/* Reset offset to 0
+	 */
+	offset = libqcow_file_seek_offset(
+	          file,
+	          0,
+	          SEEK_SET,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT64(
+	 "offset",
+	 offset,
+	 (int64_t) 0 );
+
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
+
+	/* Test error cases
+	 */
+	offset = libqcow_file_seek_offset(
+	          NULL,
+	          0,
+	          SEEK_SET,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT64(
+	 "offset",
+	 offset,
+	 (int64_t) -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	offset = libqcow_file_seek_offset(
+	          file,
+	          -1,
+	          SEEK_SET,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT64(
+	 "offset",
+	 offset,
+	 (int64_t) -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	offset = libqcow_file_seek_offset(
+	          file,
+	          -1,
+	          SEEK_CUR,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT64(
+	 "offset",
+	 offset,
+	 (int64_t) -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	offset = libqcow_file_seek_offset(
+	          file,
+	          (off64_t) ( -1 * ( size + 1 ) ),
+	          SEEK_END,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT64(
+	 "offset",
+	 offset,
+	 (int64_t) -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	return( 1 );
+
+on_error:
+	if( error != NULL )
+	{
+		libcerror_error_free(
+		 &error );
+	}
+	return( 0 );
+}
+
 /* Tests the libqcow_file_get_offset function
  * Returns 1 if successful or 0 if not
  */
@@ -1615,7 +1943,7 @@ int main(
 	system_integer_t option    = 0;
 	int result                 = 0;
 
-	while( ( option = libcsystem_getopt(
+	while( ( option = qcow_test_getopt(
 	                   argc,
 	                   argv,
 	                   _SYSTEM_STRING( "" ) ) ) != (system_integer_t) -1 )
@@ -1709,7 +2037,10 @@ int main(
 		 qcow_test_file_signal_abort,
 		 file );
 
-		/* TODO: add tests for libqcow_file_read_buffer */
+		QCOW_TEST_RUN_WITH_ARGS(
+		 "libqcow_file_read_buffer",
+		 qcow_test_file_read_buffer,
+		 file );
 
 		/* TODO: add tests for libqcow_file_read_buffer_at_offset */
 
@@ -1717,7 +2048,10 @@ int main(
 
 		/* TODO: add tests for libqcow_file_write_buffer_at_offset */
 
-		/* TODO: add tests for libqcow_file_seek_offset */
+		QCOW_TEST_RUN_WITH_ARGS(
+		 "libqcow_file_seek_offset",
+		 qcow_test_file_seek_offset,
+		 file );
 
 		QCOW_TEST_RUN_WITH_ARGS(
 		 "libqcow_file_get_offset",

@@ -38,9 +38,9 @@
 #include <libqcow/extern.h>
 
 #else
-#define LIBQCOW_EXTERN	extern
+#define LIBQCOW_EXTERN	/* extern */
 
-#endif
+#endif /* !defined( HAVE_LOCAL_LIBQCOW ) */
 
 #endif /* !defined( _LIBQCOW_INTERNAL_EXTERN_H ) */
 

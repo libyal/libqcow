@@ -14,7 +14,6 @@ AM_CPPFLAGS = \
 	@LIBCAES_CPPFLAGS@ \
 	@LIBFCACHE_CPPFLAGS@ \
 	@LIBFDATA_CPPFLAGS@ \
-	@LIBCSYSTEM_CPPFLAGS@ \
 	@ZLIB_CPPFLAGS@ \
 	@LIBCRYPTO_CPPFLAGS@ \
 	@PTHREAD_CPPFLAGS@ \
@@ -32,10 +31,9 @@ TESTS = \
 	$(TESTS_PYQCOW)
 
 check_SCRIPTS = \
-	pyqcow_test_get_version.py \
-	pyqcow_test_open_close.py \
+	pyqcow_test_file.py \
 	pyqcow_test_read.py \
-	pyqcow_test_seek.py \
+	pyqcow_test_support.py \
 	test_api_functions.sh \
 	test_api_types.sh \
 	test_python_functions.sh \
@@ -52,8 +50,6 @@ check_PROGRAMS = \
 	qcow_test_file \
 	qcow_test_io_handle \
 	qcow_test_notify \
-	qcow_test_read \
-	qcow_test_seek \
 	qcow_test_support
 
 qcow_test_cluster_block_SOURCES = \
@@ -91,16 +87,16 @@ qcow_test_error_LDADD = \
 
 qcow_test_file_SOURCES = \
 	qcow_test_file.c \
+	qcow_test_getopt.c qcow_test_getopt.h \
 	qcow_test_libcerror.h \
 	qcow_test_libclocale.h \
-	qcow_test_libcsystem.h \
+	qcow_test_libcnotify.h \
 	qcow_test_libqcow.h \
 	qcow_test_libuna.h \
 	qcow_test_macros.h \
 	qcow_test_memory.c qcow_test_memory.h
 
 qcow_test_file_LDADD = \
-	@LIBCSYSTEM_LIBADD@ \
 	@LIBUNA_LIBADD@ \
 	@LIBCNOTIFY_LIBADD@ \
 	@LIBCLOCALE_LIBADD@ \
@@ -131,45 +127,21 @@ qcow_test_notify_SOURCES = \
 qcow_test_notify_LDADD = \
 	../libqcow/libqcow.la
 
-qcow_test_read_SOURCES = \
-	qcow_test_libcerror.h \
-	qcow_test_libcsystem.h \
-	qcow_test_libcthreads.h \
-	qcow_test_libqcow.h \
-	qcow_test_read.c \
-	qcow_test_unused.h
-
-qcow_test_read_LDADD = \
-	@LIBCSYSTEM_LIBADD@ \
-	../libqcow/libqcow.la \
-	@LIBCTHREADS_LIBADD@ \
-	@LIBCERROR_LIBADD@
-	@PTHREAD_LIBADD@
-
-qcow_test_seek_SOURCES = \
-	qcow_test_libcerror.h \
-	qcow_test_libcsystem.h \
-	qcow_test_libqcow.h \
-	qcow_test_seek.c \
-	qcow_test_unused.h
-
-qcow_test_seek_LDADD = \
-	@LIBCSYSTEM_LIBADD@ \
-	../libqcow/libqcow.la \
-	@LIBCERROR_LIBADD@
-	@PTHREAD_LIBADD@
-
 qcow_test_support_SOURCES = \
+	qcow_test_getopt.c qcow_test_getopt.h \
+	qcow_test_libbfio.h \
 	qcow_test_libcerror.h \
 	qcow_test_libclocale.h \
-	qcow_test_libcsystem.h \
+	qcow_test_libcnotify.h \
 	qcow_test_libqcow.h \
 	qcow_test_libuna.h \
 	qcow_test_macros.h \
 	qcow_test_support.c
 
 qcow_test_support_LDADD = \
-	@LIBCSYSTEM_LIBADD@ \
+	@LIBBFIO_LIBADD@ \
+	@LIBCPATH_LIBADD@ \
+	@LIBCFILE_LIBADD@ \
 	@LIBUNA_LIBADD@ \
 	@LIBCNOTIFY_LIBADD@ \
 	@LIBCLOCALE_LIBADD@ \
