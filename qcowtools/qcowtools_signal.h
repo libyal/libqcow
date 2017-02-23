@@ -1,5 +1,5 @@
 /*
- * Common output functions for the qcowtools
+ * Signal handling functions
  *
  * Copyright (C) 2010-2017, Joachim Metz <joachim.metz@gmail.com>
  *
@@ -19,31 +19,54 @@
  * along with this software.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !defined( _QCOWOUTPUT_H )
-#define _QCOWOUTPUT_H
+#if !defined( _QCOWTOOLS_SIGNAL_H )
+#define _QCOWTOOLS_SIGNAL_H
 
 #include <common.h>
-#include <file_stream.h>
 #include <types.h>
+
+#include "qcowtools_libcerror.h"
 
 #if defined( __cplusplus )
 extern "C" {
 #endif
 
-void qcowoutput_copyright_fprint(
-      FILE *stream );
+#if !defined( HAVE_SIGNAL_H ) && !defined( WINAPI )
+#error missing signal functions
+#endif
 
-void qcowoutput_version_fprint(
-      FILE *stream,
-      const char *program );
+#if defined( WINAPI )
+typedef unsigned long qcowtools_signal_t;
 
-void qcowoutput_version_detailed_fprint(
-      FILE *stream,
-      const char *program );
+#else
+typedef int qcowtools_signal_t;
+
+#endif /* defined( WINAPI ) */
+
+#if defined( WINAPI )
+
+BOOL WINAPI qcowtools_signal_handler(
+             qcowtools_signal_t signal );
+
+#if defined( _MSC_VER )
+
+void qcowtools_signal_initialize_memory_debug(
+      void );
+
+#endif /* defined( _MSC_VER ) */
+
+#endif /* defined( WINAPI ) */
+
+int qcowtools_signal_attach(
+     void (*signal_handler)( qcowtools_signal_t ),
+     libcerror_error_t **error );
+
+int qcowtools_signal_detach(
+     libcerror_error_t **error );
 
 #if defined( __cplusplus )
 }
 #endif
 
-#endif /* !defined( _QCOWOUTPUT_H ) */
+#endif /* !defined( _QCOWTOOLS_SIGNAL_H ) */
 

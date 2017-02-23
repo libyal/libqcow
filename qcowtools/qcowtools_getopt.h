@@ -1,5 +1,5 @@
 /*
- * Python object definition of the libqcow encryption types
+ * GetOpt functions
  *
  * Copyright (C) 2010-2017, Joachim Metz <joachim.metz@gmail.com>
  *
@@ -19,45 +19,50 @@
  * along with this software.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !defined( _PYQCOW_ENCRYPTION_TYPES_H )
-#define _PYQCOW_ENCRYPTION_TYPES_H
+#if !defined( _QCOWTOOLS_GETOPT_H )
+#define _QCOWTOOLS_GETOPT_H
 
 #include <common.h>
 #include <types.h>
 
-#include "pyqcow_libqcow.h"
-#include "pyqcow_python.h"
+/* unistd.h is included here to export getopt, optarg, optind and optopt
+ */
+#if defined( HAVE_UNISTD_H )
+#include <unistd.h>
+#endif
 
 #if defined( __cplusplus )
 extern "C" {
 #endif
 
-typedef struct pyqcow_encryption_types pyqcow_encryption_types_t;
+#if defined( HAVE_GETOPT )
+#define qcowtools_getopt( argument_count, argument_values, options_string ) \
+	getopt( argument_count, argument_values, options_string )
 
-struct pyqcow_encryption_types
-{
-	/* Python object initialization
-	 */
-	PyObject_HEAD
-};
+#else
 
-extern PyTypeObject pyqcow_encryption_types_type_object;
+#if !defined( __CYGWIN__ )
+extern int optind;
+extern system_character_t *optarg;
+extern system_integer_t optopt;
 
-int pyqcow_encryption_types_init_type(
-     PyTypeObject *type_object );
+#else
+int optind;
+system_character_t *optarg;
+system_integer_t optopt;
 
-PyObject *pyqcow_encryption_types_new(
-           void );
+#endif /* !defined( __CYGWIN__ ) */
 
-int pyqcow_encryption_types_init(
-     pyqcow_encryption_types_t *pyqcow_encryption_types );
+system_integer_t qcowtools_getopt(
+                  int argument_count,
+                  system_character_t * const argument_values[],
+                  const system_character_t *options_string );
 
-void pyqcow_encryption_types_free(
-      pyqcow_encryption_types_t *pyqcow_encryption_types );
+#endif /* defined( HAVE_GETOPT ) */
 
 #if defined( __cplusplus )
 }
 #endif
 
-#endif /* !defined( _PYQCOW_ENCRYPTION_TYPES_H ) */
+#endif /* !defined( _QCOWTOOLS_GETOPT_H ) */
 

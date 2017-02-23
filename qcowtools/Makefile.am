@@ -12,7 +12,6 @@ AM_CPPFLAGS = \
 	@LIBBFIO_CPPFLAGS@ \
 	@LIBFCACHE_CPPFLAGS@ \
 	@LIBFDATA_CPPFLAGS@ \
-	@LIBCSYSTEM_CPPFLAGS@ \
 	@LIBFUSE_CPPFLAGS@ \
 	@LIBQCOW_DLL_IMPORT@
 
@@ -25,46 +24,50 @@ bin_PROGRAMS = \
 qcowinfo_SOURCES = \
 	info_handle.c info_handle.h \
 	qcowinfo.c \
-	qcowoutput.c qcowoutput.h \
+	qcowtools_getopt.c qcowtools_getopt.h \
+	qcowtools_i18n.h \
 	qcowtools_libbfio.h \
 	qcowtools_libcdata.h \
 	qcowtools_libcerror.h \
 	qcowtools_libclocale.h \
 	qcowtools_libcnotify.h \
-	qcowtools_libcsystem.h \
 	qcowtools_libqcow.h \
-	qcowtools_libuna.h
+	qcowtools_libuna.h \
+	qcowtools_output.c qcowtools_output.h \
+	qcowtools_signal.c qcowtools_signal.h \
+	qcowtools_unused.h
 
 qcowinfo_LDADD = \
-	@LIBCSYSTEM_LIBADD@ \
-	../libqcow/libqcow.la \
 	@LIBCNOTIFY_LIBADD@ \
 	@LIBCLOCALE_LIBADD@ \
+	../libqcow/libqcow.la \
 	@LIBCERROR_LIBADD@ \
 	@LIBINTL@
 
 qcowmount_SOURCES = \
 	mount_handle.c mount_handle.h \
 	qcowmount.c \
-	qcowoutput.c qcowoutput.h \
+	qcowtools_getopt.c qcowtools_getopt.h \
+	qcowtools_i18n.h \
 	qcowtools_libbfio.h \
 	qcowtools_libcdata.h \
 	qcowtools_libcerror.h \
 	qcowtools_libclocale.h \
 	qcowtools_libcnotify.h \
 	qcowtools_libcpath.h \
-	qcowtools_libcsystem.h \
 	qcowtools_libqcow.h \
-	qcowtools_libuna.h
+	qcowtools_libuna.h \
+	qcowtools_output.c qcowtools_output.h \
+	qcowtools_signal.c qcowtools_signal.h \
+	qcowtools_unused.h
 
 qcowmount_LDADD = \
 	@LIBFUSE_LIBADD@ \
-	@LIBCSYSTEM_LIBADD@ \
 	@LIBUNA_LIBADD@ \
-	../libqcow/libqcow.la \
 	@LIBCNOTIFY_LIBADD@ \
 	@LIBCLOCALE_LIBADD@ \
 	@LIBCDATA_LIBADD@ \
+	../libqcow/libqcow.la \
 	@LIBCERROR_LIBADD@ \
 	@LIBINTL@
 

@@ -1,5 +1,5 @@
 /*
- * Python object definition of the libqcow encryption types
+ * Internationalization (i18n) functions
  *
  * Copyright (C) 2010-2017, Joachim Metz <joachim.metz@gmail.com>
  *
@@ -19,45 +19,30 @@
  * along with this software.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !defined( _PYQCOW_ENCRYPTION_TYPES_H )
-#define _PYQCOW_ENCRYPTION_TYPES_H
+#if !defined( _QCOWTOOLS_I18N_H )
+#define _QCOWTOOLS_I18N_H
 
 #include <common.h>
-#include <types.h>
 
-#include "pyqcow_libqcow.h"
-#include "pyqcow_python.h"
+#if defined( HAVE_LIBINTL_H )
+#include <libintl.h>
+#endif
 
 #if defined( __cplusplus )
 extern "C" {
 #endif
 
-typedef struct pyqcow_encryption_types pyqcow_encryption_types_t;
+/* TODO for now do nothing i18n-like
+#define	_( string ) \
+	gettext( string )
+*/
 
-struct pyqcow_encryption_types
-{
-	/* Python object initialization
-	 */
-	PyObject_HEAD
-};
-
-extern PyTypeObject pyqcow_encryption_types_type_object;
-
-int pyqcow_encryption_types_init_type(
-     PyTypeObject *type_object );
-
-PyObject *pyqcow_encryption_types_new(
-           void );
-
-int pyqcow_encryption_types_init(
-     pyqcow_encryption_types_t *pyqcow_encryption_types );
-
-void pyqcow_encryption_types_free(
-      pyqcow_encryption_types_t *pyqcow_encryption_types );
+#define	_( string ) \
+	string
 
 #if defined( __cplusplus )
 }
 #endif
 
-#endif /* !defined( _PYQCOW_ENCRYPTION_TYPES_H ) */
+#endif /* !defined( _QCOWTOOLS_I18N_H ) */
 

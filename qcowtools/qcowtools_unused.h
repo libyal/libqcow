@@ -1,5 +1,5 @@
 /*
- * Python bindings for libqcow (pyqcow)
+ * The unused definition
  *
  * Copyright (C) 2010-2017, Joachim Metz <joachim.metz@gmail.com>
  *
@@ -19,43 +19,32 @@
  * along with this software.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !defined( _PYQCOW_H )
-#define _PYQCOW_H
+#if !defined( _QCOWTOOLS_UNUSED_H )
+#define _QCOWTOOLS_UNUSED_H
 
 #include <common.h>
-#include <types.h>
 
-#include "pyqcow_python.h"
+#if !defined( QCOWTOOLS_ATTRIBUTE_UNUSED )
 
-#if defined( __cplusplus )
-extern "C" {
-#endif
+#if defined( __GNUC__ ) && __GNUC__ >= 3
+#define QCOWTOOLS_ATTRIBUTE_UNUSED	__attribute__ ((__unused__))
 
-PyObject *pyqcow_get_version(
-           PyObject *self,
-           PyObject *arguments );
-
-PyObject *pyqcow_check_file_signature(
-           PyObject *self,
-           PyObject *arguments,
-           PyObject *keywords );
-
-PyObject *pyqcow_check_file_signature_file_object(
-           PyObject *self,
-           PyObject *arguments,
-           PyObject *keywords );
-
-#if PY_MAJOR_VERSION >= 3
-PyMODINIT_FUNC PyInit_pyqcow(
-                void );
 #else
-PyMODINIT_FUNC initpyqcow(
-                void );
-#endif
+#define QCOWTOOLS_ATTRIBUTE_UNUSED
 
-#if defined( __cplusplus )
-}
-#endif
+#endif /* defined( __GNUC__ ) && __GNUC__ >= 3 */
 
-#endif /* !defined( _PYQCOW_H ) */
+#endif /* !defined( QCOWTOOLS_ATTRIBUTE_UNUSED ) */
+
+#if defined( _MSC_VER )
+#define QCOWTOOLS_UNREFERENCED_PARAMETER( parameter ) \
+	UNREFERENCED_PARAMETER( parameter );
+
+#else
+#define QCOWTOOLS_UNREFERENCED_PARAMETER( parameter ) \
+	/* parameter */
+
+#endif /* defined( _MSC_VER ) */
+
+#endif /* !defined( _QCOWTOOLS_UNUSED_H ) */
 

@@ -2,7 +2,7 @@ AC_PREREQ( 2.59 )
 
 AC_INIT(
  [libqcow],
- [20161226],
+ [20170222],
  [joachim.metz@gmail.com])
 
 AC_CONFIG_SRCDIR(
@@ -100,8 +100,8 @@ dnl Check for zlib compression support
 AX_ZLIB_CHECK_ENABLE
 AX_ZLIB_CHECK_INFLATE
 
-dnl Check for enabling libcsystem for cross-platform C generic system functions
-AX_LIBCSYSTEM_CHECK_ENABLE
+dnl Check for qcowtools function support
+AX_QCOWTOOLS_CHECK_LOCAL
 
 dnl Check for libfuse Filesystem in Userspace (FUSE) support
 AX_LIBFUSE_CHECK_ENABLE
@@ -180,7 +180,7 @@ AS_IF(
  ])
 
 AS_IF(
- [test "x$ac_cv_libcsystem" = xyes || test "x$ac_cv_libfuse" != xno],
+ [test "x$ac_cv_libfuse" != xno],
  [AC_SUBST(
   [libqcow_spec_tools_build_requires],
   [BuildRequires:])
@@ -219,7 +219,6 @@ AC_CONFIG_FILES([libfcache/Makefile])
 AC_CONFIG_FILES([libfdata/Makefile])
 AC_CONFIG_FILES([libcaes/Makefile])
 AC_CONFIG_FILES([libqcow/Makefile])
-AC_CONFIG_FILES([libcsystem/Makefile])
 AC_CONFIG_FILES([qcowtools/Makefile])
 AC_CONFIG_FILES([pyqcow/Makefile])
 AC_CONFIG_FILES([pyqcow-python2/Makefile])
@@ -265,7 +264,6 @@ Building:
    libcaes support:                           $ac_cv_libcaes
    AES support:                               $ac_cv_libcaes_aes
    DEFLATE compression support:               $ac_cv_inflate
-   libcsystem support:                        $ac_cv_libcsystem
    FUSE support:                              $ac_cv_libfuse
 
 Features:

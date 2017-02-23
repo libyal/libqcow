@@ -21,12 +21,11 @@ AM_CPPFLAGS = \
 
 if HAVE_PYTHON_TESTS
 TESTS_PYQCOW = \
-	test_python_functions.sh
+	test_python_module.sh
 endif
 
 TESTS = \
-	test_api_functions.sh \
-	test_api_types.sh \
+	test_library.sh \
 	test_qcowinfo.sh \
 	$(TESTS_PYQCOW)
 
@@ -34,9 +33,8 @@ check_SCRIPTS = \
 	pyqcow_test_file.py \
 	pyqcow_test_read.py \
 	pyqcow_test_support.py \
-	test_api_functions.sh \
-	test_api_types.sh \
-	test_python_functions.sh \
+	test_library.sh \
+	test_python_module.sh \
 	test_qcowinfo.sh \
 	test_runner.sh
 

@@ -25,7 +25,7 @@ Header files and libraries for developing applications for libqcow.
 %package tools
 Summary: Several tools for reading QEMU Copy-On-Write (QCOW) image files
 Group: Applications/System
-Requires: libqcow = %{version}-%{release} @ax_libcsystem_spec_requires@ @ax_libfuse_spec_requires@
+Requires: libqcow = %{version}-%{release} @ax_libfuse_spec_requires@
 @libqcow_spec_tools_build_requires@ @ax_libfuse_spec_build_requires@
 
 %description tools

@@ -1,5 +1,5 @@
 /*
- * Python object definition of the libqcow encryption types
+ * Common output functions for the qcowtools
  *
  * Copyright (C) 2010-2017, Joachim Metz <joachim.metz@gmail.com>
  *
@@ -19,45 +19,37 @@
  * along with this software.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !defined( _PYQCOW_ENCRYPTION_TYPES_H )
-#define _PYQCOW_ENCRYPTION_TYPES_H
+#if !defined( _QCOWTOOLS_OUTPUT_H )
+#define _QCOWTOOLS_OUTPUT_H
 
 #include <common.h>
+#include <file_stream.h>
 #include <types.h>
 
-#include "pyqcow_libqcow.h"
-#include "pyqcow_python.h"
+#include "qcowtools_libcerror.h"
 
 #if defined( __cplusplus )
 extern "C" {
 #endif
 
-typedef struct pyqcow_encryption_types pyqcow_encryption_types_t;
+int qcowtools_output_initialize(
+     int stdio_mode,
+     libcerror_error_t **error );
 
-struct pyqcow_encryption_types
-{
-	/* Python object initialization
-	 */
-	PyObject_HEAD
-};
+void qcowoutput_copyright_fprint(
+      FILE *stream );
 
-extern PyTypeObject pyqcow_encryption_types_type_object;
+void qcowoutput_version_fprint(
+      FILE *stream,
+      const char *program );
 
-int pyqcow_encryption_types_init_type(
-     PyTypeObject *type_object );
-
-PyObject *pyqcow_encryption_types_new(
-           void );
-
-int pyqcow_encryption_types_init(
-     pyqcow_encryption_types_t *pyqcow_encryption_types );
-
-void pyqcow_encryption_types_free(
-      pyqcow_encryption_types_t *pyqcow_encryption_types );
+void qcowoutput_version_detailed_fprint(
+      FILE *stream,
+      const char *program );
 
 #if defined( __cplusplus )
 }
 #endif
 
-#endif /* !defined( _PYQCOW_ENCRYPTION_TYPES_H ) */
+#endif /* !defined( _QCOWTOOLS_OUTPUT_H ) */
 

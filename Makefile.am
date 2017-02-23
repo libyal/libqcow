@@ -17,7 +17,6 @@ SUBDIRS = \
 	libfdata \
 	libcaes \
 	libqcow \
-	libcsystem \
 	qcowtools \
 	pyqcow \
 	pyqcow-python2 \
@@ -122,7 +121,6 @@ splint:
 	(cd $(srcdir)/libfdata && $(MAKE) splint $(AM_MAKEFLAGS))
 	(cd $(srcdir)/libcaes && $(MAKE) splint $(AM_MAKEFLAGS))
 	(cd $(srcdir)/libqcow && $(MAKE) splint $(AM_MAKEFLAGS))
-	(cd $(srcdir)/libcsystem && $(MAKE) splint $(AM_MAKEFLAGS))
 	(cd $(srcdir)/qcowtools && $(MAKE) splint $(AM_MAKEFLAGS))
 	(cd $(srcdir)/pyqcow && $(MAKE) splint $(AM_MAKEFLAGS))
 	(cd $(srcdir)/po && $(MAKE) $(AM_MAKEFLAGS))
