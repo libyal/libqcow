@@ -2,7 +2,7 @@ AC_PREREQ( 2.59 )
 
 AC_INIT(
  [libqcow],
- [20170722],
+ [20170826],
  [joachim.metz@gmail.com])
 
 AC_CONFIG_SRCDIR(
@@ -54,9 +54,6 @@ AX_TYPES_CHECK_LOCAL
 dnl Checks for libraries and library functions
 AX_COMMON_CHECK_LOCAL
 
-dnl Check for library function support
-AX_LIBQCOW_CHECK_LOCAL
-
 dnl Check for enabling libcerror for cross-platform C error functions
 AX_LIBCERROR_CHECK_ENABLE
 
@@ -99,6 +96,9 @@ AX_LIBCAES_CHECK_ENABLE
 dnl Check for zlib compression support
 AX_ZLIB_CHECK_ENABLE
 AX_ZLIB_CHECK_INFLATE
+
+dnl Check for library function support
+AX_LIBQCOW_CHECK_LOCAL
 
 dnl Check for qcowtools function support
 AX_QCOWTOOLS_CHECK_LOCAL
