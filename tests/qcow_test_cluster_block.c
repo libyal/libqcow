@@ -65,13 +65,13 @@ int qcow_test_cluster_block_initialize(
 	 result,
 	 1 );
 
-        QCOW_TEST_ASSERT_IS_NOT_NULL(
-         "cluster_block",
-         cluster_block );
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "cluster_block",
+	 cluster_block );
 
-        QCOW_TEST_ASSERT_IS_NULL(
-         "error",
-         error );
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
 
 	result = libqcow_cluster_block_free(
 	          &cluster_block,
@@ -82,13 +82,13 @@ int qcow_test_cluster_block_initialize(
 	 result,
 	 1 );
 
-        QCOW_TEST_ASSERT_IS_NULL(
-         "cluster_block",
-         cluster_block );
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "cluster_block",
+	 cluster_block );
 
-        QCOW_TEST_ASSERT_IS_NULL(
-         "error",
-         error );
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
 
 	/* Test error cases
 	 */
@@ -102,9 +102,9 @@ int qcow_test_cluster_block_initialize(
 	 result,
 	 -1 );
 
-        QCOW_TEST_ASSERT_IS_NOT_NULL(
-         "error",
-         error );
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
 
 	libcerror_error_free(
 	 &error );
@@ -121,9 +121,9 @@ int qcow_test_cluster_block_initialize(
 	 result,
 	 -1 );
 
-        QCOW_TEST_ASSERT_IS_NOT_NULL(
-         "error",
-         error );
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
 
 	libcerror_error_free(
 	 &error );
@@ -140,9 +140,9 @@ int qcow_test_cluster_block_initialize(
 	 result,
 	 -1 );
 
-        QCOW_TEST_ASSERT_IS_NOT_NULL(
-         "error",
-         error );
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
 
 	libcerror_error_free(
 	 &error );
@@ -274,9 +274,9 @@ int qcow_test_cluster_block_free(
 	 result,
 	 -1 );
 
-        QCOW_TEST_ASSERT_IS_NOT_NULL(
-         "error",
-         error );
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
 
 	libcerror_error_free(
 	 &error );
