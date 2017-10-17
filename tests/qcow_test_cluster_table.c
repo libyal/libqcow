@@ -393,6 +393,111 @@ on_error:
 	return( 0 );
 }
 
+/* Tests the libqcow_cluster_table_read function
+ * Returns 1 if successful or 0 if not
+ */
+int qcow_test_cluster_table_read(
+     void )
+{
+	libcerror_error_t *error               = NULL;
+	libqcow_cluster_table_t *cluster_table = NULL;
+	int result                             = 0;
+
+	/* Initialize test
+	 */
+	result = libqcow_cluster_table_initialize(
+	          &cluster_table,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "cluster_table",
+	 cluster_table );
+
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
+
+	/* Test error cases
+	 */
+	result = libqcow_cluster_table_read(
+	          NULL,
+	          NULL,
+	          NULL,
+	          0,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	result = libqcow_cluster_table_read(
+	          cluster_table,
+	          NULL,
+	          NULL,
+	          0,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	/* Clean up
+	 */
+	result = libqcow_cluster_table_free(
+	          &cluster_table,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 1 );
+
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "cluster_table",
+	 cluster_table );
+
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
+
+	return( 1 );
+
+on_error:
+	if( error != NULL )
+	{
+		libcerror_error_free(
+		 &error );
+	}
+	if( cluster_table != NULL )
+	{
+		libqcow_cluster_table_free(
+		 &cluster_table,
+		 NULL );
+	}
+	return( 0 );
+}
+
 #endif /* defined( __GNUC__ ) && !defined( LIBQCOW_DLL_IMPORT ) */
 
 /* The main program
@@ -426,7 +531,9 @@ int main(
 
 	/* TODO: add tests for libqcow_cluster_table_get_reference_by_index */
 
-	/* TODO: add tests for libqcow_cluster_table_read */
+	QCOW_TEST_RUN(
+	 "libqcow_cluster_table_read",
+	 qcow_test_cluster_table_read );
 
 #endif /* defined( __GNUC__ ) && !defined( LIBQCOW_DLL_IMPORT ) */
 

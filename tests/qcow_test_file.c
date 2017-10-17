@@ -578,6 +578,8 @@ int qcow_test_file_close_source(
 	return( result );
 }
 
+#include "../libqcow/libqcow_file.h"
+
 /* Tests the libqcow_file_initialize function
  * Returns 1 if successful or 0 if not
  */
@@ -1983,6 +1985,27 @@ int main(
 #if !defined( __BORLANDC__ ) || ( __BORLANDC__ >= 0x0560 )
 	if( source != NULL )
 	{
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
+		result = libqcow_check_file_signature_wide(
+		          source,
+		          &error );
+#else
+		result = libqcow_check_file_signature(
+		          source,
+		          &error );
+#endif
+
+		QCOW_TEST_ASSERT_NOT_EQUAL_INT(
+		 "result",
+		 result,
+		 -1 );
+
+		QCOW_TEST_ASSERT_IS_NULL(
+		 "error",
+		 error );
+	}
+	if( result != 0 )
+	{
 		QCOW_TEST_RUN_WITH_ARGS(
 		 "libqcow_file_open",
 		 qcow_test_file_open,
@@ -2024,13 +2047,13 @@ int main(
 		 result,
 		 1 );
 
-	        QCOW_TEST_ASSERT_IS_NOT_NULL(
-	         "file",
-	         file );
+		QCOW_TEST_ASSERT_IS_NOT_NULL(
+		 "file",
+		 file );
 
-	        QCOW_TEST_ASSERT_IS_NULL(
-	         "error",
-	         error );
+		QCOW_TEST_ASSERT_IS_NULL(
+		 "error",
+		 error );
 
 		QCOW_TEST_RUN_WITH_ARGS(
 		 "libqcow_file_signal_abort",
@@ -2091,12 +2114,12 @@ int main(
 		 0 );
 
 		QCOW_TEST_ASSERT_IS_NULL(
-	         "file",
-	         file );
+		 "file",
+		 file );
 
-	        QCOW_TEST_ASSERT_IS_NULL(
-	         "error",
-	         error );
+		QCOW_TEST_ASSERT_IS_NULL(
+		 "error",
+		 error );
 	}
 #endif /* !defined( __BORLANDC__ ) || ( __BORLANDC__ >= 0x0560 ) */
 
