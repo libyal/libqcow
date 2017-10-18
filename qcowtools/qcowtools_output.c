@@ -93,7 +93,7 @@ int qcowtools_output_initialize(
 
 /* Prints the copyright information
  */
-void qcowoutput_copyright_fprint(
+void qcowtools_output_copyright_fprint(
       FILE *stream )
 {
 	if( stream == NULL )
@@ -125,7 +125,7 @@ void qcowoutput_copyright_fprint(
 
 /* Prints the (basic) version information
  */
-void qcowoutput_version_fprint(
+void qcowtools_output_version_fprint(
       FILE *stream,
       const char *program )
 {
@@ -146,7 +146,7 @@ void qcowoutput_version_fprint(
 
 /* Prints the detailed version information
  */
-void qcowoutput_version_detailed_fprint(
+void qcowtools_output_version_detailed_fprint(
       FILE *stream,
       const char *program )
 {

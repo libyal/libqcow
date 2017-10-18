@@ -39,7 +39,7 @@
 #include <stdlib.h>
 #endif
 
-#if !defined( WINAPI ) || defined( USE_CRT_FUNCTIONS )
+#if !defined( WINAPI )
 #if defined( TIME_WITH_SYS_TIME )
 #include <sys/time.h>
 #include <time.h>
@@ -86,21 +86,19 @@ void usage_fprint(
 	{
 		return;
 	}
-	fprintf( stream, "Use qcowmount to mount the QEMU Copy-On-Write (QCOW)\n"
-                         "image file\n\n" );
+	fprintf( stream, "Use qcowmount to mount a QEMU Copy-On-Write (QCOW) image file\n\n" );
 
-	fprintf( stream, "Usage: qcowmount [ -k keys ] [ -p password ]\n"
-	                 "                 [ -X extended_options ] [ -hvV ]\n"
-	                 "                 qcow_file mount_point\n\n" );
+	fprintf( stream, "Usage: qcowmount [ -k keys ] [ -p password ] [ -X extended_options ] [ -hvV ]\n"
+	                 "                 image mount_point\n\n" );
 
-	fprintf( stream, "\tqcow_file:   the QCOW image file\n\n" );
+	fprintf( stream, "\timage:       a QEMU Copy-On-Write (QCOW) image file\n\n" );
 	fprintf( stream, "\tmount_point: the directory to serve as mount point\n\n" );
 
 	fprintf( stream, "\t-h:          shows this help\n" );
 	fprintf( stream, "\t-k:          the key formatted in base16\n" );
 	fprintf( stream, "\t-p:          specify the password/passphrase\n" );
-	fprintf( stream, "\t-v:          verbose output to stderr\n"
-	                 "\t             qcowmount will remain running in the foreground\n" );
+	fprintf( stream, "\t-v:          verbose output to stderr, while qcowmount will remain running in the\n"
+	                 "\t             foreground\n" );
 	fprintf( stream, "\t-V:          print version\n" );
 	fprintf( stream, "\t-X:          extended options to pass to sub system\n" );
 }
@@ -262,7 +260,7 @@ int qcowmount_fuse_read(
 	static char *function    = "qcowmount_fuse_read";
 	size_t path_length       = 0;
 	ssize_t read_count       = 0;
-	int input_file_index     = 0;
+	int image_index          = 0;
 	int result               = 0;
 	int string_index         = 0;
 
@@ -329,23 +327,23 @@ int qcowmount_fuse_read(
 	}
 	string_index = (int) qcowmount_fuse_path_prefix_length;
 
-	input_file_index = path[ string_index++ ] - '0';
+	image_index = path[ string_index++ ] - '0';
 
 	if( string_index < (int) path_length )
 	{
-		input_file_index *= 10;
-		input_file_index += path[ string_index++ ] - '0';
+		image_index *= 10;
+		image_index += path[ string_index++ ] - '0';
 	}
 	if( string_index < (int) path_length )
 	{
-		input_file_index *= 10;
-		input_file_index += path[ string_index++ ] - '0';
+		image_index *= 10;
+		image_index += path[ string_index++ ] - '0';
 	}
-	input_file_index -= 1;
+	image_index -= 1;
 
 	if( mount_handle_seek_offset(
 	     qcowmount_mount_handle,
-	     input_file_index,
+	     image_index,
 	     (off64_t) offset,
 	     SEEK_SET,
 	     &error ) == -1 )
@@ -363,7 +361,7 @@ int qcowmount_fuse_read(
 	}
 	read_count = mount_handle_read_buffer(
 	              qcowmount_mount_handle,
-	              input_file_index,
+	              image_index,
 	              (uint8_t *) buffer,
 	              size,
 	              &error );
@@ -481,7 +479,7 @@ int qcowmount_fuse_filldir(
      size_t name_size,
      struct stat *stat_info,
      mount_handle_t *mount_handle,
-     int input_file_index,
+     int image_index,
      uint8_t use_mount_time,
      libcerror_error_t **error )
 {
@@ -508,7 +506,7 @@ int qcowmount_fuse_filldir(
 	{
 		if( mount_handle_get_media_size(
 		     mount_handle,
-		     input_file_index,
+		     image_index,
 		     &media_size,
 		     error ) != 1 )
 		{
@@ -582,14 +580,14 @@ int qcowmount_fuse_readdir(
 {
 	char qcowmount_fuse_path[ 10 ];
 
-	libcerror_error_t *error  = NULL;
-	struct stat *stat_info    = NULL;
-	static char *function     = "qcowmount_fuse_readdir";
-	size_t path_length        = 0;
-	int input_file_index      = 0;
-	int number_of_input_files = 0;
-	int result                = 0;
-	int string_index          = 0;
+	libcerror_error_t *error = NULL;
+	struct stat *stat_info   = NULL;
+	static char *function    = "qcowmount_fuse_readdir";
+	size_t path_length       = 0;
+	int image_index          = 0;
+	int number_of_images     = 0;
+	int result               = 0;
+	int string_index         = 0;
 
 	QCOWTOOLS_UNREFERENCED_PARAMETER( offset )
 	QCOWTOOLS_UNREFERENCED_PARAMETER( file_info )
@@ -641,30 +639,30 @@ int qcowmount_fuse_readdir(
 
 		goto on_error;
 	}
-	if( mount_handle_get_number_of_input_files(
+	if( mount_handle_get_number_of_images(
 	     qcowmount_mount_handle,
-	     &number_of_input_files,
+	     &number_of_images,
 	     &error ) != 1 )
 	{
 		libcerror_error_set(
 		 &error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve number of input files.",
+		 "%s: unable to retrieve number of images.",
 		 function );
 
 		result = -EIO;
 
 		goto on_error;
 	}
-	if( ( number_of_input_files < 0 )
-	 || ( number_of_input_files > 99 ) )
+	if( ( number_of_images < 0 )
+	 || ( number_of_images > 99 ) )
 	{
 		libcerror_error_set(
 		 &error,
 		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
 		 LIBCERROR_ARGUMENT_ERROR_UNSUPPORTED_VALUE,
-		 "%s: unsupported number of input files.",
+		 "%s: unsupported number of images.",
 		 function );
 
 		result = -ENOENT;
@@ -731,31 +729,31 @@ int qcowmount_fuse_readdir(
 
 		goto on_error;
 	}
-	for( input_file_index = 1;
-	     input_file_index <= number_of_input_files;
-	     input_file_index++ )
+	for( image_index = 1;
+	     image_index <= number_of_images;
+	     image_index++ )
 	{
 		string_index = qcowmount_fuse_path_prefix_length;
 
-		if( input_file_index >= 100 )
+		if( image_index >= 100 )
 		{
-			qcowmount_fuse_path[ string_index++ ] = '0' + (char) ( input_file_index / 100 );
+			qcowmount_fuse_path[ string_index++ ] = '0' + (char) ( image_index / 100 );
 		}
-		if( input_file_index >= 10 )
+		if( image_index >= 10 )
 		{
-			qcowmount_fuse_path[ string_index++ ] = '0' + (char) ( input_file_index / 10 );
+			qcowmount_fuse_path[ string_index++ ] = '0' + (char) ( image_index / 10 );
 		}
-		qcowmount_fuse_path[ string_index++ ] = '0' + (char) ( input_file_index % 10 );
+		qcowmount_fuse_path[ string_index++ ] = '0' + (char) ( image_index % 10 );
 		qcowmount_fuse_path[ string_index++ ] = 0;
 
-/* TODO add support for multiple input files ? */
-		if( input_file_index != 1 )
+/* TODO add support for multiple images ? */
+		if( image_index != 1 )
 		{
 			libcerror_error_set(
 			 &error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 			 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
-			 "%s: invalid input file index value out of bounds.",
+			 "%s: invalid image index value out of bounds.",
 			 function );
 
 			result = -EIO;
@@ -769,7 +767,7 @@ int qcowmount_fuse_readdir(
 		     string_index - 1,
 		     stat_info,
 		     qcowmount_mount_handle,
-		     input_file_index - 1,
+		     image_index - 1,
 		     1,
 		     &error ) != 1 )
 		{
@@ -817,7 +815,7 @@ int qcowmount_fuse_getattr(
 	static char *function    = "qcowmount_fuse_getattr";
 	size64_t media_size      = 0;
 	size_t path_length       = 0;
-	int input_file_index     = 0;
+	int image_index          = 0;
 	int number_of_sub_items  = 0;
 	int result               = -ENOENT;
 	int string_index         = 0;
@@ -887,28 +885,28 @@ int qcowmount_fuse_getattr(
 		{
 			string_index = qcowmount_fuse_path_prefix_length;
 
-			input_file_index = path[ string_index++ ] - '0';
+			image_index = path[ string_index++ ] - '0';
 
 			if( string_index < (int) path_length )
 			{
-				input_file_index *= 10;
-				input_file_index += path[ string_index++ ] - '0';
+				image_index *= 10;
+				image_index += path[ string_index++ ] - '0';
 			}
 			if( string_index < (int) path_length )
 			{
-				input_file_index *= 10;
-				input_file_index += path[ string_index++ ] - '0';
+				image_index *= 10;
+				image_index += path[ string_index++ ] - '0';
 			}
-			input_file_index -= 1;
+			image_index -= 1;
 
-/* TODO add support for multiple input files ? */
-			if( input_file_index != 0 )
+/* TODO add support for multiple images ? */
+			if( image_index != 0 )
 			{
 				libcerror_error_set(
 				 &error,
 				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 				 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
-				 "%s: invalid input file index value out of bounds.",
+				 "%s: invalid image index value out of bounds.",
 				 function );
 
 				result = -ERANGE;
@@ -917,7 +915,7 @@ int qcowmount_fuse_getattr(
 			}
 			if( mount_handle_get_media_size(
 			     qcowmount_mount_handle,
-			     input_file_index,
+			     image_index,
 			     &media_size,
 			     &error ) != 1 )
 			{
@@ -1261,7 +1259,7 @@ int __stdcall qcowmount_dokan_ReadFile(
 	static char *function    = "qcowmount_dokan_ReadFile";
 	size_t path_length       = 0;
 	ssize_t read_count       = 0;
-	int input_file_index     = 0;
+	int image_index          = 0;
 	int result               = 0;
 	int string_index         = 0;
 
@@ -1330,23 +1328,23 @@ int __stdcall qcowmount_dokan_ReadFile(
 	}
 	string_index = (int) qcowmount_dokan_path_prefix_length;
 
-	input_file_index = path[ string_index++ ] - (wchar_t) '0';
+	image_index = path[ string_index++ ] - (wchar_t) '0';
 
 	if( string_index < (int) path_length )
 	{
-		input_file_index *= 10;
-		input_file_index += path[ string_index++ ] - (wchar_t) '0';
+		image_index *= 10;
+		image_index += path[ string_index++ ] - (wchar_t) '0';
 	}
 	if( string_index < (int) path_length )
 	{
-		input_file_index *= 10;
-		input_file_index += path[ string_index++ ] - (wchar_t) '0';
+		image_index *= 10;
+		image_index += path[ string_index++ ] - (wchar_t) '0';
 	}
-	input_file_index -= 1;
+	image_index -= 1;
 
 	if( mount_handle_seek_offset(
 	     qcowmount_mount_handle,
-	     input_file_index,
+	     image_index,
 	     (off64_t) offset,
 	     SEEK_SET,
 	     &error ) == -1 )
@@ -1364,7 +1362,7 @@ int __stdcall qcowmount_dokan_ReadFile(
 	}
 	read_count = mount_handle_read_buffer(
 		      qcowmount_mount_handle,
-		      input_file_index,
+		      image_index,
 		      (uint8_t *) buffer,
 		      (size_t) number_of_bytes_to_read,
 		      &error );
@@ -1464,7 +1462,7 @@ int qcowmount_dokan_filldir(
      size_t name_size,
      WIN32_FIND_DATAW *find_data,
      mount_handle_t *mount_handle,
-     int input_file_index,
+     int image_index,
      uint8_t use_mount_time,
      libcerror_error_t **error )
 {
@@ -1513,7 +1511,7 @@ int qcowmount_dokan_filldir(
 	{
 		if( mount_handle_get_media_size(
 		     mount_handle,
-		     input_file_index,
+		     image_index,
 		     &media_size,
 		     error ) != 1 )
 		{
@@ -1616,13 +1614,13 @@ int __stdcall qcowmount_dokan_FindFiles(
 
 	wchar_t qcowmount_dokan_path[ 10 ];
 
-	libcerror_error_t *error  = NULL;
-	static char *function     = "qcowmount_dokan_FindFiles";
-	size_t path_length        = 0;
-	int input_file_index      = 0;
-	int number_of_input_files = 0;
-	int result                = 0;
-	int string_index          = 0;
+	libcerror_error_t *error = NULL;
+	static char *function    = "qcowmount_dokan_FindFiles";
+	size_t path_length       = 0;
+	int image_index          = 0;
+	int number_of_images     = 0;
+	int result               = 0;
+	int string_index         = 0;
 
 	if( path == NULL )
 	{
@@ -1671,30 +1669,30 @@ int __stdcall qcowmount_dokan_FindFiles(
 
 		goto on_error;
 	}
-	if( mount_handle_get_number_of_input_files(
+	if( mount_handle_get_number_of_images(
 	     qcowmount_mount_handle,
-	     &number_of_input_files,
+	     &number_of_images,
 	     &error ) != 1 )
 	{
 		libcerror_error_set(
 		 &error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve number of input files.",
+		 "%s: unable to retrieve number of images.",
 		 function );
 
 		result = -ERROR_GEN_FAILURE;
 
 		goto on_error;
 	}
-	if( ( number_of_input_files < 0 )
-	 || ( number_of_input_files > 99 ) )
+	if( ( number_of_images < 0 )
+	 || ( number_of_images > 99 ) )
 	{
 		libcerror_error_set(
 		 &error,
 		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
 		 LIBCERROR_ARGUMENT_ERROR_UNSUPPORTED_VALUE,
-		 "%s: unsupported number of input files.",
+		 "%s: unsupported number of images.",
 		 function );
 
 		result = -ERROR_GEN_FAILURE;
@@ -1745,31 +1743,31 @@ int __stdcall qcowmount_dokan_FindFiles(
 
 		goto on_error;
 	}
-	for( input_file_index = 1;
-	     input_file_index <= number_of_input_files;
-	     input_file_index++ )
+	for( image_index = 1;
+	     image_index <= number_of_images;
+	     image_index++ )
 	{
 		string_index = (int) qcowmount_dokan_path_prefix_length;
 
-		if( input_file_index >= 100 )
+		if( image_index >= 100 )
 		{
-			qcowmount_dokan_path[ string_index++ ] = (wchar_t) ( '0' + ( input_file_index / 100 ) );
+			qcowmount_dokan_path[ string_index++ ] = (wchar_t) ( '0' + ( image_index / 100 ) );
 		}
-		if( input_file_index >= 10 )
+		if( image_index >= 10 )
 		{
-			qcowmount_dokan_path[ string_index++ ] = (wchar_t) ( '0' + ( input_file_index / 10 ) );
+			qcowmount_dokan_path[ string_index++ ] = (wchar_t) ( '0' + ( image_index / 10 ) );
 		}
-		qcowmount_dokan_path[ string_index++ ] = (wchar_t) ( '0' + ( input_file_index % 10 ) );
+		qcowmount_dokan_path[ string_index++ ] = (wchar_t) ( '0' + ( image_index % 10 ) );
 		qcowmount_dokan_path[ string_index++ ] = 0;
 
-/* TODO add support for multiple input files ? */
-		if( input_file_index != 1 )
+/* TODO add support for multiple images ? */
+		if( image_index != 1 )
 		{
 			libcerror_error_set(
 			 &error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 			 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
-			 "%s: invalid input file index value out of bounds.",
+			 "%s: invalid image index value out of bounds.",
 			 function );
 
 			result = -ERROR_BAD_ARGUMENTS;
@@ -1783,7 +1781,7 @@ int __stdcall qcowmount_dokan_FindFiles(
 		     string_index - 1,
 		     &find_data,
 		     qcowmount_mount_handle,
-		     input_file_index - 1,
+		     image_index - 1,
 		     1,
 		     &error ) != 1 )
 		{
@@ -1866,7 +1864,7 @@ int __stdcall qcowmount_dokan_GetFileInformation(
 	static char *function    = "qcowmount_dokan_GetFileInformation";
 	size64_t media_size      = 0;
 	size_t path_length       = 0;
-	int input_file_index     = 0;
+	int image_index          = 0;
 	int number_of_sub_items  = 0;
 	int result               = 0;
 	int string_index         = 0;
@@ -1943,28 +1941,28 @@ int __stdcall qcowmount_dokan_GetFileInformation(
 		}
 		string_index = (int) qcowmount_dokan_path_prefix_length;
 
-		input_file_index = path[ string_index++ ] - (wchar_t) '0';
+		image_index = path[ string_index++ ] - (wchar_t) '0';
 
 		if( string_index < (int) path_length )
 		{
-			input_file_index *= 10;
-			input_file_index += path[ string_index++ ] - (wchar_t) '0';
+			image_index *= 10;
+			image_index += path[ string_index++ ] - (wchar_t) '0';
 		}
 		if( string_index < (int) path_length )
 		{
-			input_file_index *= 10;
-			input_file_index += path[ string_index++ ] - (wchar_t) '0';
+			image_index *= 10;
+			image_index += path[ string_index++ ] - (wchar_t) '0';
 		}
-		input_file_index -= 1;
+		image_index -= 1;
 
-/* TODO add support for multiple input files ? */
-		if( input_file_index != 0 )
+/* TODO add support for multiple images ? */
+		if( image_index != 0 )
 		{
 			libcerror_error_set(
 			 &error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 			 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
-			 "%s: invalid input file index value out of bounds.",
+			 "%s: invalid image index value out of bounds.",
 			 function );
 
 			result = -ERROR_BAD_ARGUMENTS;
@@ -1973,7 +1971,7 @@ int __stdcall qcowmount_dokan_GetFileInformation(
 		}
 		if( mount_handle_get_media_size(
 		     qcowmount_mount_handle,
-		     input_file_index,
+		     image_index,
 		     &media_size,
 		     &error ) != 1 )
 		{
@@ -2186,7 +2184,7 @@ int main( int argc, char * const argv[] )
 
 		goto on_error;
 	}
-	qcowoutput_version_fprint(
+	qcowtools_output_version_fprint(
 	 stdout,
 	 program );
 
@@ -2231,7 +2229,7 @@ int main( int argc, char * const argv[] )
 				break;
 
 			case (system_integer_t) 'V':
-				qcowoutput_copyright_fprint(
+				qcowtools_output_copyright_fprint(
 				 stdout );
 
 				return( EXIT_SUCCESS );
@@ -2246,7 +2244,7 @@ int main( int argc, char * const argv[] )
 	{
 		fprintf(
 		 stderr,
-		 "Missing source file.\n" );
+		 "Missing source image.\n" );
 
 		usage_fprint(
 		 stdout );
@@ -2314,14 +2312,14 @@ int main( int argc, char * const argv[] )
 			goto on_error;
 		}
 	}
-	if( mount_handle_open_input(
+	if( mount_handle_open(
 	     qcowmount_mount_handle,
 	     source,
 	     &error ) != 1 )
 	{
 		fprintf(
 		 stderr,
-		 "Unable to open source file.\n" );
+		 "Unable to open source image.\n" );
 
 		goto on_error;
 	}
@@ -2554,6 +2552,7 @@ int main( int argc, char * const argv[] )
 			break;
 	}
 	return( EXIT_SUCCESS );
+
 #else
 	fprintf(
 	 stderr,

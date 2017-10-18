@@ -151,7 +151,7 @@ int main( int argc, char * const argv[] )
 
 		goto on_error;
 	}
-	qcowoutput_version_fprint(
+	qcowtools_output_version_fprint(
 	 stdout,
 	 program );
 
@@ -186,7 +186,7 @@ int main( int argc, char * const argv[] )
 				break;
 
 			case (system_integer_t) 'V':
-				qcowoutput_copyright_fprint(
+				qcowtools_output_copyright_fprint(
 				 stdout );
 
 				return( EXIT_SUCCESS );

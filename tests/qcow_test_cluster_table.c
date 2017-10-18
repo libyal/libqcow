@@ -427,7 +427,7 @@ int qcow_test_cluster_table_read(
 	result = libqcow_cluster_table_read(
 	          NULL,
 	          NULL,
-	          NULL,
+	          0,
 	          0,
 	          &error );
 
@@ -446,7 +446,7 @@ int qcow_test_cluster_table_read(
 	result = libqcow_cluster_table_read(
 	          cluster_table,
 	          NULL,
-	          NULL,
+	          0,
 	          0,
 	          &error );
 

@@ -27,9 +27,8 @@
 #include <wide_string.h>
 
 #include "mount_handle.h"
-#include "qcowtools_libcpath.h"
+#include "qcowtools_libcdata.h"
 #include "qcowtools_libcerror.h"
-#include "qcowtools_libcnotify.h"
 #include "qcowtools_libcpath.h"
 #include "qcowtools_libqcow.h"
 #include "qcowtools_libuna.h"
@@ -95,7 +94,7 @@ int mount_handle_initialize(
 		goto on_error;
 	}
 	if( libcdata_array_initialize(
-	     &( ( *mount_handle )->input_files_array ),
+	     &( ( *mount_handle )->images_array ),
 	     0,
 	     error ) != 1 )
 	{
@@ -103,7 +102,7 @@ int mount_handle_initialize(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-		 "%s: unable to initialize input files array.",
+		 "%s: unable to initialize images array.",
 		 function );
 
 		goto on_error;
@@ -150,7 +149,7 @@ int mount_handle_free(
 			 ( *mount_handle )->basename );
 		}
 		if( libcdata_array_free(
-		     &( ( *mount_handle )->input_files_array ),
+		     &( ( *mount_handle )->images_array ),
 		     (int (*)(intptr_t **, libcerror_error_t **)) &libqcow_file_free,
 		     error ) != 1 )
 		{
@@ -158,7 +157,7 @@ int mount_handle_free(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 			 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
-			 "%s: unable to free input files array.",
+			 "%s: unable to free images array.",
 			 function );
 
 			result = -1;
@@ -192,10 +191,10 @@ int mount_handle_signal_abort(
      mount_handle_t *mount_handle,
      libcerror_error_t **error )
 {
-	libqcow_file_t *input_file = NULL;
-	static char *function      = "mount_handle_signal_abort";	
-	int input_file_index       = 0;
-	int number_of_input_files  = 0;
+	libqcow_file_t *image = NULL;
+	static char *function = "mount_handle_signal_abort";
+	int image_index       = 0;
+	int number_of_images  = 0;
 
 	if( mount_handle == NULL )
 	{
@@ -209,50 +208,50 @@ int mount_handle_signal_abort(
 		return( -1 );
 	}
 	if( libcdata_array_get_number_of_entries(
-	     mount_handle->input_files_array,
-	     &number_of_input_files,
+	     mount_handle->images_array,
+	     &number_of_images,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve number of input files.",
+		 "%s: unable to retrieve number of images.",
 		 function );
 
 		return( -1 );
 	}
-	for( input_file_index = number_of_input_files - 1;
-	     input_file_index > 0;
-	     input_file_index-- )
+	for( image_index = number_of_images - 1;
+	     image_index > 0;
+	     image_index-- )
 	{
 		if( libcdata_array_get_entry_by_index(
-		     mount_handle->input_files_array,
-		     input_file_index,
-		     (intptr_t **) &input_file,
+		     mount_handle->images_array,
+		     image_index,
+		     (intptr_t **) &image,
 		     error ) != 1 )
 		{
 			libcerror_error_set(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve input file: %d.",
+			 "%s: unable to retrieve image: %d.",
 			 function,
-			 input_file_index );
+			 image_index );
 
 			return( -1 );
 		}
 		if( libqcow_file_signal_abort(
-		     input_file,
+		     image,
 		     error ) != 1 )
 		{
 			libcerror_error_set(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 			 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
-			 "%s: unable to signal input file: %d to abort.",
+			 "%s: unable to signal image: %d to abort.",
 			 function,
-			 input_file_index );
+			 image_index );
 
 			return( -1 );
 		}
@@ -365,6 +364,7 @@ int mount_handle_set_password(
      libcerror_error_t **error )
 {
 	static char *function = "mount_handle_set_password";
+	size_t string_length  = 0;
 
 	if( mount_handle == NULL )
 	{
@@ -388,24 +388,26 @@ int mount_handle_set_password(
 
 		return( -1 );
 	}
+	string_length = system_string_length(
+	                 string );
+
 	mount_handle->password        = string;
-	mount_handle->password_length = system_string_length(
-	                                 mount_handle->password );
+	mount_handle->password_length = string_length;
 
 	return( 1 );
 }
 
-/* Opens the input of the mount handle
+/* Opens the mount handle
  * Returns 1 if successful, 0 if the keys could not be read or -1 on error
  */
-int mount_handle_open_input(
+int mount_handle_open(
      mount_handle_t *mount_handle,
      const system_character_t *filename,
      libcerror_error_t **error )
 {
-	libqcow_file_t *input_file       = NULL;
+	libqcow_file_t *image            = NULL;
 	system_character_t *basename_end = NULL;
-	static char *function            = "mount_handle_open_input";
+	static char *function            = "mount_handle_open";
 	size_t basename_length           = 0;
 	size_t filename_length           = 0;
 	int entry_index                  = 0;
@@ -463,14 +465,14 @@ int mount_handle_open_input(
 		}
 	}
 	if( libqcow_file_initialize(
-	     &input_file,
+	     &image,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-		 "%s: unable to initialize input file.",
+		 "%s: unable to initialize image.",
 		 function );
 
 		goto on_error;
@@ -478,7 +480,7 @@ int mount_handle_open_input(
 	if( mount_handle->key_data_is_set != 0 )
 	{
 		if( libqcow_file_set_keys(
-		     input_file,
+		     image,
 		     mount_handle->key_data,
 		     16,
 		     error ) != 1 )
@@ -497,13 +499,13 @@ int mount_handle_open_input(
 	{
 #if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 		if( libqcow_file_set_utf16_password(
-		     input_file,
+		     image,
 		     (uint16_t *) mount_handle->password,
 		     mount_handle->password_length,
 		     error ) != 1 )
 #else
 		if( libqcow_file_set_utf8_password(
-		     input_file,
+		     image,
 		     (uint8_t *) mount_handle->password,
 		     mount_handle->password_length,
 		     error ) != 1 )
@@ -521,13 +523,13 @@ int mount_handle_open_input(
 	}
 #if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 	if( libqcow_file_open_wide(
-	     input_file,
+	     image,
 	     filename,
 	     LIBQCOW_OPEN_READ,
 	     error ) != 1 )
 #else
 	if( libqcow_file_open(
-	     input_file,
+	     image,
 	     filename,
 	     LIBQCOW_OPEN_READ,
 	     error ) != 1 )
@@ -537,38 +539,22 @@ int mount_handle_open_input(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_IO,
 		 LIBCERROR_IO_ERROR_OPEN_FAILED,
-		 "%s: unable to open input file.",
+		 "%s: unable to open image.",
 		 function );
 
 		goto on_error;
 	}
-/* TODO
-	if( mount_handle_open_input_parent_file(
-	     mount_handle,
-	     input_file,
-	     error ) == -1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_IO,
-		 LIBCERROR_IO_ERROR_OPEN_FAILED,
-		 "%s: unable to open parent input file.",
-		 function );
-
-		goto on_error;
-	}
-*/
 	if( libcdata_array_append_entry(
-	     mount_handle->input_files_array,
+	     mount_handle->images_array,
 	     &entry_index,
-	     (intptr_t *) input_file,
+	     (intptr_t *) image,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
-		 "%s: unable to append input file to array.",
+		 "%s: unable to append image to array.",
 		 function );
 
 		goto on_error;
@@ -576,14 +562,14 @@ int mount_handle_open_input(
 	return( 1 );
 
 on_error:
-	if( input_file != NULL )
+	if( image != NULL )
 	{
 		libqcow_file_free(
-		 &input_file,
+		 &image,
 		 NULL );
 	}
 	libcdata_array_empty(
-	 mount_handle->input_files_array,
+	 mount_handle->images_array,
 	 (int (*)(intptr_t **, libcerror_error_t **)) &libqcow_file_free,
 	 NULL );
 
@@ -597,10 +583,10 @@ int mount_handle_close(
      mount_handle_t *mount_handle,
      libcerror_error_t **error )
 {
-	libqcow_file_t *input_file = NULL;
-	static char *function      = "mount_handle_close";
-	int input_file_index       = 0;
-	int number_of_input_files  = 0;
+	libqcow_file_t *image = NULL;
+	static char *function = "mount_handle_close";
+	int image_index       = 0;
+	int number_of_images  = 0;
 
 	if( mount_handle == NULL )
 	{
@@ -614,50 +600,50 @@ int mount_handle_close(
 		return( -1 );
 	}
 	if( libcdata_array_get_number_of_entries(
-	     mount_handle->input_files_array,
-	     &number_of_input_files,
+	     mount_handle->images_array,
+	     &number_of_images,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve number of input files.",
+		 "%s: unable to retrieve number of images.",
 		 function );
 
 		return( -1 );
 	}
-	for( input_file_index = number_of_input_files - 1;
-	     input_file_index > 0;
-	     input_file_index-- )
+	for( image_index = number_of_images - 1;
+	     image_index > 0;
+	     image_index-- )
 	{
 		if( libcdata_array_get_entry_by_index(
-		     mount_handle->input_files_array,
-		     input_file_index,
-		     (intptr_t **) &input_file,
+		     mount_handle->images_array,
+		     image_index,
+		     (intptr_t **) &image,
 		     error ) != 1 )
 		{
 			libcerror_error_set(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve input file: %d.",
+			 "%s: unable to retrieve image: %d.",
 			 function,
-			 input_file_index );
+			 image_index );
 
 			return( -1 );
 		}
 		if( libqcow_file_close(
-		     input_file,
+		     image,
 		     error ) != 0 )
 		{
 			libcerror_error_set(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_IO,
 			 LIBCERROR_IO_ERROR_CLOSE_FAILED,
-			 "%s: unable to close input file: %d.",
+			 "%s: unable to close image: %d.",
 			 function,
-			 input_file_index );
+			 image_index );
 
 			return( -1 );
 		}
@@ -665,19 +651,19 @@ int mount_handle_close(
 	return( 0 );
 }
 
-/* Read a buffer from a specific input file
+/* Read a buffer from a specific image
  * Returns the number of bytes read if successful or -1 on error
  */
 ssize_t mount_handle_read_buffer(
          mount_handle_t *mount_handle,
-         int input_file_index,
+         int image_index,
          uint8_t *buffer,
          size_t size,
          libcerror_error_t **error )
 {
-	libqcow_file_t *input_file = NULL;
-	static char *function      = "mount_handle_read_buffer";
-	ssize_t read_count         = 0;
+	libqcow_file_t *image = NULL;
+	static char *function = "mount_handle_read_buffer";
+	ssize_t read_count    = 0;
 
 	if( mount_handle == NULL )
 	{
@@ -691,23 +677,23 @@ ssize_t mount_handle_read_buffer(
 		return( -1 );
 	}
 	if( libcdata_array_get_entry_by_index(
-	     mount_handle->input_files_array,
-	     input_file_index,
-	     (intptr_t **) &input_file,
+	     mount_handle->images_array,
+	     image_index,
+	     (intptr_t **) &image,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve input file: %d.",
+		 "%s: unable to retrieve image: %d.",
 		 function,
-		 input_file_index );
+		 image_index );
 
 		return( -1 );
 	}
 	read_count = libqcow_file_read_buffer(
-	              input_file,
+	              image,
 	              buffer,
 	              size,
 	              error );
@@ -718,27 +704,27 @@ ssize_t mount_handle_read_buffer(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_IO,
 		 LIBCERROR_IO_ERROR_READ_FAILED,
-		 "%s: unable to read buffer from input file: %d.",
+		 "%s: unable to read buffer from image: %d.",
 		 function,
-		 input_file_index );
+		 image_index );
 
 		return( -1 );
 	}
 	return( read_count );
 }
 
-/* Seeks a specific offset in a specific input file
+/* Seeks a specific offset in a specific image
  * Returns the offset if successful or -1 on error
  */
 off64_t mount_handle_seek_offset(
          mount_handle_t *mount_handle,
-         int input_file_index,
+         int image_index,
          off64_t offset,
          int whence,
          libcerror_error_t **error )
 {
-	libqcow_file_t *input_file = NULL;
-	static char *function      = "mount_handle_seek_offset";
+	libqcow_file_t *image = NULL;
+	static char *function = "mount_handle_seek_offset";
 
 	if( mount_handle == NULL )
 	{
@@ -752,23 +738,23 @@ off64_t mount_handle_seek_offset(
 		return( -1 );
 	}
 	if( libcdata_array_get_entry_by_index(
-	     mount_handle->input_files_array,
-	     input_file_index,
-	     (intptr_t **) &input_file,
+	     mount_handle->images_array,
+	     image_index,
+	     (intptr_t **) &image,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve input file: %d.",
+		 "%s: unable to retrieve image: %d.",
 		 function,
-		 input_file_index );
+		 image_index );
 
 		return( -1 );
 	}
 	offset = libqcow_file_seek_offset(
-	          input_file,
+	          image,
 	          offset,
 	          whence,
 	          error );
@@ -779,26 +765,26 @@ off64_t mount_handle_seek_offset(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_IO,
 		 LIBCERROR_IO_ERROR_SEEK_FAILED,
-		 "%s: unable to seek offset in input file: %d.",
+		 "%s: unable to seek offset in image: %d.",
 		 function,
-		 input_file_index );
+		 image_index );
 
 		return( -1 );
 	}
 	return( offset );
 }
 
-/* Retrieves the media size of a specific input file
+/* Retrieves the media size of a specific image
  * Returns 1 if successful or -1 on error
  */
 int mount_handle_get_media_size(
      mount_handle_t *mount_handle,
-     int input_file_index,
+     int image_index,
      size64_t *size,
      libcerror_error_t **error )
 {
-	libqcow_file_t *input_file = NULL;
-	static char *function      = "mount_handle_get_media_size";
+	libqcow_file_t *image = NULL;
+	static char *function = "mount_handle_get_media_size";
 
 	if( mount_handle == NULL )
 	{
@@ -812,23 +798,23 @@ int mount_handle_get_media_size(
 		return( -1 );
 	}
 	if( libcdata_array_get_entry_by_index(
-	     mount_handle->input_files_array,
-	     input_file_index,
-	     (intptr_t **) &input_file,
+	     mount_handle->images_array,
+	     image_index,
+	     (intptr_t **) &image,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve input file: %d.",
+		 "%s: unable to retrieve image: %d.",
 		 function,
-		 input_file_index );
+		 image_index );
 
 		return( -1 );
 	}
 	if( libqcow_file_get_media_size(
-	     input_file,
+	     image,
 	     size,
 	     error ) != 1 )
 	{
@@ -836,24 +822,24 @@ int mount_handle_get_media_size(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve media size from input file: %d.",
+		 "%s: unable to retrieve media size from image: %d.",
 		 function,
-		 input_file_index );
+		 image_index );
 
 		return( -1 );
 	}
 	return( 1 );
 }
 
-/* Retrieves the number of input files
+/* Retrieves the number of images
  * Returns 1 if successful or -1 on error
  */
-int mount_handle_get_number_of_input_files(
+int mount_handle_get_number_of_images(
      mount_handle_t *mount_handle,
-     int *number_of_input_files,
+     int *number_of_images,
      libcerror_error_t **error )
 {
-	static char *function = "mount_handle_get_number_of_input_files";
+	static char *function = "mount_handle_get_number_of_images";
 
 	if( mount_handle == NULL )
 	{
@@ -867,15 +853,15 @@ int mount_handle_get_number_of_input_files(
 		return( -1 );
 	}
 	if( libcdata_array_get_number_of_entries(
-	     mount_handle->input_files_array,
-	     number_of_input_files,
+	     mount_handle->images_array,
+	     number_of_images,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve number of input files.",
+		 "%s: unable to retrieve number of images.",
 		 function );
 
 		return( -1 );

@@ -36,14 +36,14 @@ int qcowtools_output_initialize(
      int stdio_mode,
      libcerror_error_t **error );
 
-void qcowoutput_copyright_fprint(
+void qcowtools_output_copyright_fprint(
       FILE *stream );
 
-void qcowoutput_version_fprint(
+void qcowtools_output_version_fprint(
       FILE *stream,
       const char *program );
 
-void qcowoutput_version_detailed_fprint(
+void qcowtools_output_version_detailed_fprint(
       FILE *stream,
       const char *program );
 

@@ -28,7 +28,6 @@
 
 #include "qcowtools_libcdata.h"
 #include "qcowtools_libcerror.h"
-#include "qcowtools_libcnotify.h"
 #include "qcowtools_libqcow.h"
 
 #if defined( __cplusplus )
@@ -47,9 +46,9 @@ struct mount_handle
 	 */
 	size_t basename_size;
 
-	/* The input files array
+	/* The images array
 	 */
-	libcdata_array_t *input_files_array;
+	libcdata_array_t *images_array;
 
 	/* The key data
 	 */
@@ -94,7 +93,7 @@ int mount_handle_set_password(
      const system_character_t *string,
      libcerror_error_t **error );
 
-int mount_handle_open_input(
+int mount_handle_open(
      mount_handle_t *mount_handle,
      const system_character_t *filename,
      libcerror_error_t **error );
@@ -105,27 +104,27 @@ int mount_handle_close(
 
 ssize_t mount_handle_read_buffer(
          mount_handle_t *mount_handle,
-         int input_file_index,
+         int image_index,
          uint8_t *buffer,
          size_t size,
          libcerror_error_t **error );
 
 off64_t mount_handle_seek_offset(
          mount_handle_t *mount_handle,
-         int input_file_index,
+         int image_index,
          off64_t offset,
          int whence,
          libcerror_error_t **error );
 
 int mount_handle_get_media_size(
      mount_handle_t *mount_handle,
-     int input_file_index,
+     int image_index,
      size64_t *size,
      libcerror_error_t **error );
 
-int mount_handle_get_number_of_input_files(
+int mount_handle_get_number_of_images(
      mount_handle_t *mount_handle,
-     int *number_of_input_files,
+     int *number_of_images,
      libcerror_error_t **error );
 
 int mount_handle_set_basename(
