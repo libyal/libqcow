@@ -43,7 +43,12 @@
 
 #if !defined( LIBQCOW_HAVE_BFIO )
 
-extern \
+LIBQCOW_EXTERN \
+int libqcow_check_file_signature_file_io_handle(
+     libbfio_handle_t *file_io_handle,
+     libcerror_error_t **error );
+
+LIBQCOW_EXTERN \
 int libqcow_file_open_file_io_handle(
      libqcow_file_t *file,
      libbfio_handle_t *file_io_handle,
@@ -2272,6 +2277,7 @@ int main(
 				 argv[ optind - 1 ] );
 
 				return( EXIT_FAILURE );
+
 			case (system_integer_t) 'p':
 				option_password = optarg;
 
@@ -2301,15 +2307,51 @@ int main(
 #if !defined( __BORLANDC__ ) || ( __BORLANDC__ >= 0x0560 )
 	if( source != NULL )
 	{
+		result = libbfio_file_initialize(
+		          &file_io_handle,
+		          &error );
+
+		QCOW_TEST_ASSERT_EQUAL_INT(
+		 "result",
+		 result,
+		 1 );
+
+	        QCOW_TEST_ASSERT_IS_NOT_NULL(
+	         "file_io_handle",
+	         file_io_handle );
+
+	        QCOW_TEST_ASSERT_IS_NULL(
+	         "error",
+	         error );
+
+		string_length = system_string_length(
+		                 source );
+
 #if defined( HAVE_WIDE_SYSTEM_CHARACTER )
-		result = libqcow_check_file_signature_wide(
+		result = libbfio_file_set_name_wide(
+		          file_io_handle,
 		          source,
+		          string_length,
 		          &error );
 #else
-		result = libqcow_check_file_signature(
+		result = libbfio_file_set_name(
+		          file_io_handle,
 		          source,
+		          string_length,
 		          &error );
 #endif
+		QCOW_TEST_ASSERT_EQUAL_INT(
+		 "result",
+		 result,
+		 1 );
+
+	        QCOW_TEST_ASSERT_IS_NULL(
+	         "error",
+	         error );
+
+		result = libqcow_check_file_signature_file_io_handle(
+		          file_io_handle,
+		          &error );
 
 		QCOW_TEST_ASSERT_NOT_EQUAL_INT(
 		 "result",
@@ -2356,48 +2398,6 @@ int main(
 
 		/* Initialize test
 		 */
-		result = libbfio_file_initialize(
-		          &file_io_handle,
-		          &error );
-
-		QCOW_TEST_ASSERT_EQUAL_INT(
-		 "result",
-		 result,
-		 1 );
-
-	        QCOW_TEST_ASSERT_IS_NOT_NULL(
-	         "file_io_handle",
-	         file_io_handle );
-
-	        QCOW_TEST_ASSERT_IS_NULL(
-	         "error",
-	         error );
-
-		string_length = system_string_length(
-		                 source );
-
-#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
-		result = libbfio_file_set_name_wide(
-		          file_io_handle,
-		          source,
-		          string_length,
-		          &error );
-#else
-		result = libbfio_file_set_name(
-		          file_io_handle,
-		          source,
-		          string_length,
-		          &error );
-#endif
-		QCOW_TEST_ASSERT_EQUAL_INT(
-		 "result",
-		 result,
-		 1 );
-
-	        QCOW_TEST_ASSERT_IS_NULL(
-	         "error",
-	         error );
-
 		result = qcow_test_file_open_source(
 		          &file,
 		          file_io_handle,
