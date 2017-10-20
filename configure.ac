@@ -2,7 +2,7 @@ AC_PREREQ( 2.59 )
 
 AC_INIT(
  [libqcow],
- [20171018],
+ [20171020],
  [joachim.metz@gmail.com])
 
 AC_CONFIG_SRCDIR(
@@ -90,7 +90,7 @@ AX_LIBFCACHE_CHECK_ENABLE
 dnl Check if libfdata or required headers and functions are available
 AX_LIBFDATA_CHECK_ENABLE
 
-dnl Check for zlib compression support
+dnl Check if zlib or required headers and functions are available
 AX_ZLIB_CHECK_ENABLE
 AX_ZLIB_CHECK_INFLATE
 

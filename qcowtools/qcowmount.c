@@ -746,20 +746,6 @@ int qcowmount_fuse_readdir(
 		qcowmount_fuse_path[ string_index++ ] = '0' + (char) ( image_index % 10 );
 		qcowmount_fuse_path[ string_index++ ] = 0;
 
-/* TODO add support for multiple images ? */
-		if( image_index != 1 )
-		{
-			libcerror_error_set(
-			 &error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
-			 "%s: invalid image index value out of bounds.",
-			 function );
-
-			result = -EIO;
-
-			goto on_error;
-		}
 		if( qcowmount_fuse_filldir(
 		     buffer,
 		     filler,
@@ -899,20 +885,6 @@ int qcowmount_fuse_getattr(
 			}
 			image_index -= 1;
 
-/* TODO add support for multiple images ? */
-			if( image_index != 0 )
-			{
-				libcerror_error_set(
-				 &error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
-				 "%s: invalid image index value out of bounds.",
-				 function );
-
-				result = -ERANGE;
-
-				goto on_error;
-			}
 			if( mount_handle_get_media_size(
 			     qcowmount_mount_handle,
 			     image_index,
@@ -1760,20 +1732,6 @@ int __stdcall qcowmount_dokan_FindFiles(
 		qcowmount_dokan_path[ string_index++ ] = (wchar_t) ( '0' + ( image_index % 10 ) );
 		qcowmount_dokan_path[ string_index++ ] = 0;
 
-/* TODO add support for multiple images ? */
-		if( image_index != 1 )
-		{
-			libcerror_error_set(
-			 &error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
-			 "%s: invalid image index value out of bounds.",
-			 function );
-
-			result = -ERROR_BAD_ARGUMENTS;
-
-			goto on_error;
-		}
 		if( qcowmount_dokan_filldir(
 		     fill_find_data,
 		     file_info,
@@ -1955,20 +1913,6 @@ int __stdcall qcowmount_dokan_GetFileInformation(
 		}
 		image_index -= 1;
 
-/* TODO add support for multiple images ? */
-		if( image_index != 0 )
-		{
-			libcerror_error_set(
-			 &error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
-			 "%s: invalid image index value out of bounds.",
-			 function );
-
-			result = -ERROR_BAD_ARGUMENTS;
-
-			goto on_error;
-		}
 		if( mount_handle_get_media_size(
 		     qcowmount_mount_handle,
 		     image_index,

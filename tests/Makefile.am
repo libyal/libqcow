@@ -85,17 +85,24 @@ qcow_test_error_LDADD = \
 
 qcow_test_file_SOURCES = \
 	qcow_test_file.c \
+	qcow_test_functions.c qcow_test_functions.h \
 	qcow_test_getopt.c qcow_test_getopt.h \
+	qcow_test_libbfio.h \
 	qcow_test_libcerror.h \
 	qcow_test_libclocale.h \
 	qcow_test_libcnotify.h \
 	qcow_test_libqcow.h \
 	qcow_test_libuna.h \
 	qcow_test_macros.h \
-	qcow_test_memory.c qcow_test_memory.h
+	qcow_test_memory.c qcow_test_memory.h \
+	qcow_test_unused.h
 
 qcow_test_file_LDADD = \
+	@LIBBFIO_LIBADD@ \
+	@LIBCPATH_LIBADD@ \
+	@LIBCFILE_LIBADD@ \
 	@LIBUNA_LIBADD@ \
+	@LIBCSPLIT_LIBADD@ \
 	@LIBCNOTIFY_LIBADD@ \
 	@LIBCLOCALE_LIBADD@ \
 	@LIBCDATA_LIBADD@ \
@@ -126,6 +133,7 @@ qcow_test_notify_LDADD = \
 	../libqcow/libqcow.la
 
 qcow_test_support_SOURCES = \
+	qcow_test_functions.c qcow_test_functions.h \
 	qcow_test_getopt.c qcow_test_getopt.h \
 	qcow_test_libbfio.h \
 	qcow_test_libcerror.h \
@@ -134,7 +142,8 @@ qcow_test_support_SOURCES = \
 	qcow_test_libqcow.h \
 	qcow_test_libuna.h \
 	qcow_test_macros.h \
-	qcow_test_support.c
+	qcow_test_support.c \
+	qcow_test_unused.h
 
 qcow_test_support_LDADD = \
 	@LIBBFIO_LIBADD@ \
