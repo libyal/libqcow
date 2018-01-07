@@ -1,7 +1,7 @@
 /*
  * Shows information obtained from a QEMU Copy-On-Write (QCOW) image file
  *
- * Copyright (C) 2010-2017, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2010-2018, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
