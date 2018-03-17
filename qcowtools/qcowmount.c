@@ -991,6 +991,7 @@ static size_t qcowmount_dokan_path_prefix_length = 5;
 /* Opens a file or directory
  * Returns 0 if successful or a negative error code otherwise
  */
+#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 int __stdcall qcowmount_dokan_CreateFile(
                const wchar_t *path,
                DWORD desired_access,
@@ -998,14 +999,49 @@ int __stdcall qcowmount_dokan_CreateFile(
                DWORD creation_disposition,
                DWORD attribute_flags QCOWTOOLS_ATTRIBUTE_UNUSED,
                DOKAN_FILE_INFO *file_info )
+#else
+NTSTATUS __stdcall qcowmount_dokan_CreateFile(
+                    const wchar_t *path,
+                    DOKAN_IO_SECURITY_CONTEXT *security_context,
+                    ACCESS_MASK desired_access,
+                    ULONG file_attributes,
+                    ULONG share_access,
+                    ULONG creation_disposition,
+                    ULONG creation_options,
+                    DOKAN_FILE_INFO *file_info )
+#endif
 {
-	libcerror_error_t *error = NULL;
-	static char *function    = "qcowmount_dokan_CreateFile";
-	size_t path_length       = 0;
-	int result               = 0;
+#if ! ( ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 ) )
+	SECURITY_ATTRIBUTES security_attributes;
 
+	ACCESS_MASK result_desired_access      = 0;
+	DWORD result_creation_disposition      = 0;
+	DWORD result_file_attributes_and_flags = 0;
+#endif
+
+	libcerror_error_t *error               = NULL;
+	static char *function                  = "qcowmount_dokan_CreateFile";
+	size_t path_length                     = 0;
+	int result                             = 0;
+
+#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 	QCOWTOOLS_UNREFERENCED_PARAMETER( share_mode )
 	QCOWTOOLS_UNREFERENCED_PARAMETER( attribute_flags )
+
+#else
+	security_attributes.nLength              = sizeof( SECURITY_ATTRIBUTES );
+	security_attributes.lpSecurityDescriptor = security_context->AccessState.SecurityDescriptor;
+	security_attributes.bInheritHandle       = FALSE;
+
+	DokanMapKernelToUserCreateFileFlags(
+	 desired_access,
+	 file_attributes,
+	 creation_options,
+	 creation_disposition,
+	 &result_desired_access,
+	 &result_creation_disposition,
+	 &result_creation_disposition );
+#endif
 
 	if( path == NULL )
 	{
@@ -1120,8 +1156,14 @@ on_error:
 		libcerror_error_free(
 		 &error );
 	}
+#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 	return( result );
+#else
+	return( DokanNtStatusFromWin32( result ) );
+#endif
 }
+
+#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 
 /* Opens a directory
  * Returns 0 if successful or a negative error code otherwise
@@ -1178,15 +1220,27 @@ on_error:
 		libcerror_error_free(
 		 &error );
 	}
+#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 	return( result );
+#else
+	return( DokanNtStatusFromWin32( result ) );
+#endif
 }
+
+#endif /* ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 ) */
 
 /* Closes a file or direcotry
  * Returns 0 if successful or a negative error code otherwise
  */
+#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 int __stdcall qcowmount_dokan_CloseFile(
                const wchar_t *path,
                DOKAN_FILE_INFO *file_info QCOWTOOLS_ATTRIBUTE_UNUSED )
+#else
+NTSTATUS __stdcall qcowmount_dokan_CloseFile(
+                    const wchar_t *path,
+                    DOKAN_FILE_INFO *file_info QCOWTOOLS_ATTRIBUTE_UNUSED )
+#endif
 {
 	libcerror_error_t *error = NULL;
 	static char *function    = "qcowmount_dokan_CloseFile";
@@ -1217,12 +1271,17 @@ on_error:
 		libcerror_error_free(
 		 &error );
 	}
+#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 	return( result );
+#else
+	return( DokanNtStatusFromWin32( result ) );
+#endif
 }
 
 /* Reads a buffer of data at the specified offset
  * Returns 0 if successful or a negative error code otherwise
  */
+#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 int __stdcall qcowmount_dokan_ReadFile(
                const wchar_t *path,
                void *buffer,
@@ -1230,6 +1289,15 @@ int __stdcall qcowmount_dokan_ReadFile(
                DWORD *number_of_bytes_read,
                LONGLONG offset,
                DOKAN_FILE_INFO *file_info QCOWTOOLS_ATTRIBUTE_UNUSED )
+#else
+NTSTATUS __stdcall qcowmount_dokan_ReadFile(
+                    const wchar_t *path,
+                    void *buffer,
+                    DWORD number_of_bytes_to_read,
+                    DWORD *number_of_bytes_read,
+                    LONGLONG offset,
+                    DOKAN_FILE_INFO *file_info QCOWTOOLS_ATTRIBUTE_UNUSED )
+#endif
 {
 	libcerror_error_t *error = NULL;
 	static char *function    = "qcowmount_dokan_ReadFile";
@@ -1383,7 +1451,11 @@ on_error:
 		libcerror_error_free(
 		 &error );
 	}
+#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 	return( result );
+#else
+	return( DokanNtStatusFromWin32( result ) );
+#endif
 }
 
 /* Sets the values in a find data structure
@@ -1581,10 +1653,17 @@ int qcowmount_dokan_filldir(
 /* Reads a directory
  * Returns 0 if successful or a negative error code otherwise
  */
+#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 int __stdcall qcowmount_dokan_FindFiles(
                const wchar_t *path,
                PFillFindData fill_find_data,
                DOKAN_FILE_INFO *file_info )
+#else
+NTSTATUS __stdcall qcowmount_dokan_FindFiles(
+                    const wchar_t *path,
+                    PFillFindData fill_find_data,
+                    DOKAN_FILE_INFO *file_info )
+#endif
 {
 	WIN32_FIND_DATAW find_data;
 
@@ -1769,7 +1848,11 @@ on_error:
 		libcerror_error_free(
 		 &error );
 	}
+#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 	return( result );
+#else
+	return( DokanNtStatusFromWin32( result ) );
+#endif
 }
 
 /* Sets the values in a file information structure
@@ -1817,10 +1900,17 @@ int qcowmount_dokan_set_file_information(
 /* Retrieves the file information
  * Returns 0 if successful or a negative error code otherwise
  */
+#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 int __stdcall qcowmount_dokan_GetFileInformation(
                const wchar_t *path,
                BY_HANDLE_FILE_INFORMATION *file_information,
                DOKAN_FILE_INFO *file_info )
+#else
+NTSTATUS __stdcall qcowmount_dokan_GetFileInformation(
+                    const wchar_t *path,
+                    BY_HANDLE_FILE_INFORMATION *file_information,
+                    DOKAN_FILE_INFO *file_info )
+#endif
 {
 	libcerror_error_t *error = NULL;
 	static char *function    = "qcowmount_dokan_GetFileInformation";
@@ -1964,12 +2054,17 @@ on_error:
 		libcerror_error_free(
 		 &error );
 	}
+#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 	return( result );
+#else
+	return( DokanNtStatusFromWin32( result ) );
+#endif
 }
 
 /* Retrieves the volume information
  * Returns 0 if successful or a negative error code otherwise
  */
+#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 int __stdcall qcowmount_dokan_GetVolumeInformation(
                wchar_t *volume_name,
                DWORD volume_name_size,
@@ -1979,6 +2074,17 @@ int __stdcall qcowmount_dokan_GetVolumeInformation(
                wchar_t *file_system_name,
                DWORD file_system_name_size,
                DOKAN_FILE_INFO *file_info QCOWTOOLS_ATTRIBUTE_UNUSED )
+#else
+NTSTATUS __stdcall qcowmount_dokan_GetVolumeInformation(
+                    wchar_t *volume_name,
+                    DWORD volume_name_size,
+                    DWORD *volume_serial_number,
+                    DWORD *maximum_filename_length,
+                    DWORD *file_system_flags,
+                    wchar_t *file_system_name,
+                    DWORD file_system_name_size,
+                    DOKAN_FILE_INFO *file_info QCOWTOOLS_ATTRIBUTE_UNUSED )
+#endif
 {
 	libcerror_error_t *error = NULL;
 	static char *function    = "qcowmount_dokan_GetVolumeInformation";
@@ -2057,8 +2163,14 @@ on_error:
 		libcerror_error_free(
 		 &error );
 	}
+#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 	return( result );
+#else
+	return( DokanNtStatusFromWin32( result ) );
+#endif
 }
+
+#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 
 /* Unmount the image
  * Returns 0 if successful or a negative error code otherwise
@@ -2072,6 +2184,8 @@ int __stdcall qcowmount_dokan_Unmount(
 
 	return( 0 );
 }
+
+#endif /* ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 ) */
 
 #endif
 
@@ -2419,6 +2533,8 @@ int main( int argc, char * const argv[] )
 /* This will only affect the drive properties
 	qcowmount_dokan_options.Options |= DOKAN_OPTION_REMOVABLE;
 */
+
+#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 	qcowmount_dokan_options.Options |= DOKAN_OPTION_KEEP_ALIVE;
 
 	qcowmount_dokan_operations.CreateFile           = &qcowmount_dokan_CreateFile;
@@ -2446,6 +2562,35 @@ int main( int argc, char * const argv[] )
 	qcowmount_dokan_operations.GetDiskFreeSpace     = NULL;
 	qcowmount_dokan_operations.GetVolumeInformation = &qcowmount_dokan_GetVolumeInformation;
 	qcowmount_dokan_operations.Unmount              = &qcowmount_dokan_Unmount;
+
+#else
+	qcowmount_dokan_operations.ZwCreateFile         = &qcowmount_dokan_CreateFile;
+	qcowmount_dokan_operations.Cleanup              = NULL;
+	qcowmount_dokan_operations.CloseFile            = &qcowmount_dokan_CloseFile;
+	qcowmount_dokan_operations.ReadFile             = &qcowmount_dokan_ReadFile;
+	qcowmount_dokan_operations.WriteFile            = NULL;
+	qcowmount_dokan_operations.FlushFileBuffers     = NULL;
+	qcowmount_dokan_operations.GetFileInformation   = &qcowmount_dokan_GetFileInformation;
+	qcowmount_dokan_operations.FindFiles            = &qcowmount_dokan_FindFiles;
+	qcowmount_dokan_operations.FindFilesWithPattern = NULL;
+	qcowmount_dokan_operations.SetFileAttributes    = NULL;
+	qcowmount_dokan_operations.SetFileTime          = NULL;
+	qcowmount_dokan_operations.DeleteFile           = NULL;
+	qcowmount_dokan_operations.DeleteDirectory      = NULL;
+	qcowmount_dokan_operations.MoveFile             = NULL;
+	qcowmount_dokan_operations.SetEndOfFile         = NULL;
+	qcowmount_dokan_operations.SetAllocationSize    = NULL;
+	qcowmount_dokan_operations.LockFile             = NULL;
+	qcowmount_dokan_operations.UnlockFile           = NULL;
+	qcowmount_dokan_operations.GetFileSecurity      = NULL;
+	qcowmount_dokan_operations.SetFileSecurity      = NULL;
+	qcowmount_dokan_operations.GetDiskFreeSpace     = NULL;
+	qcowmount_dokan_operations.GetVolumeInformation = &qcowmount_dokan_GetVolumeInformation;
+	qcowmount_dokan_operations.Unmounted            = NULL;
+	qcowmount_dokan_operations.FindStreams          = NULL;
+	qcowmount_dokan_operations.Mounted              = NULL;
+
+#endif /* ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 ) */
 
 	result = DokanMain(
 	          &qcowmount_dokan_options,
