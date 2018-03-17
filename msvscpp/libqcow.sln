@@ -67,6 +67,7 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "qcow_test_notify", "qcow_test_notify\qcow_test_notify.vcproj", "{3D64F9BF-4537-4E16-814A-8300E6772297}"
 	ProjectSection(ProjectDependencies) = postProject
 		{9BB5C79B-C1EF-438C-ABA0-226EECBD8526} = {9BB5C79B-C1EF-438C-ABA0-226EECBD8526}
+		{BD3A95FA-A3DE-4B79-A889-A7E5ECA4B69C} = {BD3A95FA-A3DE-4B79-A889-A7E5ECA4B69C}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "qcow_test_support", "qcow_test_support\qcow_test_support.vcproj", "{BCCF5091-04EB-42C6-89AF-5093A5840CE4}"

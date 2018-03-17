@@ -39,6 +39,10 @@
 #include <stdlib.h>
 #endif
 
+#if defined( HAVE_IO_H ) || defined( WINAPI )
+#include <io.h>
+#endif
+
 #if !defined( WINAPI )
 #if defined( TIME_WITH_SYS_TIME )
 #include <sys/time.h>

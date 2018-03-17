@@ -124,13 +124,15 @@ qcow_test_io_handle_LDADD = \
 	@LIBCERROR_LIBADD@
 
 qcow_test_notify_SOURCES = \
+	qcow_test_libcerror.h \
 	qcow_test_libqcow.h \
 	qcow_test_macros.h \
 	qcow_test_notify.c \
 	qcow_test_unused.h
 
 qcow_test_notify_LDADD = \
-	../libqcow/libqcow.la
+	../libqcow/libqcow.la \
+	@LIBCERROR_LIBADD@
 
 qcow_test_support_SOURCES = \
 	qcow_test_functions.c qcow_test_functions.h \
@@ -142,6 +144,7 @@ qcow_test_support_SOURCES = \
 	qcow_test_libqcow.h \
 	qcow_test_libuna.h \
 	qcow_test_macros.h \
+	qcow_test_memory.c qcow_test_memory.h \
 	qcow_test_support.c \
 	qcow_test_unused.h
 
