@@ -33,6 +33,10 @@
 #include <stdlib.h>
 #endif
 
+#if defined( HAVE_IO_H ) || defined( WINAPI )
+#include <io.h>
+#endif
+
 #include "info_handle.h"
 #include "qcowtools_getopt.h"
 #include "qcowtools_libcerror.h"
