@@ -40,8 +40,10 @@ install:
 - cmd: git clone https://github.com/codecov/codecov-bash.git ..\codecov-bash
 - cmd: git clone https://github.com/libyal/vstools.git ..\vstools
 - ps: .\synczlib.ps1
-- ps: if ($env:TARGET -eq "vs2008" -or $env:TARGET -eq "vs2010" -or $env:TARGET -eq "vs2012" -or $env:TARGET -eq "vs2013") {
+- ps: If ($env:TARGET -eq "vs2008" -or $env:TARGET -eq "vs2010" -or $env:TARGET -eq "vs2012" -or $env:TARGET -eq "vs2013" -or $env:TARGET -eq "vs2015") {
     .\syncdokan.ps1 -UseLegacyVersion }
+- ps: If ($env:TARGET -eq "vs2017") {
+    .\syncdokan.ps1 }
 - cmd: if [%TARGET%]==[vs2010] (
     pushd ..\dokan &&
     set PYTHONPATH=..\vstools &&
@@ -63,11 +65,20 @@ install:
     rd /q /s msvscpp &&
     ren vs2013 msvscpp &&
     popd )
-- ps: if ($env:TARGET -eq "vs2008" -or $env:TARGET -eq "vs2010" -or $env:TARGET -eq "vs2012" -or $env:TARGET -eq "vs2013") {
+- cmd: if [%TARGET%]==[vs2015] (
+    pushd ..\dokan &&
+    set PYTHONPATH=..\vstools &&
+    C:\Python27\python.exe ..\vstools\scripts\msvscpp-convert.py --output-format 2015 msvscpp\dokan.sln &&
+    rd /q /s msvscpp &&
+    ren vs2015 msvscpp &&
+    popd )
+- ps: If ($env:TARGET -eq "vs2008" -or $env:TARGET -eq "vs2010" -or $env:TARGET -eq "vs2012" -or $env:TARGET -eq "vs2013" -or $env:TARGET -eq "vs2015") {
     .\builddokan.ps1 -UseLegacyVersion }
-- ps: if ($env:TARGET -eq "vs2013" -or $env:TARGET -eq "vs2015" -or $env:TARGET -eq "vs2017") {
-    .\syncdokan.ps1;
-    If ($env:CONFIGURATION -eq "VSDebug") { .\builddokan.ps1 -Configuration "Debug" } Else { .\builddokan.ps1 } }
+- ps: If ($env:TARGET -eq "vs2017") {
+    $Configuration = $env:CONFIGURATION;
+    If (${Configuration} -eq "VSDebug") { $Configuration = "Debug" }
+    .\builddokan.ps1 -Configuration ${Configuration} -Platform "Win32";
+    .\builddokan.ps1 -Configuration ${Configuration} -Platform "x64"; }
 - cmd: if [%TARGET%]==[cygwin] (
     C:\cygwin\setup-x86.exe -qgnNdO -l C:\cygwin\var\cache\setup -R c:\cygwin -s http://cygwin.mirror.constant.com -P zlib-devel -P openssl-devel -P python2-devel -P python3-devel )
 - cmd: if [%TARGET%]==[cygwin64] (
@@ -96,13 +107,13 @@ build_script:
     msbuild /verbosity:quiet vs2013\libqcow.sln /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" )
 - cmd: if [%TARGET%]==[vs2015] (
     set PYTHONPATH=..\vstools &&
-    C:\Python27\python.exe ..\vstools\scripts\msvscpp-convert.py --output-format 2015 --with-dokany msvscpp\libqcow.sln &&
+    C:\Python27\python.exe ..\vstools\scripts\msvscpp-convert.py --output-format 2015 msvscpp\libqcow.sln &&
     msbuild /verbosity:quiet vs2015\libqcow.sln /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" )
 - cmd: if [%TARGET%]==[vs2017] (
     set PYTHONPATH=..\vstools &&
     C:\Python27\python.exe ..\vstools\scripts\msvscpp-convert.py --extend-with-x64 --no-python-dll --output-format 2017 --with-dokany msvscpp\libqcow.sln &&
-    msbuild /verbosity:quiet vs2017\libqcow.sln /property:Platform=Win32 /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" &&
-    msbuild /verbosity:quiet vs2017\libqcow.sln /property:Platform=x64 /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" )
+    msbuild /verbosity:quiet vs2017\libqcow.sln /property:Platform=Win32 /property:PlatformToolset=v141 /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" &&
+    msbuild /verbosity:quiet vs2017\libqcow.sln /property:Platform=x64 /property:PlatformToolset=v141 /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" )
 - cmd: if [%TARGET%]==[python27] (
     C:\Python27\python.exe setup.py bdist_msi )
 - cmd: if [%TARGET%]==[python36] (
@@ -122,7 +133,7 @@ build_script:
 
 test_script:
 - cmd: rem Run tests
-- ps: if ($env:TARGET -eq "vs2008" -or $env:TARGET -eq "vs2010" -or $env:TARGET -eq "vs2012" -or $env:TARGET -eq "vs2013" -or $env:TARGET -eq "vs2015" -or $env:TARGET -eq "vs2017") {
+- ps: If ($env:TARGET -eq "vs2008" -or $env:TARGET -eq "vs2010" -or $env:TARGET -eq "vs2012" -or $env:TARGET -eq "vs2013" -or $env:TARGET -eq "vs2015" -or $env:TARGET -eq "vs2017") {
     .\runtests.ps1 }
 - cmd: if [%TARGET%]==[cygwin] (
     C:\cygwin\bin\bash -e -l -c "cd libqcow && ./runtests.sh" )
