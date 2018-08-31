@@ -28,17 +28,13 @@
  */
 #if !defined( HAVE_LOCAL_LIBQCOW )
 
-/* If libtool DLL support is enabled set LIBQCOW_DLL_EXPORT
- * before including libqcow/extern.h
- */
-#if defined( _WIN32 ) && defined( DLL_EXPORT )
-#define LIBQCOW_DLL_EXPORT
-#endif
-
 #include <libqcow/extern.h>
 
+#define LIBQCOW_EXTERN_VARIABLE	LIBQCOW_EXTERN
+
 #else
-#define LIBQCOW_EXTERN	/* extern */
+#define LIBQCOW_EXTERN		/* extern */
+#define LIBQCOW_EXTERN_VARIABLE	extern
 
 #endif /* !defined( HAVE_LOCAL_LIBQCOW ) */
 

@@ -24,14 +24,7 @@
 
 #include <common.h>
 
-/* If Cygwin libtool DLL support is enabled set LIBQCOW_DLL_IMPORT
- * before including libqcow.h
- */
-#if defined( _WIN32 ) && defined( DLL_EXPORT )
-#define LIBQCOW_DLL_IMPORT
-#endif
-
 #include <libqcow.h>
 
-#endif
+#endif /* !defined( _PYQCOW_LIBQCOW_H ) */
 

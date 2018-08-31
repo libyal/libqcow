@@ -1,5 +1,5 @@
 /*
- * The internal libqcow header
+ * The libqcow header wrapper
  *
  * Copyright (C) 2010-2018, Joachim Metz <joachim.metz@gmail.com>
  *
@@ -23,13 +23,6 @@
 #define _QCOWTOOLS_LIBQCOW_H
 
 #include <common.h>
-
-/* If Cygwin libtool DLL support is enabled set LIBQCOW_DLL_IMPORT
- * before including libqcow.h
- */
-#if defined( _WIN32 ) && defined( DLL_IMPORT ) && !defined( HAVE_STATIC_EXECUTABLES )
-#define LIBQCOW_DLL_IMPORT
-#endif
 
 #include <libqcow.h>
 
