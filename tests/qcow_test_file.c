@@ -298,6 +298,8 @@ int qcow_test_file_initialize(
 	          &file,
 	          &error );
 
+	file = NULL;
+
 	QCOW_TEST_ASSERT_EQUAL_INT(
 	 "result",
 	 result,
@@ -309,8 +311,6 @@ int qcow_test_file_initialize(
 
 	libcerror_error_free(
 	 &error );
-
-	file = NULL;
 
 #if defined( HAVE_QCOW_TEST_MEMORY )
 
@@ -2396,7 +2396,7 @@ int main(
 		 source,
 		 option_password );
 
-		/* Initialize test
+		/* Initialize file for tests
 		 */
 		result = qcow_test_file_open_source(
 		          &file,
@@ -2485,7 +2485,9 @@ int main(
 		QCOW_TEST_ASSERT_IS_NULL(
 		 "error",
 		 error );
-
+	}
+	if( file_io_handle != NULL )
+	{
 		result = libbfio_handle_free(
 		          &file_io_handle,
 		          &error );
