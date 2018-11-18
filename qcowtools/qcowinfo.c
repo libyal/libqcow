@@ -31,12 +31,12 @@
 #include <io.h>
 #endif
 
-#if defined( HAVE_UNISTD_H )
-#include <unistd.h>
-#endif
-
 #if defined( HAVE_STDLIB_H ) || defined( WINAPI )
 #include <stdlib.h>
+#endif
+
+#if defined( HAVE_UNISTD_H )
+#include <unistd.h>
 #endif
 
 #include "info_handle.h"

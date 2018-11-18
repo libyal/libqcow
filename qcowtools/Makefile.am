@@ -45,6 +45,8 @@ qcowinfo_LDADD = \
 	@LIBINTL@
 
 qcowmount_SOURCES = \
+	mount_dokan.c mount_dokan.h \
+	mount_fuse.c mount_fuse.h \
 	mount_handle.c mount_handle.h \
 	qcowmount.c \
 	qcowtools_getopt.c qcowtools_getopt.h \
