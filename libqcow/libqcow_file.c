@@ -1254,7 +1254,7 @@ int libqcow_internal_file_open_read(
 	     (intptr_t *) internal_file->io_handle,
 	     NULL,
 	     NULL,
-	     (int (*)(intptr_t *, intptr_t *, libfdata_vector_t *, libfcache_cache_t *, int, int, off64_t, size64_t, uint32_t, uint8_t, libcerror_error_t **)) &libqcow_io_handle_read_level2_table,
+	     (int (*)(intptr_t *, intptr_t *, libfdata_vector_t *, libfdata_cache_t *, int, int, off64_t, size64_t, uint32_t, uint8_t, libcerror_error_t **)) &libqcow_io_handle_read_level2_table,
 	     NULL,
 	     LIBFDATA_DATA_HANDLE_FLAG_NON_MANAGED,
 	     error ) != 1 )
@@ -1307,7 +1307,7 @@ int libqcow_internal_file_open_read(
 	     (intptr_t *) internal_file->io_handle,
 	     NULL,
 	     NULL,
-	     (int (*)(intptr_t *, intptr_t *, libfdata_vector_t *, libfcache_cache_t *, int, int, off64_t, size64_t, uint32_t, uint8_t, libcerror_error_t **)) &libqcow_io_handle_read_cluster_block,
+	     (int (*)(intptr_t *, intptr_t *, libfdata_vector_t *, libfdata_cache_t *, int, int, off64_t, size64_t, uint32_t, uint8_t, libcerror_error_t **)) &libqcow_io_handle_read_cluster_block,
 	     NULL,
 	     LIBFDATA_DATA_HANDLE_FLAG_NON_MANAGED,
 	     error ) != 1 )
@@ -1556,7 +1556,7 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 			if( libfdata_vector_get_element_value_at_offset(
 			     internal_file->level2_table_vector,
 			     (intptr_t *) file_io_handle,
-			     internal_file->level2_table_cache,
+			     (libfdata_cache_t *) internal_file->level2_table_cache,
 			     (off64_t) level2_table_file_offset,
 			     &element_data_offset,
 			     (intptr_t **) &level2_table,
@@ -1955,7 +1955,7 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 				if( libfdata_vector_get_element_value_at_offset(
 				     internal_file->cluster_block_vector,
 				     (intptr_t *) file_io_handle,
-				     internal_file->cluster_block_cache,
+				     (libfdata_cache_t *) internal_file->cluster_block_cache,
 				     (off64_t) cluster_block_file_offset,
 				     &element_data_offset,
 				     (intptr_t **) &cluster_block,

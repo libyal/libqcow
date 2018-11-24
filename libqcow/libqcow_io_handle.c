@@ -31,7 +31,6 @@
 #include "libqcow_libbfio.h"
 #include "libqcow_libcerror.h"
 #include "libqcow_libcnotify.h"
-#include "libqcow_libfcache.h"
 #include "libqcow_libfdata.h"
 #include "libqcow_unused.h"
 
@@ -734,7 +733,7 @@ int libqcow_io_handle_read_level2_table(
      intptr_t *data_handle LIBQCOW_ATTRIBUTE_UNUSED,
      libbfio_handle_t *file_io_handle,
      libfdata_vector_t *vector,
-     libfcache_cache_t *cache,
+     libfdata_cache_t *cache,
      int element_index,
      int element_data_file_index LIBQCOW_ATTRIBUTE_UNUSED,
      off64_t element_data_offset,
@@ -830,7 +829,7 @@ int libqcow_io_handle_read_cluster_block(
      intptr_t *data_handle LIBQCOW_ATTRIBUTE_UNUSED,
      libbfio_handle_t *file_io_handle,
      libfdata_vector_t *vector,
-     libfcache_cache_t *cache,
+     libfdata_cache_t *cache,
      int element_index,
      int element_data_file_index LIBQCOW_ATTRIBUTE_UNUSED,
      off64_t element_data_offset,

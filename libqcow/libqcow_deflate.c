@@ -96,7 +96,7 @@ int libqcow_deflate_bit_stream_get_value(
 		bit_stream->bit_buffer      |= *value_32bit;
 		bit_stream->bit_buffer_size += 8;
 	}
-	*value_32bit = bit_stream->bit_buffer & ~( -1L << number_of_bits );
+	*value_32bit = bit_stream->bit_buffer & ~( (uint32_t) -1L << number_of_bits );
 
 	bit_stream->bit_buffer     >>= number_of_bits;
 	bit_stream->bit_buffer_size -= number_of_bits;

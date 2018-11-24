@@ -334,9 +334,8 @@ int mount_fuse_set_stat_info(
 	if( libcnotify_verbose != 0 )
 	{
 		libcnotify_printf(
-		 "%s: %s\n",
-		 function,
-		 path );
+		 "%s\n",
+		 function );
 	}
 #endif
 	if( stat_info == NULL )
