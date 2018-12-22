@@ -54,7 +54,7 @@
 mount_handle_t *qcowmount_mount_handle = NULL;
 int qcowmount_abort                    = 0;
 
-/* Prints the executable usage information
+/* Prints usage information
  */
 void usage_fprint(
       FILE *stream )
@@ -321,14 +321,15 @@ int main( int argc, char * const argv[] )
 		goto on_error;
 	}
 #if defined( HAVE_LIBFUSE ) || defined( HAVE_LIBOSXFUSE )
-	if( memory_set(
-	     &qcowmount_fuse_operations,
-	     0,
-	     sizeof( struct fuse_operations ) ) == NULL )
+	if( mount_handle_set_path_prefix(
+	     qcowmount_mount_handle,
+	     _SYSTEM_STRING( "/qcow" ),
+	     6,
+	     &error ) != 1 )
 	{
 		fprintf(
 		 stderr,
-		 "Unable to clear fuse operations.\n" );
+		 "Unable to set path prefix.\n" );
 
 		goto on_error;
 	}
@@ -367,11 +368,25 @@ int main( int argc, char * const argv[] )
 			goto on_error;
 		}
 	}
-	qcowmount_fuse_operations.open    = &mount_fuse_open;
-	qcowmount_fuse_operations.read    = &mount_fuse_read;
-	qcowmount_fuse_operations.readdir = &mount_fuse_readdir;
-	qcowmount_fuse_operations.getattr = &mount_fuse_getattr;
-	qcowmount_fuse_operations.destroy = &mount_fuse_destroy;
+	if( memory_set(
+	     &qcowmount_fuse_operations,
+	     0,
+	     sizeof( struct fuse_operations ) ) == NULL )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to clear fuse operations.\n" );
+
+		goto on_error;
+	}
+	qcowmount_fuse_operations.open       = &mount_fuse_open;
+	qcowmount_fuse_operations.read       = &mount_fuse_read;
+	qcowmount_fuse_operations.release    = &mount_fuse_release;
+	qcowmount_fuse_operations.opendir    = &mount_fuse_opendir;
+	qcowmount_fuse_operations.readdir    = &mount_fuse_readdir;
+	qcowmount_fuse_operations.releasedir = &mount_fuse_releasedir;
+	qcowmount_fuse_operations.getattr    = &mount_fuse_getattr;
+	qcowmount_fuse_operations.destroy    = &mount_fuse_destroy;
 
 	qcowmount_fuse_channel = fuse_mount(
 	                          mount_point,
@@ -432,6 +447,18 @@ int main( int argc, char * const argv[] )
 	return( EXIT_SUCCESS );
 
 #elif defined( HAVE_LIBDOKAN )
+	if( mount_handle_set_path_prefix(
+	     qcowmount_mount_handle,
+	     _SYSTEM_STRING( "\\QCOW" ),
+	     6,
+	     &error ) != 1 )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to set path prefix.\n" );
+
+		goto on_error;
+	}
 	if( memory_set(
 	     &qcowmount_dokan_operations,
 	     0,

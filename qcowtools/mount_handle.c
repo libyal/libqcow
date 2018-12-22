@@ -26,8 +26,9 @@
 #include <types.h>
 #include <wide_string.h>
 
+#include "mount_file_entry.h"
+#include "mount_file_system.h"
 #include "mount_handle.h"
-#include "qcowtools_libcdata.h"
 #include "qcowtools_libcerror.h"
 #include "qcowtools_libcpath.h"
 #include "qcowtools_libqcow.h"
@@ -93,16 +94,15 @@ int mount_handle_initialize(
 
 		goto on_error;
 	}
-	if( libcdata_array_initialize(
-	     &( ( *mount_handle )->images_array ),
-	     0,
+	if( mount_file_system_initialize(
+	     &( ( *mount_handle )->file_system ),
 	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-		 "%s: unable to initialize images array.",
+		 "%s: unable to initialize file system.",
 		 function );
 
 		goto on_error;
@@ -148,16 +148,15 @@ int mount_handle_free(
 			memory_free(
 			 ( *mount_handle )->basename );
 		}
-		if( libcdata_array_free(
-		     &( ( *mount_handle )->images_array ),
-		     (int (*)(intptr_t **, libcerror_error_t **)) &libqcow_file_free,
+		if( mount_file_system_free(
+		     &( ( *mount_handle )->file_system ),
 		     error ) != 1 )
 		{
 			libcerror_error_set(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 			 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
-			 "%s: unable to free images array.",
+			 "%s: unable to free file system.",
 			 function );
 
 			result = -1;
@@ -191,10 +190,7 @@ int mount_handle_signal_abort(
      mount_handle_t *mount_handle,
      libcerror_error_t **error )
 {
-	libqcow_file_t *image = NULL;
 	static char *function = "mount_handle_signal_abort";
-	int image_index       = 0;
-	int number_of_images  = 0;
 
 	if( mount_handle == NULL )
 	{
@@ -207,54 +203,18 @@ int mount_handle_signal_abort(
 
 		return( -1 );
 	}
-	if( libcdata_array_get_number_of_entries(
-	     mount_handle->images_array,
-	     &number_of_images,
+	if( mount_file_system_signal_abort(
+	     mount_handle->file_system,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve number of images.",
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to signal file system abort.",
 		 function );
 
 		return( -1 );
-	}
-	for( image_index = number_of_images - 1;
-	     image_index > 0;
-	     image_index-- )
-	{
-		if( libcdata_array_get_entry_by_index(
-		     mount_handle->images_array,
-		     image_index,
-		     (intptr_t **) &image,
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve image: %d.",
-			 function,
-			 image_index );
-
-			return( -1 );
-		}
-		if( libqcow_file_signal_abort(
-		     image,
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
-			 "%s: unable to signal image: %d to abort.",
-			 function,
-			 image_index );
-
-			return( -1 );
-		}
 	}
 	return( 1 );
 }
@@ -410,7 +370,6 @@ int mount_handle_open(
 	static char *function            = "mount_handle_open";
 	size_t basename_length           = 0;
 	size_t filename_length           = 0;
-	int entry_index                  = 0;
 
 	if( mount_handle == NULL )
 	{
@@ -544,17 +503,16 @@ int mount_handle_open(
 
 		goto on_error;
 	}
-	if( libcdata_array_append_entry(
-	     mount_handle->images_array,
-	     &entry_index,
-	     (intptr_t *) image,
+	if( mount_file_system_append_image(
+	     mount_handle->file_system,
+	     image,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
-		 "%s: unable to append image to array.",
+		 "%s: unable to append image to file system.",
 		 function );
 
 		goto on_error;
@@ -568,11 +526,6 @@ on_error:
 		 &image,
 		 NULL );
 	}
-	libcdata_array_empty(
-	 mount_handle->images_array,
-	 (int (*)(intptr_t **, libcerror_error_t **)) &libqcow_file_free,
-	 NULL );
-
 	return( -1 );
 }
 
@@ -599,8 +552,8 @@ int mount_handle_close(
 
 		return( -1 );
 	}
-	if( libcdata_array_get_number_of_entries(
-	     mount_handle->images_array,
+	if( mount_file_system_get_number_of_images(
+	     mount_handle->file_system,
 	     &number_of_images,
 	     error ) != 1 )
 	{
@@ -617,10 +570,10 @@ int mount_handle_close(
 	     image_index > 0;
 	     image_index-- )
 	{
-		if( libcdata_array_get_entry_by_index(
-		     mount_handle->images_array,
+		if( mount_file_system_get_image_by_index(
+		     mount_handle->file_system,
 		     image_index,
-		     (intptr_t **) &image,
+		     &image,
 		     error ) != 1 )
 		{
 			libcerror_error_set(
@@ -651,224 +604,6 @@ int mount_handle_close(
 	return( 0 );
 }
 
-/* Read a buffer from a specific image
- * Returns the number of bytes read if successful or -1 on error
- */
-ssize_t mount_handle_read_buffer(
-         mount_handle_t *mount_handle,
-         int image_index,
-         uint8_t *buffer,
-         size_t size,
-         libcerror_error_t **error )
-{
-	libqcow_file_t *image = NULL;
-	static char *function = "mount_handle_read_buffer";
-	ssize_t read_count    = 0;
-
-	if( mount_handle == NULL )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid mount handle.",
-		 function );
-
-		return( -1 );
-	}
-	if( libcdata_array_get_entry_by_index(
-	     mount_handle->images_array,
-	     image_index,
-	     (intptr_t **) &image,
-	     error ) != 1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve image: %d.",
-		 function,
-		 image_index );
-
-		return( -1 );
-	}
-	read_count = libqcow_file_read_buffer(
-	              image,
-	              buffer,
-	              size,
-	              error );
-
-	if( read_count == -1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_IO,
-		 LIBCERROR_IO_ERROR_READ_FAILED,
-		 "%s: unable to read buffer from image: %d.",
-		 function,
-		 image_index );
-
-		return( -1 );
-	}
-	return( read_count );
-}
-
-/* Seeks a specific offset in a specific image
- * Returns the offset if successful or -1 on error
- */
-off64_t mount_handle_seek_offset(
-         mount_handle_t *mount_handle,
-         int image_index,
-         off64_t offset,
-         int whence,
-         libcerror_error_t **error )
-{
-	libqcow_file_t *image = NULL;
-	static char *function = "mount_handle_seek_offset";
-
-	if( mount_handle == NULL )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid mount handle.",
-		 function );
-
-		return( -1 );
-	}
-	if( libcdata_array_get_entry_by_index(
-	     mount_handle->images_array,
-	     image_index,
-	     (intptr_t **) &image,
-	     error ) != 1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve image: %d.",
-		 function,
-		 image_index );
-
-		return( -1 );
-	}
-	offset = libqcow_file_seek_offset(
-	          image,
-	          offset,
-	          whence,
-	          error );
-
-	if( offset == -1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_IO,
-		 LIBCERROR_IO_ERROR_SEEK_FAILED,
-		 "%s: unable to seek offset in image: %d.",
-		 function,
-		 image_index );
-
-		return( -1 );
-	}
-	return( offset );
-}
-
-/* Retrieves the media size of a specific image
- * Returns 1 if successful or -1 on error
- */
-int mount_handle_get_media_size(
-     mount_handle_t *mount_handle,
-     int image_index,
-     size64_t *size,
-     libcerror_error_t **error )
-{
-	libqcow_file_t *image = NULL;
-	static char *function = "mount_handle_get_media_size";
-
-	if( mount_handle == NULL )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid mount handle.",
-		 function );
-
-		return( -1 );
-	}
-	if( libcdata_array_get_entry_by_index(
-	     mount_handle->images_array,
-	     image_index,
-	     (intptr_t **) &image,
-	     error ) != 1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve image: %d.",
-		 function,
-		 image_index );
-
-		return( -1 );
-	}
-	if( libqcow_file_get_media_size(
-	     image,
-	     size,
-	     error ) != 1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve media size from image: %d.",
-		 function,
-		 image_index );
-
-		return( -1 );
-	}
-	return( 1 );
-}
-
-/* Retrieves the number of images
- * Returns 1 if successful or -1 on error
- */
-int mount_handle_get_number_of_images(
-     mount_handle_t *mount_handle,
-     int *number_of_images,
-     libcerror_error_t **error )
-{
-	static char *function = "mount_handle_get_number_of_images";
-
-	if( mount_handle == NULL )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid mount handle.",
-		 function );
-
-		return( -1 );
-	}
-	if( libcdata_array_get_number_of_entries(
-	     mount_handle->images_array,
-	     number_of_images,
-	     error ) != 1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve number of images.",
-		 function );
-
-		return( -1 );
-	}
-	return( 1 );
-}
-
 /* Sets the basename
  * Returns 1 if successful or -1 on error
  */
@@ -887,6 +622,17 @@ int mount_handle_set_basename(
 		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
 		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
 		 "%s: invalid mount handle.",
+		 function );
+
+		return( -1 );
+	}
+	if( mount_handle->basename != NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
+		 "%s: invalid mount handle - basename value already set.",
 		 function );
 
 		return( -1 );
@@ -913,8 +659,7 @@ int mount_handle_set_basename(
 
 		goto on_error;
 	}
-	if( ( basename_size > (size_t) SSIZE_MAX )
-	 || ( ( sizeof( system_character_t ) * basename_size ) > (size_t) SSIZE_MAX ) )
+	if( basename_size > (size_t) ( SSIZE_MAX / sizeof( system_character_t ) ) )
 	{
 		libcerror_error_set(
 		 error,
@@ -924,14 +669,6 @@ int mount_handle_set_basename(
 		 function );
 
 		goto on_error;
-	}
-	if( mount_handle->basename != NULL )
-	{
-		memory_free(
-		 mount_handle->basename );
-
-		mount_handle->basename      = NULL;
-		mount_handle->basename_size = 0;
 	}
 	mount_handle->basename = system_string_allocate(
 	                          basename_size );
@@ -980,3 +717,152 @@ on_error:
 	return( -1 );
 }
 
+/* Sets the path prefix
+ * Returns 1 if successful or -1 on error
+ */
+int mount_handle_set_path_prefix(
+     mount_handle_t *mount_handle,
+     const system_character_t *path_prefix,
+     size_t path_prefix_size,
+     libcerror_error_t **error )
+{
+	static char *function = "mount_handle_set_path_prefix";
+
+	if( mount_handle == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid mount handle.",
+		 function );
+
+		return( -1 );
+	}
+	if( mount_file_system_set_path_prefix(
+	     mount_handle->file_system,
+	     path_prefix,
+	     path_prefix_size,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to set path prefix.",
+		 function );
+
+		return( -1 );
+	}
+	return( 1 );
+}
+
+/* Retrieves a file entry for a specific path
+ * Returns 1 if successful, 0 if no such file entry or -1 on error
+ */
+int mount_handle_get_file_entry_by_path(
+     mount_handle_t *mount_handle,
+     const system_character_t *path,
+     mount_file_entry_t **file_entry,
+     libcerror_error_t **error )
+{
+	libqcow_file_t *image              = NULL;
+	const system_character_t *filename = NULL;
+	static char *function              = "mount_handle_get_file_entry_by_path";
+	int image_index                    = 0;
+	int result                         = 0;
+
+	if( mount_handle == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid mount handle.",
+		 function );
+
+		return( -1 );
+	}
+	if( path == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid path.",
+		 function );
+
+		return( -1 );
+	}
+	result = mount_file_system_get_image_index_from_path(
+	          mount_handle->file_system,
+	          path,
+	          &image_index,
+	          error );
+
+	if( result == -1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve image index.",
+		 function );
+
+		return( -1 );
+	}
+	else if( result == 0 )
+	{
+		return( 0 );
+	}
+	if( image_index != -1 )
+	{
+		if( mount_file_system_get_image_by_index(
+		     mount_handle->file_system,
+		     image_index,
+		     &image,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve image: %d.",
+			 function,
+			 image_index );
+
+			return( -1 );
+		}
+		if( image == NULL )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+			 "%s: missing image: %d.",
+			 function,
+			 image_index );
+
+			return( -1 );
+		}
+		filename = &( path[ 0 ] );
+	}
+	if( mount_file_entry_initialize(
+	     file_entry,
+	     mount_handle->file_system,
+	     image_index,
+	     filename,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+		 "%s: unable to initialize file entry for image: %d.",
+		 function,
+		 image_index );
+
+		return( -1 );
+	}
+	return( 1 );
+}

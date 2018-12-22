@@ -61,12 +61,226 @@ extern mount_handle_t *qcowmount_mount_handle;
 #error Size of off_t not supported
 #endif
 
-static char *mount_fuse_path_prefix         = "/qcow";
-static size_t mount_fuse_path_prefix_length = 5;
-
 #if defined( HAVE_TIME )
 time_t mount_timestamp                      = 0;
 #endif
+
+/* Sets the values in a stat info structure
+ * Returns 1 if successful or -1 on error
+ */
+int mount_fuse_set_stat_info(
+     struct stat *stat_info,
+     size64_t size,
+     uint16_t file_mode,
+     int64_t access_time,
+     int64_t inode_change_time,
+     int64_t modification_time,
+     libcerror_error_t **error )
+{
+	static char *function = "mount_fuse_set_stat_info";
+
+	if( stat_info == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid stat info.",
+		 function );
+
+		return( -1 );
+	}
+#if SIZEOF_OFF_T <= 4
+	if( size > (size64_t) UINT32_MAX )
+#else
+	if( size > (size64_t) INT64_MAX )
+#endif
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid size value out of bounds.",
+		 function );
+
+		return( -1 );
+	}
+	stat_info->st_size  = (off_t) size;
+	stat_info->st_mode  = file_mode;
+
+	if( ( file_mode & 0x4000 ) != 0 )
+	{
+		stat_info->st_nlink = 2;
+	}
+	else
+	{
+		stat_info->st_nlink = 1;
+	}
+#if defined( HAVE_GETEUID )
+	stat_info->st_uid = geteuid();
+#endif
+#if defined( HAVE_GETEGID )
+	stat_info->st_gid = getegid();
+#endif
+
+	stat_info->st_atime = access_time;
+	stat_info->st_mtime = modification_time;
+	stat_info->st_ctime = inode_change_time;
+
+	return( 1 );
+}
+
+/* Fills a directory entry
+ * Returns 1 if successful or -1 on error
+ */
+int mount_fuse_filldir(
+     void *buffer,
+     fuse_fill_dir_t filler,
+     const char *name,
+     struct stat *stat_info,
+     mount_file_entry_t *file_entry,
+     libcerror_error_t **error )
+{
+	static char *function     = "mount_fuse_filldir";
+	size64_t file_size        = 0;
+	int64_t access_time       = 0;
+	int64_t inode_change_time = 0;
+	int64_t modification_time = 0;
+	uint16_t file_mode        = 0;
+
+	if( filler == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid filler.",
+		 function );
+
+		return( -1 );
+	}
+	if( file_entry != NULL )
+	{
+		if( mount_file_entry_get_size(
+		     file_entry,
+		     &file_size,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve file entry size.",
+			 function );
+
+			return( -1 );
+		}
+		if( mount_file_entry_get_file_mode(
+		     file_entry,
+		     &file_mode,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve file mode.",
+			 function );
+
+			return( -1 );
+		}
+		if( mount_file_entry_get_access_time(
+		     file_entry,
+		     &access_time,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve access time.",
+			 function );
+
+			return( -1 );
+		}
+		if( mount_file_entry_get_modification_time(
+		     file_entry,
+		     &modification_time,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve modification time.",
+			 function );
+
+			return( -1 );
+		}
+		if( mount_file_entry_get_inode_change_time(
+		     file_entry,
+		     &inode_change_time,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve inode change time.",
+			 function );
+
+			return( -1 );
+		}
+	}
+	if( memory_set(
+	     stat_info,
+	     0,
+	     sizeof( struct stat ) ) == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_MEMORY,
+		 LIBCERROR_MEMORY_ERROR_SET_FAILED,
+		 "%s: unable to clear stat info.",
+		 function );
+
+		return( -1 );
+	}
+	if( mount_fuse_set_stat_info(
+	     stat_info,
+	     file_size,
+	     file_mode,
+	     access_time,
+	     modification_time,
+	     inode_change_time,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to set stat info.",
+		 function );
+
+		return( -1 );
+	}
+	if( filler(
+	     buffer,
+	     name,
+	     stat_info,
+	     0 ) == 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to set directory entry.",
+		 function );
+
+		return( -1 );
+	}
+	return( 1 );
+}
 
 /* Opens a file or directory
  * Returns 0 if successful or a negative errno value otherwise
@@ -77,7 +291,6 @@ int mount_fuse_open(
 {
 	libcerror_error_t *error = NULL;
 	static char *function    = "mount_fuse_open";
-	size_t path_length       = 0;
 	int result               = 0;
 
 #if defined( HAVE_DEBUG_OUTPUT )
@@ -108,32 +321,23 @@ int mount_fuse_open(
 		 &error,
 		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
 		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid file info.",
+		 "%s: invalid file information.",
 		 function );
 
 		result = -EINVAL;
 
 		goto on_error;
 	}
-	path_length = narrow_string_length(
-	               path );
-
-	if( ( path_length <= mount_fuse_path_prefix_length )
-         || ( path_length > ( mount_fuse_path_prefix_length + 3 ) )
-	 || ( narrow_string_compare(
-	       path,
-	       mount_fuse_path_prefix,
-	       mount_fuse_path_prefix_length ) != 0 ) )
+	if( file_info->fh != (uint64_t) NULL )
 	{
 		libcerror_error_set(
 		 &error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_UNSUPPORTED_VALUE,
-		 "%s: unsupported path: %s.",
-		 function,
-		 path );
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
+		 "%s: invalid file information - file handle already set.",
+		 function );
 
-		result = -ENOENT;
+		result = -EINVAL;
 
 		goto on_error;
 	}
@@ -147,6 +351,24 @@ int mount_fuse_open(
 		 function );
 
 		result = -EACCES;
+
+		goto on_error;
+	}
+	if( mount_handle_get_file_entry_by_path(
+	     qcowmount_mount_handle,
+	     path,
+	     (mount_file_entry_t **) &( file_info->fh ),
+	     &error ) != 1 )
+	{
+		libcerror_error_set(
+		 &error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve file entry for path: %s.",
+		 function,
+		 path );
+
+		result = -ENOENT;
 
 		goto on_error;
 	}
@@ -175,11 +397,8 @@ int mount_fuse_read(
 {
 	libcerror_error_t *error = NULL;
 	static char *function    = "mount_fuse_read";
-	size_t path_length       = 0;
 	ssize_t read_count       = 0;
-	int image_index          = 0;
 	int result               = 0;
-	int string_index         = 0;
 
 #if defined( HAVE_DEBUG_OUTPUT )
 	if( libcnotify_verbose != 0 )
@@ -222,83 +441,40 @@ int mount_fuse_read(
 		 &error,
 		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
 		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid file info.",
+		 "%s: invalid file information.",
 		 function );
 
 		result = -EINVAL;
 
 		goto on_error;
 	}
-	path_length = narrow_string_length(
-	               path );
-
-	if( ( path_length <= mount_fuse_path_prefix_length )
-         || ( path_length > ( mount_fuse_path_prefix_length + 3 ) )
-	 || ( narrow_string_compare(
-	       path,
-	       mount_fuse_path_prefix,
-	       mount_fuse_path_prefix_length ) != 0 ) )
+	if( file_info->fh == (uint64_t) NULL )
 	{
 		libcerror_error_set(
 		 &error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_UNSUPPORTED_VALUE,
-		 "%s: unsupported path: %s.",
-		 function,
-		 path );
-
-		result = -ENOENT;
-
-		goto on_error;
-	}
-	string_index = (int) mount_fuse_path_prefix_length;
-
-	image_index = path[ string_index++ ] - '0';
-
-	if( string_index < (int) path_length )
-	{
-		image_index *= 10;
-		image_index += path[ string_index++ ] - '0';
-	}
-	if( string_index < (int) path_length )
-	{
-		image_index *= 10;
-		image_index += path[ string_index++ ] - '0';
-	}
-	image_index -= 1;
-
-	if( mount_handle_seek_offset(
-	     qcowmount_mount_handle,
-	     image_index,
-	     (off64_t) offset,
-	     SEEK_SET,
-	     &error ) == -1 )
-	{
-		libcerror_error_set(
-		 &error,
-		 LIBCERROR_ERROR_DOMAIN_IO,
-		 LIBCERROR_IO_ERROR_SEEK_FAILED,
-		 "%s: unable to seek offset in mount handle.",
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid file information - missing file handle.",
 		 function );
 
-		result = -EIO;
+		result = -EINVAL;
 
 		goto on_error;
 	}
-	read_count = mount_handle_read_buffer(
-	              qcowmount_mount_handle,
-	              image_index,
-	              (uint8_t *) buffer,
+	read_count = mount_file_entry_read_buffer_at_offset(
+	              (mount_file_entry_t *) file_info->fh,
+	              (void *) buffer,
 	              size,
+	              (off64_t) offset,
 	              &error );
 
-	if( read_count == -1 )
+	if( read_count < 0 )
 	{
 		libcerror_error_set(
 		 &error,
 		 LIBCERROR_ERROR_DOMAIN_IO,
 		 LIBCERROR_IO_ERROR_READ_FAILED,
-		 "%s: unable to read from mount handle.",
+		 "%s: unable to read from file entry.",
 		 function );
 
 		result = -EIO;
@@ -318,213 +494,16 @@ on_error:
 	return( result );
 }
 
-/* Sets the values in a stat info structure
- * Returns 1 if successful or -1 on error
- */
-int mount_fuse_set_stat_info(
-     struct stat *stat_info,
-     size64_t size,
-     int number_of_sub_items,
-     uint8_t use_mount_time,
-     libcerror_error_t **error )
-{
-	static char *function = "mount_fuse_set_stat_info";
-
-#if defined( HAVE_DEBUG_OUTPUT )
-	if( libcnotify_verbose != 0 )
-	{
-		libcnotify_printf(
-		 "%s\n",
-		 function );
-	}
-#endif
-	if( stat_info == NULL )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid stat info.",
-		 function );
-
-		return( -1 );
-	}
-#if defined( HAVE_TIME )
-	if( use_mount_time != 0 )
-	{
-		if( mount_timestamp == 0 )
-		{
-			if( time(
-			     &mount_timestamp ) == (time_t) -1 )
-			{
-				mount_timestamp = 0;
-			}
-		}
-		stat_info->st_atime = mount_timestamp;
-		stat_info->st_mtime = mount_timestamp;
-		stat_info->st_ctime = mount_timestamp;
-	}
-#endif
-	if( size != 0 )
-	{
-#if SIZEOF_OFF_T <= 4
-		if( size > (size64_t) UINT32_MAX )
-#else
-		if( size > (size64_t) INT64_MAX )
-#endif
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
-			 "%s: invalid size value out of bounds.",
-			 function );
-
-			return( -1 );
-		}
-		stat_info->st_size = (off_t) size;
-	}
-	if( number_of_sub_items > 0 )
-	{
-		stat_info->st_mode  = S_IFDIR | 0555;
-		stat_info->st_nlink = 2;
-	}
-	else
-	{
-		stat_info->st_mode  = S_IFREG | 0444;
-		stat_info->st_nlink = 1;
-	}
-#if defined( HAVE_GETEUID )
-	stat_info->st_uid = geteuid();
-#endif
-#if defined( HAVE_GETEGID )
-	stat_info->st_gid = getegid();
-#endif
-	return( 1 );
-}
-
-/* Fills a directory entry
- * Returns 1 if successful or -1 on error
- */
-int mount_fuse_filldir(
-     void *buffer,
-     fuse_fill_dir_t filler,
-     char *name,
-     size_t name_size,
-     struct stat *stat_info,
-     mount_handle_t *mount_handle,
-     int image_index,
-     uint8_t use_mount_time,
-     libcerror_error_t **error )
-{
-	static char *function   = "mount_fuse_filldir";
-	size64_t media_size     = 0;
-	int number_of_sub_items = 0;
-
-	if( filler == NULL )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid filler.",
-		 function );
-
-		return( -1 );
-	}
-	if( mount_handle == NULL )
-	{
-		number_of_sub_items = 1;
-	}
-	else
-	{
-		if( mount_handle_get_media_size(
-		     mount_handle,
-		     image_index,
-		     &media_size,
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve media size.",
-			 function );
-
-			return( -1 );
-		}
-	}
-	if( memory_set(
-	     stat_info,
-	     0,
-	     sizeof( struct stat ) ) == NULL )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_MEMORY,
-		 LIBCERROR_MEMORY_ERROR_SET_FAILED,
-		 "%s: unable to clear stat info.",
-		 function );
-
-		return( -1 );
-	}
-	if( mount_fuse_set_stat_info(
-	     stat_info,
-	     media_size,
-	     number_of_sub_items,
-	     use_mount_time,
-	     error ) != 1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
-		 "%s: unable to set stat info.",
-		 function );
-
-		return( -1 );
-	}
-	if( filler(
-	     buffer,
-	     name,
-	     stat_info,
-	     0 ) == 1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
-		 "%s: unable to set directory entry.",
-		 function );
-
-		return( -1 );
-	}
-	return( 1 );
-}
-
-/* Reads a directory
+/* Releases a file entry
  * Returns 0 if successful or a negative errno value otherwise
  */
-int mount_fuse_readdir(
+int mount_fuse_release(
      const char *path,
-     void *buffer,
-     fuse_fill_dir_t filler,
-     off_t offset QCOWTOOLS_ATTRIBUTE_UNUSED,
-     struct fuse_file_info *file_info QCOWTOOLS_ATTRIBUTE_UNUSED )
+     struct fuse_file_info *file_info )
 {
-	char mount_fuse_path[ 10 ];
-
 	libcerror_error_t *error = NULL;
-	struct stat *stat_info   = NULL;
-	static char *function    = "mount_fuse_readdir";
-	size_t path_length       = 0;
-	int image_index          = 0;
-	int number_of_images     = 0;
+	static char *function    = "mount_fuse_release";
 	int result               = 0;
-	int string_index         = 0;
-
-	QCOWTOOLS_UNREFERENCED_PARAMETER( offset )
-	QCOWTOOLS_UNREFERENCED_PARAMETER( file_info )
 
 #if defined( HAVE_DEBUG_OUTPUT )
 	if( libcnotify_verbose != 0 )
@@ -548,17 +527,120 @@ int mount_fuse_readdir(
 
 		goto on_error;
 	}
-	path_length = narrow_string_length(
-	               path );
-
-	if( ( path_length != 1 )
-	 || ( path[ 0 ] != '/' ) )
+	if( file_info == NULL )
 	{
 		libcerror_error_set(
 		 &error,
 		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_UNSUPPORTED_VALUE,
-		 "%s: unsupported path: %s.",
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file information.",
+		 function );
+
+		result = -EINVAL;
+
+		goto on_error;
+	}
+	if( file_info->fh != (uint64_t) NULL )
+	{
+		if( mount_file_entry_free(
+		     (mount_file_entry_t **) &( file_info->fh ),
+		     &error ) != 1 )
+		{
+			libcerror_error_set(
+			 &error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+			 "%s: unable to free file entry.",
+			 function );
+
+			result = -ENOENT;
+
+			goto on_error;
+		}
+	}
+	return( 0 );
+
+on_error:
+	if( error != NULL )
+	{
+		libcnotify_print_error_backtrace(
+		 error );
+		libcerror_error_free(
+		 &error );
+	}
+	return( result );
+}
+
+/* Opens a directory
+ * Returns 0 if successful or a negative errno value otherwise
+ */
+int mount_fuse_opendir(
+     const char *path,
+     struct fuse_file_info *file_info )
+{
+	libcerror_error_t *error = NULL;
+	static char *function    = "mount_fuse_opendir";
+	int result               = 0;
+
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
+	{
+		libcnotify_printf(
+		 "%s: %s\n",
+		 function,
+		 path );
+	}
+#endif
+	if( path == NULL )
+	{
+		libcerror_error_set(
+		 &error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid path.",
+		 function );
+
+		result = -EINVAL;
+
+		goto on_error;
+	}
+	if( file_info == NULL )
+	{
+		libcerror_error_set(
+		 &error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file information.",
+		 function );
+
+		result = -EINVAL;
+
+		goto on_error;
+	}
+	if( file_info->fh != (uint64_t) NULL )
+	{
+		libcerror_error_set(
+		 &error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
+		 "%s: invalid file information - file handle already set.",
+		 function );
+
+		result = -EINVAL;
+
+		goto on_error;
+	}
+	if( mount_handle_get_file_entry_by_path(
+	     qcowmount_mount_handle,
+	     path,
+	     (mount_file_entry_t **) &( file_info->fh ),
+	     &error ) != 1 )
+	{
+		libcerror_error_set(
+		 &error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve file entry for path: %s.",
 		 function,
 		 path );
 
@@ -566,49 +648,87 @@ int mount_fuse_readdir(
 
 		goto on_error;
 	}
-	if( narrow_string_copy(
-	     mount_fuse_path,
-	     mount_fuse_path_prefix,
-	     mount_fuse_path_prefix_length ) == NULL )
+	return( 0 );
+
+on_error:
+	if( error != NULL )
 	{
-		libcerror_error_set(
-		 &error,
-		 LIBCERROR_ERROR_DOMAIN_MEMORY,
-		 LIBCERROR_MEMORY_ERROR_COPY_FAILED,
-		 "%s: unable to copy path prefix.",
-		 function );
-
-		result = -errno;
-
-		goto on_error;
+		libcnotify_print_error_backtrace(
+		 error );
+		libcerror_error_free(
+		 &error );
 	}
-	if( mount_handle_get_number_of_images(
-	     qcowmount_mount_handle,
-	     &number_of_images,
-	     &error ) != 1 )
+	return( result );
+}
+
+/* Reads a directory
+ * Returns 0 if successful or a negative errno value otherwise
+ */
+int mount_fuse_readdir(
+     const char *path,
+     void *buffer,
+     fuse_fill_dir_t filler,
+     off_t offset QCOWTOOLS_ATTRIBUTE_UNUSED,
+     struct fuse_file_info *file_info QCOWTOOLS_ATTRIBUTE_UNUSED )
+{
+	struct stat *stat_info                = NULL;
+	libcerror_error_t *error              = NULL;
+	mount_file_entry_t *parent_file_entry = NULL;
+	mount_file_entry_t *sub_file_entry    = NULL;
+	static char *function                 = "mount_fuse_readdir";
+	char *name                            = NULL;
+	size_t name_size                      = 0;
+	int number_of_sub_file_entries        = 0;
+	int result                            = 0;
+	int sub_file_entry_index              = 0;
+
+	QCOWTOOLS_UNREFERENCED_PARAMETER( offset )
+
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
 	{
-		libcerror_error_set(
-		 &error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve number of images.",
-		 function );
-
-		result = -EIO;
-
-		goto on_error;
+		libcnotify_printf(
+		 "%s: %s\n",
+		 function,
+		 path );
 	}
-	if( ( number_of_images < 0 )
-	 || ( number_of_images > 99 ) )
+#endif
+	if( path == NULL )
 	{
 		libcerror_error_set(
 		 &error,
 		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_UNSUPPORTED_VALUE,
-		 "%s: unsupported number of images.",
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid path.",
 		 function );
 
-		result = -ENOENT;
+		result = -EINVAL;
+
+		goto on_error;
+	}
+	if( file_info == NULL )
+	{
+		libcerror_error_set(
+		 &error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file information.",
+		 function );
+
+		result = -EINVAL;
+
+		goto on_error;
+	}
+	if( file_info->fh == (uint64_t) NULL )
+	{
+		libcerror_error_set(
+		 &error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid file information - missing file handle.",
+		 function );
+
+		result = -EINVAL;
 
 		goto on_error;
 	}
@@ -632,18 +752,33 @@ int mount_fuse_readdir(
 	     buffer,
 	     filler,
 	     ".",
-	     2,
 	     stat_info,
-	     NULL,
-	     -1,
-	     1,
+	     (mount_file_entry_t *) file_info->fh,
 	     &error ) != 1 )
 	{
 		libcerror_error_set(
 		 &error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
-		 "%s: unable to set directory entry.",
+		 "%s: unable to set self directory entry.",
+		 function );
+
+		result = -EIO;
+
+		goto on_error;
+	}
+	result = mount_file_entry_get_parent_file_entry(
+	          (mount_file_entry_t *) file_info->fh,
+	          &parent_file_entry,
+	          &error );
+
+	if( result == -1 )
+	{
+		libcerror_error_set(
+		 &error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve parent file entry.",
 		 function );
 
 		result = -EIO;
@@ -654,50 +789,131 @@ int mount_fuse_readdir(
 	     buffer,
 	     filler,
 	     "..",
-	     3,
 	     stat_info,
-	     NULL,
-	     -1,
-	     0,
+	     parent_file_entry,
 	     &error ) != 1 )
 	{
 		libcerror_error_set(
 		 &error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
-		 "%s: unable to set directory entry.",
+		 "%s: unable to set parent directory entry.",
 		 function );
 
 		result = -EIO;
 
 		goto on_error;
 	}
-	for( image_index = 1;
-	     image_index <= number_of_images;
-	     image_index++ )
+	if( mount_file_entry_free(
+	     &parent_file_entry,
+	     &error ) != 1 )
 	{
-		string_index = mount_fuse_path_prefix_length;
+		libcerror_error_set(
+		 &error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+		 "%s: unable to free parent file entry.",
+		 function );
 
-		if( image_index >= 100 )
-		{
-			mount_fuse_path[ string_index++ ] = '0' + (char) ( image_index / 100 );
-		}
-		if( image_index >= 10 )
-		{
-			mount_fuse_path[ string_index++ ] = '0' + (char) ( image_index / 10 );
-		}
-		mount_fuse_path[ string_index++ ] = '0' + (char) ( image_index % 10 );
-		mount_fuse_path[ string_index++ ] = 0;
+		result = -EIO;
 
+		goto on_error;
+	}
+	if( mount_file_entry_get_number_of_sub_file_entries(
+	     (mount_file_entry_t *) file_info->fh,
+	     &number_of_sub_file_entries,
+	     &error ) != 1 )
+	{
+		libcerror_error_set(
+		 &error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve number of sub file entries.",
+		 function );
+
+		result = -EIO;
+
+		goto on_error;
+	}
+	for( sub_file_entry_index = 0;
+	     sub_file_entry_index < number_of_sub_file_entries;
+	     sub_file_entry_index++ )
+	{
+		if( mount_file_entry_get_sub_file_entry_by_index(
+		     (mount_file_entry_t *) file_info->fh,
+		     sub_file_entry_index,
+		     &sub_file_entry,
+		     &error ) != 1 )
+		{
+			libcerror_error_set(
+			 &error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve sub file entry: %d.",
+			 function,
+			 sub_file_entry_index );
+
+			result = -EIO;
+
+			goto on_error;
+		}
+		if( mount_file_entry_get_name_size(
+		     sub_file_entry,
+		     &name_size,
+		     &error ) != 1 )
+		{
+			libcerror_error_set(
+			 &error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve sub file entry: %d name size.",
+			 function,
+			 sub_file_entry_index );
+
+			result = -EIO;
+
+			goto on_error;
+		}
+		name = narrow_string_allocate(
+		        name_size );
+
+		if( name == NULL )
+		{
+			libcerror_error_set(
+			 &error,
+			 LIBCERROR_ERROR_DOMAIN_MEMORY,
+			 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
+			 "%s: unable to create sub file entry: %d name.",
+			 function );
+
+			result = -EIO;
+
+			goto on_error;
+		}
+		if( mount_file_entry_get_name(
+		     sub_file_entry,
+		     name,
+		     name_size,
+		     &error ) != 1 )
+		{
+			libcerror_error_set(
+			 &error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve sub file entry: %d name.",
+			 function,
+			 sub_file_entry_index );
+
+			result = -EIO;
+
+			goto on_error;
+		}
 		if( mount_fuse_filldir(
 		     buffer,
 		     filler,
-		     &( mount_fuse_path[ 1 ] ),
-		     string_index - 1,
+		     name,
 		     stat_info,
-		     qcowmount_mount_handle,
-		     image_index - 1,
-		     1,
+		     sub_file_entry,
 		     &error ) != 1 )
 		{
 			libcerror_error_set(
@@ -706,6 +922,27 @@ int mount_fuse_readdir(
 			 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
 			 "%s: unable to set directory entry.",
 			 function );
+
+			result = -EIO;
+
+			goto on_error;
+		}
+		memory_free(
+		 name );
+
+		name = NULL;
+
+		if( mount_file_entry_free(
+		     &sub_file_entry,
+		     &error ) != 1 )
+		{
+			libcerror_error_set(
+			 &error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+			 "%s: unable to free sub file entry: %d.",
+			 function,
+			 sub_file_entry_index );
 
 			result = -EIO;
 
@@ -725,10 +962,90 @@ on_error:
 		libcerror_error_free(
 		 &error );
 	}
+	if( name != NULL )
+	{
+		memory_free(
+		 name );
+	}
+	if( sub_file_entry != NULL )
+	{
+		mount_file_entry_free(
+		 &sub_file_entry,
+		 NULL );
+	}
+	if( parent_file_entry != NULL )
+	{
+		mount_file_entry_free(
+		 &parent_file_entry,
+		 NULL );
+	}
 	if( stat_info != NULL )
 	{
 		memory_free(
 		 stat_info );
+	}
+	return( result );
+}
+
+/* Releases a directory entry
+ * Returns 0 if successful or a negative errno value otherwise
+ */
+int mount_fuse_releasedir(
+     const char *path,
+     struct fuse_file_info *file_info )
+{
+	libcerror_error_t *error = NULL;
+	static char *function    = "mount_fuse_releasedir";
+	int result               = 0;
+
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
+	{
+		libcnotify_printf(
+		 "%s: %s\n",
+		 function,
+		 path );
+	}
+#endif
+	if( path == NULL )
+	{
+		libcerror_error_set(
+		 &error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid path.",
+		 function );
+
+		result = -EINVAL;
+
+		goto on_error;
+	}
+	if( file_info == NULL )
+	{
+		libcerror_error_set(
+		 &error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file information.",
+		 function );
+
+		result = -EINVAL;
+
+		goto on_error;
+	}
+	if( file_info->fh != (uint64_t) NULL )
+	{
+		file_info->fh = (uint64_t) NULL;
+	}
+	return( 0 );
+
+on_error:
+	if( error != NULL )
+	{
+		libcnotify_print_error_backtrace(
+		 error );
+		libcerror_error_free(
+		 &error );
 	}
 	return( result );
 }
@@ -740,15 +1057,15 @@ int mount_fuse_getattr(
      const char *path,
      struct stat *stat_info )
 {
-	libcerror_error_t *error = NULL;
-	static char *function    = "mount_fuse_getattr";
-	size64_t media_size      = 0;
-	size_t path_length       = 0;
-	int image_index          = 0;
-	int number_of_sub_items  = 0;
-	int result               = -ENOENT;
-	int string_index         = 0;
-	uint8_t use_mount_time   = 0;
+	libcerror_error_t *error       = NULL;
+	mount_file_entry_t *file_entry = NULL;
+	static char *function          = "mount_fuse_getattr";
+	size64_t file_size             = 0;
+	int64_t access_time            = 0;
+	int64_t inode_change_time      = 0;
+	int64_t modification_time      = 0;
+	uint16_t file_mode             = 0;
+	int result                     = 0;
 
 #if defined( HAVE_DEBUG_OUTPUT )
 	if( libcnotify_verbose != 0 )
@@ -801,85 +1118,146 @@ int mount_fuse_getattr(
 
 		goto on_error;
 	}
-	path_length = narrow_string_length(
-	               path );
+	result = mount_handle_get_file_entry_by_path(
+	          qcowmount_mount_handle,
+	          path,
+	          &file_entry,
+	          &error );
 
-	if( path_length == 1 )
+	if( result == -1 )
 	{
-		if( path[ 0 ] == '/' )
-		{
-			number_of_sub_items = 1;
-			use_mount_time      = 1;
-			result              = 0;
-		}
+		libcerror_error_set(
+		 &error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve value for: %s.",
+		 function,
+		 path );
+
+		result = -ENOENT;
+
+		goto on_error;
 	}
-	else if( ( path_length > mount_fuse_path_prefix_length )
-	      && ( path_length <= ( mount_fuse_path_prefix_length + 3 ) ) )
+	else if( result == 0 )
 	{
-		if( narrow_string_compare(
-		     path,
-		     mount_fuse_path_prefix,
-		     mount_fuse_path_prefix_length ) == 0 )
-		{
-			string_index = mount_fuse_path_prefix_length;
-
-			image_index = path[ string_index++ ] - '0';
-
-			if( string_index < (int) path_length )
-			{
-				image_index *= 10;
-				image_index += path[ string_index++ ] - '0';
-			}
-			if( string_index < (int) path_length )
-			{
-				image_index *= 10;
-				image_index += path[ string_index++ ] - '0';
-			}
-			image_index -= 1;
-
-			if( mount_handle_get_media_size(
-			     qcowmount_mount_handle,
-			     image_index,
-			     &media_size,
-			     &error ) != 1 )
-			{
-				libcerror_error_set(
-				 &error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-				 "%s: unable to retrieve media size.",
-				 function );
-
-				result = -EIO;
-
-				goto on_error;
-			}
-			use_mount_time = 1;
-			result         = 0;
-		}
+		return( -ENOENT );
 	}
-	if( result == 0 )
+	if( mount_file_entry_get_size(
+	     file_entry,
+	     &file_size,
+	     &error ) != 1 )
 	{
-		if( mount_fuse_set_stat_info(
-		     stat_info,
-		     media_size,
-		     number_of_sub_items,
-		     use_mount_time,
-		     &error ) != 1 )
-		{
-			libcerror_error_set(
-			 &error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
-			 "%s: unable to set stat info.",
-			 function );
+		libcerror_error_set(
+		 &error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve file entry size.",
+		 function );
 
-			result = -EIO;
+		result = -EIO;
 
-			goto on_error;
-		}
+		goto on_error;
 	}
-	return( result );
+	if( mount_file_entry_get_file_mode(
+	     file_entry,
+	     &file_mode,
+	     &error ) != 1 )
+	{
+		libcerror_error_set(
+		 &error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve file mode.",
+		 function );
+
+		result = -EIO;
+
+		goto on_error;
+	}
+	if( mount_file_entry_get_access_time(
+	     file_entry,
+	     &access_time,
+	     &error ) != 1 )
+	{
+		libcerror_error_set(
+		 &error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve access time.",
+		 function );
+
+		result = -EIO;
+
+		goto on_error;
+	}
+	if( mount_file_entry_get_modification_time(
+	     file_entry,
+	     &modification_time,
+	     &error ) != 1 )
+	{
+		libcerror_error_set(
+		 &error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve modification time.",
+		 function );
+
+		result = -EIO;
+
+		goto on_error;
+	}
+	if( mount_file_entry_get_inode_change_time(
+	     file_entry,
+	     &inode_change_time,
+	     &error ) != 1 )
+	{
+		libcerror_error_set(
+		 &error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve inode change time.",
+		 function );
+
+		result = -EIO;
+
+		goto on_error;
+	}
+	if( mount_fuse_set_stat_info(
+	     stat_info,
+	     file_size,
+	     file_mode,
+	     access_time,
+	     modification_time,
+	     inode_change_time,
+	     &error ) != 1 )
+	{
+		libcerror_error_set(
+		 &error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to set stat info.",
+		 function );
+
+		result = -EIO;
+
+		goto on_error;
+	}
+	if( mount_file_entry_free(
+	     &file_entry,
+	     &error ) != 1 )
+	{
+		libcerror_error_set(
+		 &error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+		 "%s: unable to free file entry.",
+		 function );
+
+		result = -EIO;
+
+		goto on_error;
+	}
+	return( 0 );
 
 on_error:
 	if( error != NULL )
@@ -888,6 +1266,12 @@ on_error:
 		 error );
 		libcerror_error_free(
 		 &error );
+	}
+	if( file_entry != NULL )
+	{
+		mount_file_entry_free(
+		 &file_entry,
+		 NULL );
 	}
 	return( result );
 }

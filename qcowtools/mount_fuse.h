@@ -37,6 +37,7 @@
 
 #endif /* defined( HAVE_LIBFUSE ) || defined( HAVE_LIBOSXFUSE ) */
 
+#include "mount_file_entry.h"
 #include "mount_handle.h"
 #include "qcowtools_libcerror.h"
 #include "qcowtools_libqcow.h"
@@ -46,6 +47,23 @@ extern "C" {
 #endif
 
 #if defined( HAVE_LIBFUSE ) || defined( HAVE_LIBOSXFUSE )
+
+int mount_fuse_set_stat_info(
+     struct stat *stat_info,
+     size64_t size,
+     uint16_t file_mode,
+     int64_t access_time,
+     int64_t inode_change_time,
+     int64_t modification_time,
+     libcerror_error_t **error );
+
+int mount_fuse_filldir(
+     void *buffer,
+     fuse_fill_dir_t filler,
+     const char *name,
+     struct stat *stat_info,
+     mount_file_entry_t *file_entry,
+     libcerror_error_t **error );
 
 int mount_fuse_open(
      const char *path,
@@ -58,29 +76,23 @@ int mount_fuse_read(
      off_t offset,
      struct fuse_file_info *file_info );
 
-int mount_fuse_set_stat_info(
-     struct stat *stat_info,
-     size64_t size,
-     int number_of_sub_items,
-     uint8_t use_mount_time,
-     libcerror_error_t **error );
+int mount_fuse_release(
+     const char *path,
+     struct fuse_file_info *file_info );
 
-int mount_fuse_filldir(
-     void *buffer,
-     fuse_fill_dir_t filler,
-     char *name,
-     size_t name_size,
-     struct stat *stat_info,
-     mount_handle_t *mount_handle,
-     int image_index,
-     uint8_t use_mount_time,
-     libcerror_error_t **error );
+int mount_fuse_opendir(
+     const char *path,
+     struct fuse_file_info *file_info );
 
 int mount_fuse_readdir(
      const char *path,
      void *buffer,
      fuse_fill_dir_t filler,
      off_t offset,
+     struct fuse_file_info *file_info );
+
+int mount_fuse_releasedir(
+     const char *path,
      struct fuse_file_info *file_info );
 
 int mount_fuse_getattr(

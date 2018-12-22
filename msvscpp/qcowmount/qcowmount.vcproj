@@ -58,7 +58,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\..\..\dokan\msvscpp\$(Configuration)\dokan.lib"
+				AdditionalDependencies="..\..\..\dokan\msvscpp\$(ConfigurationName)\dokan.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(OutDir)&quot;"
 				SubSystem="1"
@@ -135,7 +135,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\..\..\dokan\msvscpp\$(Configuration)\dokan.lib"
+				AdditionalDependencies="..\..\..\dokan\msvscpp\$(ConfigurationName)\dokan.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(OutDir)&quot;"
 				GenerateDebugInformation="true"
@@ -182,6 +182,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\qcowtools\mount_file_entry.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\qcowtools\mount_file_system.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\qcowtools\mount_fuse.c"
 				>
 			</File>
@@ -213,6 +221,14 @@
 			>
 			<File
 				RelativePath="..\..\qcowtools\mount_dokan.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\qcowtools\mount_file_entry.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\qcowtools\mount_file_system.h"
 				>
 			</File>
 			<File
