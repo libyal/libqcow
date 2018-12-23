@@ -117,7 +117,7 @@ int __stdcall mount_dokan_Unmount(
 
 #else
 
-NTSTATUS __stdcall mount_dokan_CreateFile(
+NTSTATUS __stdcall mount_dokan_ZwCreateFile(
                     const wchar_t *path,
                     DOKAN_IO_SECURITY_CONTEXT *security_context,
                     ACCESS_MASK desired_access,
@@ -125,7 +125,7 @@ NTSTATUS __stdcall mount_dokan_CreateFile(
                     ULONG share_access,
                     ULONG creation_disposition,
                     ULONG creation_options,
-                    DOKAN_FILE_INFO *file_info )
+                    DOKAN_FILE_INFO *file_info );
 
 NTSTATUS __stdcall mount_dokan_CloseFile(
                     const wchar_t *path,

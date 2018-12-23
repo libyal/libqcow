@@ -36,8 +36,19 @@ extern mount_handle_t *qcowmount_mount_handle;
 
 #if defined( HAVE_LIBDOKAN )
 
-static wchar_t *mount_dokan_path_prefix      = L"\\QCOW";
-static size_t mount_dokan_path_prefix_length = 5;
+#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
+#define MOUNT_DOKAN_ERROR_BAD_ARGUMENTS -ERROR_BAD_ARGUMENTS
+#define MOUNT_DOKAN_ERROR_FILE_NOT_FOUND -ERROR_FILE_NOT_FOUND
+#define MOUNT_DOKAN_ERROR_GENERIC_FAILURE -ERROR_GEN_FAILURE
+#define MOUNT_DOKAN_ERROR_READ_FAULT -ERROR_READ_FAULT
+
+#else
+#define MOUNT_DOKAN_ERROR_BAD_ARGUMENTS STATUS_UNSUCCESSFUL
+#define MOUNT_DOKAN_ERROR_FILE_NOT_FOUND STATUS_OBJECT_NAME_NOT_FOUND
+#define MOUNT_DOKAN_ERROR_GENERIC_FAILURE STATUS_UNSUCCESSFUL
+#define MOUNT_DOKAN_ERROR_READ_FAULT STATUS_UNEXPECTED_IO_ERROR
+
+#endif /* ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 ) */
 
 /* Sets the values in a file information structure
  * Returns 1 if successful or -1 on error
@@ -325,10 +336,11 @@ int mount_dokan_filldir(
 	return( 1 );
 }
 
-/* Opens a file or directory
- * Returns 0 if successful or a negative error code otherwise
- */
 #if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
+
+/* Opens a file or directory
+ * Returns 0 if successful or an error code otherwise
+ */
 int __stdcall mount_dokan_CreateFile(
                const wchar_t *path,
                DWORD desired_access,
@@ -336,50 +348,23 @@ int __stdcall mount_dokan_CreateFile(
                DWORD creation_disposition,
                DWORD attribute_flags QCOWTOOLS_ATTRIBUTE_UNUSED,
                DOKAN_FILE_INFO *file_info )
-#else
-NTSTATUS __stdcall mount_dokan_CreateFile(
-                    const wchar_t *path,
-                    DOKAN_IO_SECURITY_CONTEXT *security_context,
-                    ACCESS_MASK desired_access,
-                    ULONG file_attributes,
-                    ULONG share_access,
-                    ULONG creation_disposition,
-                    ULONG creation_options,
-                    DOKAN_FILE_INFO *file_info )
-#endif
 {
-#if ! ( ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 ) )
-	SECURITY_ATTRIBUTES security_attributes;
+	libcerror_error_t *error = NULL;
+	static char *function    = "mount_dokan_CreateFile";
+	int result               = 0;
 
-	ACCESS_MASK result_desired_access      = 0;
-	DWORD result_creation_disposition      = 0;
-	DWORD result_file_attributes_and_flags = 0;
-#endif
-
-	libcerror_error_t *error               = NULL;
-	static char *function                  = "mount_dokan_CreateFile";
-	size_t path_length                     = 0;
-	int result                             = 0;
-
-#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 	QCOWTOOLS_UNREFERENCED_PARAMETER( share_mode )
 	QCOWTOOLS_UNREFERENCED_PARAMETER( attribute_flags )
 
-#else
-	security_attributes.nLength              = sizeof( SECURITY_ATTRIBUTES );
-	security_attributes.lpSecurityDescriptor = security_context->AccessState.SecurityDescriptor;
-	security_attributes.bInheritHandle       = FALSE;
-
-	DokanMapKernelToUserCreateFileFlags(
-	 desired_access,
-	 file_attributes,
-	 creation_options,
-	 creation_disposition,
-	 &result_desired_access,
-	 &result_creation_disposition,
-	 &result_creation_disposition );
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
+	{
+		libcnotify_printf(
+		 "%s: %ls\n",
+		 function,
+		 path );
+	}
 #endif
-
 	if( path == NULL )
 	{
 		libcerror_error_set(
@@ -482,28 +467,32 @@ on_error:
 		libcerror_error_free(
 		 &error );
 	}
-#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 	return( result );
-#else
-	return( DokanNtStatusFromWin32( result ) );
-#endif
 }
 
-#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
+#else
 
-/* Opens a directory
- * Returns 0 if successful or a negative error code otherwise
+/* Opens a file or directory
+ * Returns 0 if successful or an error code otherwise
  */
-int __stdcall mount_dokan_OpenDirectory(
-               const wchar_t *path,
-               DOKAN_FILE_INFO *file_info QCOWTOOLS_ATTRIBUTE_UNUSED )
+NTSTATUS __stdcall mount_dokan_ZwCreateFile(
+                    const wchar_t *path,
+                    DOKAN_IO_SECURITY_CONTEXT *security_context QCOWTOOLS_ATTRIBUTE_UNUSED,
+                    ACCESS_MASK desired_access,
+                    ULONG file_attributes QCOWTOOLS_ATTRIBUTE_UNUSED,
+                    ULONG share_access QCOWTOOLS_ATTRIBUTE_UNUSED,
+                    ULONG creation_disposition,
+                    ULONG creation_options QCOWTOOLS_ATTRIBUTE_UNUSED,
+                    DOKAN_FILE_INFO *file_info )
 {
 	libcerror_error_t *error = NULL;
-	static char *function    = "mount_dokan_OpenDirectory";
-	size_t path_length       = 0;
+	static char *function    = "mount_dokan_ZwCreateFile";
 	int result               = 0;
 
-	QCOWTOOLS_UNREFERENCED_PARAMETER( file_info )
+	QCOWTOOLS_UNREFERENCED_PARAMETER( security_context )
+	QCOWTOOLS_UNREFERENCED_PARAMETER( file_attributes )
+	QCOWTOOLS_UNREFERENCED_PARAMETER( share_access )
+	QCOWTOOLS_UNREFERENCED_PARAMETER( creation_options )
 
 	if( path == NULL )
 	{
@@ -514,25 +503,160 @@ int __stdcall mount_dokan_OpenDirectory(
 		 "%s: invalid path.",
 		 function );
 
-		result = -ERROR_BAD_ARGUMENTS;
+		result = STATUS_UNSUCCESSFUL;
 
 		goto on_error;
 	}
-	path_length = wide_string_length(
-	               path );
-
-	if( ( path_length != 1 )
-	 || ( path[ 0 ] != (wchar_t) '\\' ) )
+	if( ( desired_access & GENERIC_WRITE ) != 0 )
+	{
+		return( STATUS_MEDIA_WRITE_PROTECTED );
+	}
+	/* Ignore the share_mode
+	 */
+	if( creation_disposition == FILE_CREATE )
+	{
+		return( STATUS_OBJECT_NAME_COLLISION );
+	}
+	else if( ( creation_disposition != FILE_OPEN )
+	      && ( creation_disposition != FILE_OPEN_IF ) )
+	{
+		return( STATUS_ACCESS_DENIED );
+	}
+	if( file_info == NULL )
 	{
 		libcerror_error_set(
 		 &error,
 		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_UNSUPPORTED_VALUE,
-		 "%s: unsupported path: %ls.",
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file information.",
+		 function );
+
+		result = STATUS_UNSUCCESSFUL;
+
+		goto on_error;
+	}
+	if( file_info->Context != (ULONG64) NULL )
+	{
+		libcerror_error_set(
+		 &error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
+		 "%s: invalid file information - context already set.",
+		 function );
+
+		result = STATUS_UNSUCCESSFUL;
+
+		goto on_error;
+	}
+	if( mount_handle_get_file_entry_by_path(
+	     qcowmount_mount_handle,
+	     path,
+	     (mount_file_entry_t **) &( file_info->Context ),
+	     &error ) != 1 )
+	{
+		libcerror_error_set(
+		 &error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve file entry for path: %ls.",
 		 function,
 		 path );
 
-		result = -ERROR_FILE_NOT_FOUND;
+		result = STATUS_OBJECT_NAME_NOT_FOUND;
+
+		goto on_error;
+	}
+	return( STATUS_SUCCESS );
+
+on_error:
+	if( error != NULL )
+	{
+		libcnotify_print_error_backtrace(
+		 error );
+		libcerror_error_free(
+		 &error );
+	}
+	return( result );
+}
+
+#endif /* ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 ) */
+
+#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
+
+/* Opens a directory
+ * Returns 0 if successful or an error code otherwise
+ */
+int __stdcall mount_dokan_OpenDirectory(
+               const wchar_t *path,
+               DOKAN_FILE_INFO *file_info )
+{
+	libcerror_error_t *error = NULL;
+	static char *function    = "mount_dokan_OpenDirectory";
+	int result               = 0;
+
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
+	{
+		libcnotify_printf(
+		 "%s: %ls\n",
+		 function,
+		 path );
+	}
+#endif
+	if( path == NULL )
+	{
+		libcerror_error_set(
+		 &error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid path.",
+		 function );
+
+		result = MOUNT_DOKAN_ERROR_BAD_ARGUMENTS;
+
+		goto on_error;
+	}
+	if( file_info == NULL )
+	{
+		libcerror_error_set(
+		 &error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file information.",
+		 function );
+
+		result = MOUNT_DOKAN_ERROR_BAD_ARGUMENTS;
+
+		goto on_error;
+	}
+	if( file_info->Context != (ULONG64) NULL )
+	{
+		libcerror_error_set(
+		 &error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
+		 "%s: invalid file information - context already set.",
+		 function );
+
+		result = MOUNT_DOKAN_ERROR_BAD_ARGUMENTS;
+
+		goto on_error;
+	}
+	if( mount_handle_get_file_entry_by_path(
+	     qcowmount_mount_handle,
+	     path,
+	     (mount_file_entry_t **) &( file_info->Context ),
+	     &error ) != 1 )
+	{
+		libcerror_error_set(
+		 &error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve file entry for path: %ls.",
+		 function,
+		 path );
+
+		result = MOUNT_DOKAN_ERROR_FILE_NOT_FOUND;
 
 		goto on_error;
 	}
@@ -546,17 +670,13 @@ on_error:
 		libcerror_error_free(
 		 &error );
 	}
-#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 	return( result );
-#else
-	return( DokanNtStatusFromWin32( result ) );
-#endif
 }
 
 #endif /* ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 ) */
 
 /* Closes a file or direcotry
- * Returns 0 if successful or a negative error code otherwise
+ * Returns 0 if successful or an error code otherwise
  */
 #if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 int __stdcall mount_dokan_CloseFile(
@@ -572,6 +692,15 @@ NTSTATUS __stdcall mount_dokan_CloseFile(
 	static char *function    = "mount_dokan_CloseFile";
 	int result               = 0;
 
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
+	{
+		libcnotify_printf(
+		 "%s: %ls\n",
+		 function,
+		 path );
+	}
+#endif
 	if( path == NULL )
 	{
 		libcerror_error_set(
@@ -581,7 +710,7 @@ NTSTATUS __stdcall mount_dokan_CloseFile(
 		 "%s: invalid path.",
 		 function );
 
-		result = -ERROR_BAD_ARGUMENTS;
+		result = MOUNT_DOKAN_ERROR_BAD_ARGUMENTS;
 
 		goto on_error;
 	}
@@ -594,7 +723,7 @@ NTSTATUS __stdcall mount_dokan_CloseFile(
 		 "%s: invalid file information.",
 		 function );
 
-		result = -ERROR_BAD_ARGUMENTS;
+		result = MOUNT_DOKAN_ERROR_BAD_ARGUMENTS;
 
 		goto on_error;
 	}
@@ -611,7 +740,7 @@ NTSTATUS __stdcall mount_dokan_CloseFile(
 			 "%s: unable to free file entry.",
 			 function );
 
-			result = -ERROR_GEN_FAILURE;
+			result = MOUNT_DOKAN_ERROR_GENERIC_FAILURE;
 
 			goto on_error;
 		}
@@ -626,15 +755,11 @@ on_error:
 		libcerror_error_free(
 		 &error );
 	}
-#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 	return( result );
-#else
-	return( DokanNtStatusFromWin32( result ) );
-#endif
 }
 
 /* Reads a buffer of data at the specified offset
- * Returns 0 if successful or a negative error code otherwise
+ * Returns 0 if successful or an error code otherwise
  */
 #if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 int __stdcall mount_dokan_ReadFile(
@@ -656,12 +781,18 @@ NTSTATUS __stdcall mount_dokan_ReadFile(
 {
 	libcerror_error_t *error = NULL;
 	static char *function    = "mount_dokan_ReadFile";
-	size_t path_length       = 0;
 	ssize_t read_count       = 0;
-	int image_index          = 0;
 	int result               = 0;
-	int string_index         = 0;
 
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
+	{
+		libcnotify_printf(
+		 "%s: %ls\n",
+		 function,
+		 path );
+	}
+#endif
 	if( path == NULL )
 	{
 		libcerror_error_set(
@@ -671,7 +802,7 @@ NTSTATUS __stdcall mount_dokan_ReadFile(
 		 "%s: invalid path.",
 		 function );
 
-		result = -ERROR_BAD_ARGUMENTS;
+		result = MOUNT_DOKAN_ERROR_BAD_ARGUMENTS;
 
 		goto on_error;
 	}
@@ -684,7 +815,7 @@ NTSTATUS __stdcall mount_dokan_ReadFile(
 		 "%s: invalid number of bytes to read value exceeds maximum.",
 		 function );
 
-		result = -ERROR_BAD_ARGUMENTS;
+		result = MOUNT_DOKAN_ERROR_BAD_ARGUMENTS;
 
 		goto on_error;
 	}
@@ -697,7 +828,7 @@ NTSTATUS __stdcall mount_dokan_ReadFile(
 		 "%s: invalid number of bytes read.",
 		 function );
 
-		result = -ERROR_BAD_ARGUMENTS;
+		result = MOUNT_DOKAN_ERROR_BAD_ARGUMENTS;
 
 		goto on_error;
 	}
@@ -710,7 +841,7 @@ NTSTATUS __stdcall mount_dokan_ReadFile(
 		 "%s: invalid file information.",
 		 function );
 
-		result = -ERROR_BAD_ARGUMENTS;
+		result = MOUNT_DOKAN_ERROR_BAD_ARGUMENTS;
 
 		goto on_error;
 	}
@@ -723,13 +854,13 @@ NTSTATUS __stdcall mount_dokan_ReadFile(
 		 "%s: invalid file information - missing context.",
 		 function );
 
-		result = -ERROR_BAD_ARGUMENTS;
+		result = MOUNT_DOKAN_ERROR_BAD_ARGUMENTS;
 
 		goto on_error;
 	}
 	read_count = mount_file_entry_read_buffer_at_offset(
 		      (mount_file_entry_t *) file_info->Context,
-		      (uint8_t *) buffer,
+		      buffer,
 		      (size_t) number_of_bytes_to_read,
 		      (off64_t) offset,
 		      &error );
@@ -743,7 +874,7 @@ NTSTATUS __stdcall mount_dokan_ReadFile(
 		 "%s: unable to read from mount handle.",
 		 function );
 
-		result = -ERROR_READ_FAULT;
+		result = MOUNT_DOKAN_ERROR_READ_FAULT;
 
 		goto on_error;
 	}
@@ -756,7 +887,7 @@ NTSTATUS __stdcall mount_dokan_ReadFile(
 		 "%s: invalid read count value exceeds maximum.",
 		 function );
 
-		result = -ERROR_READ_FAULT;
+		result = MOUNT_DOKAN_ERROR_READ_FAULT;
 
 		goto on_error;
 	}
@@ -774,15 +905,11 @@ on_error:
 		libcerror_error_free(
 		 &error );
 	}
-#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 	return( result );
-#else
-	return( DokanNtStatusFromWin32( result ) );
-#endif
 }
 
 /* Reads a directory
- * Returns 0 if successful or a negative error code otherwise
+ * Returns 0 if successful or an error code otherwise
  */
 #if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 int __stdcall mount_dokan_FindFiles(
@@ -807,9 +934,17 @@ NTSTATUS __stdcall mount_dokan_FindFiles(
 	size_t name_size                      = 0;
 	int number_of_sub_file_entries        = 0;
 	int result                            = 0;
-	int string_index                      = 0;
 	int sub_file_entry_index              = 0;
 
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
+	{
+		libcnotify_printf(
+		 "%s: %ls\n",
+		 function,
+		 path );
+	}
+#endif
 	if( path == NULL )
 	{
 		libcerror_error_set(
@@ -819,7 +954,7 @@ NTSTATUS __stdcall mount_dokan_FindFiles(
 		 "%s: invalid path.",
 		 function );
 
-		result = -ERROR_BAD_ARGUMENTS;
+		result = MOUNT_DOKAN_ERROR_BAD_ARGUMENTS;
 
 		goto on_error;
 	}
@@ -837,7 +972,7 @@ NTSTATUS __stdcall mount_dokan_FindFiles(
 		 function,
 		 path );
 
-		result = -ERROR_FILE_NOT_FOUND;
+		result = MOUNT_DOKAN_ERROR_FILE_NOT_FOUND;
 
 		goto on_error;
 	}
@@ -857,7 +992,7 @@ NTSTATUS __stdcall mount_dokan_FindFiles(
 		 "%s: unable to set find data.",
 		 function );
 
-		result = -ERROR_GEN_FAILURE;
+		result = MOUNT_DOKAN_ERROR_GENERIC_FAILURE;
 
 		goto on_error;
 	}
@@ -875,7 +1010,7 @@ NTSTATUS __stdcall mount_dokan_FindFiles(
 		 "%s: unable to retrieve parent file entry.",
 		 function );
 
-		result = -ERROR_GEN_FAILURE;
+		result = MOUNT_DOKAN_ERROR_GENERIC_FAILURE;
 
 		goto on_error;
 	}
@@ -895,7 +1030,7 @@ NTSTATUS __stdcall mount_dokan_FindFiles(
 		 "%s: unable to set find data.",
 		 function );
 
-		result = -ERROR_GEN_FAILURE;
+		result = MOUNT_DOKAN_ERROR_GENERIC_FAILURE;
 
 		goto on_error;
 	}
@@ -910,7 +1045,7 @@ NTSTATUS __stdcall mount_dokan_FindFiles(
 		 "%s: unable to free parent file entry.",
 		 function );
 
-		result = -ERROR_GEN_FAILURE;
+		result = MOUNT_DOKAN_ERROR_GENERIC_FAILURE;
 
 		goto on_error;
 	}
@@ -926,7 +1061,7 @@ NTSTATUS __stdcall mount_dokan_FindFiles(
 		 "%s: unable to retrieve number of sub file entries.",
 		 function );
 
-		result = -ERROR_GEN_FAILURE;
+		result = MOUNT_DOKAN_ERROR_GENERIC_FAILURE;
 
 		goto on_error;
 	}
@@ -948,7 +1083,7 @@ NTSTATUS __stdcall mount_dokan_FindFiles(
 			 function,
 			 sub_file_entry_index );
 
-			result = -ERROR_GEN_FAILURE;
+			result = MOUNT_DOKAN_ERROR_GENERIC_FAILURE;
 
 			goto on_error;
 		}
@@ -965,7 +1100,7 @@ NTSTATUS __stdcall mount_dokan_FindFiles(
 			 function,
 			 sub_file_entry_index );
 
-			result = -ERROR_GEN_FAILURE;
+			result = MOUNT_DOKAN_ERROR_GENERIC_FAILURE;
 
 			goto on_error;
 		}
@@ -981,7 +1116,7 @@ NTSTATUS __stdcall mount_dokan_FindFiles(
 			 "%s: unable to create sub file entry: %d name.",
 			 function );
 
-			result = -ERROR_GEN_FAILURE;
+			result = MOUNT_DOKAN_ERROR_GENERIC_FAILURE;
 
 			goto on_error;
 		}
@@ -999,7 +1134,7 @@ NTSTATUS __stdcall mount_dokan_FindFiles(
 			 function,
 			 sub_file_entry_index );
 
-			result = -ERROR_GEN_FAILURE;
+			result = MOUNT_DOKAN_ERROR_GENERIC_FAILURE;
 
 			goto on_error;
 		}
@@ -1020,7 +1155,7 @@ NTSTATUS __stdcall mount_dokan_FindFiles(
 			 function,
 			 sub_file_entry_index );
 
-			result = -ERROR_GEN_FAILURE;
+			result = MOUNT_DOKAN_ERROR_GENERIC_FAILURE;
 
 			goto on_error;
 		}
@@ -1041,7 +1176,7 @@ NTSTATUS __stdcall mount_dokan_FindFiles(
 			 function,
 			 sub_file_entry_index );
 
-			result = -ERROR_GEN_FAILURE;
+			result = MOUNT_DOKAN_ERROR_GENERIC_FAILURE;
 
 			goto on_error;
 		}
@@ -1057,7 +1192,7 @@ NTSTATUS __stdcall mount_dokan_FindFiles(
 		 "%s: unable to free file entry.",
 		 function );
 
-		result = -ERROR_GEN_FAILURE;
+		result = MOUNT_DOKAN_ERROR_GENERIC_FAILURE;
 
 		goto on_error;
 	}
@@ -1094,15 +1229,11 @@ on_error:
 		 &file_entry,
 		 NULL );
 	}
-#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 	return( result );
-#else
-	return( DokanNtStatusFromWin32( result ) );
-#endif
 }
 
 /* Retrieves the file information
- * Returns 0 if successful or a negative error code otherwise
+ * Returns 0 if successful or an error code otherwise
  */
 #if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 int __stdcall mount_dokan_GetFileInformation(
@@ -1128,6 +1259,15 @@ NTSTATUS __stdcall mount_dokan_GetFileInformation(
 
 	QCOWTOOLS_UNREFERENCED_PARAMETER( file_info )
 
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
+	{
+		libcnotify_printf(
+		 "%s: %ls\n",
+		 function,
+		 path );
+	}
+#endif
 	if( path == NULL )
 	{
 		libcerror_error_set(
@@ -1137,7 +1277,7 @@ NTSTATUS __stdcall mount_dokan_GetFileInformation(
 		 "%s: invalid path.",
 		 function );
 
-		result = -ERROR_BAD_ARGUMENTS;
+		result = MOUNT_DOKAN_ERROR_BAD_ARGUMENTS;
 
 		goto on_error;
 	}
@@ -1155,7 +1295,7 @@ NTSTATUS __stdcall mount_dokan_GetFileInformation(
 		 function,
 		 path );
 
-		result = -ERROR_FILE_NOT_FOUND;
+		result = MOUNT_DOKAN_ERROR_FILE_NOT_FOUND;
 
 		goto on_error;
 	}
@@ -1173,7 +1313,7 @@ NTSTATUS __stdcall mount_dokan_GetFileInformation(
 			 "%s: unable to retrieve file entry size.",
 			 function );
 
-			result = -ERROR_GEN_FAILURE;
+			result = MOUNT_DOKAN_ERROR_GENERIC_FAILURE;
 
 			goto on_error;
 		}
@@ -1189,7 +1329,7 @@ NTSTATUS __stdcall mount_dokan_GetFileInformation(
 			 "%s: unable to retrieve file mode.",
 			 function );
 
-			result = -ERROR_GEN_FAILURE;
+			result = MOUNT_DOKAN_ERROR_GENERIC_FAILURE;
 
 			goto on_error;
 		}
@@ -1205,7 +1345,7 @@ NTSTATUS __stdcall mount_dokan_GetFileInformation(
 			 "%s: unable to retrieve access time.",
 			 function );
 
-			result = -ERROR_GEN_FAILURE;
+			result = MOUNT_DOKAN_ERROR_GENERIC_FAILURE;
 
 			goto on_error;
 		}
@@ -1221,7 +1361,7 @@ NTSTATUS __stdcall mount_dokan_GetFileInformation(
 			 "%s: unable to retrieve modification time.",
 			 function );
 
-			result = -ERROR_GEN_FAILURE;
+			result = MOUNT_DOKAN_ERROR_GENERIC_FAILURE;
 
 			goto on_error;
 		}
@@ -1237,7 +1377,7 @@ NTSTATUS __stdcall mount_dokan_GetFileInformation(
 			 "%s: unable to retrieve inode change time.",
 			 function );
 
-			result = -ERROR_GEN_FAILURE;
+			result = MOUNT_DOKAN_ERROR_GENERIC_FAILURE;
 
 			goto on_error;
 		}
@@ -1258,7 +1398,7 @@ NTSTATUS __stdcall mount_dokan_GetFileInformation(
 		 "%s: unable to set file information.",
 		 function );
 
-		result = -ERROR_GEN_FAILURE;
+		result = MOUNT_DOKAN_ERROR_GENERIC_FAILURE;
 
 		goto on_error;
 	}
@@ -1273,7 +1413,7 @@ NTSTATUS __stdcall mount_dokan_GetFileInformation(
 		 "%s: unable to free file entry.",
 		 function );
 
-		result = -ERROR_GEN_FAILURE;
+		result = MOUNT_DOKAN_ERROR_GENERIC_FAILURE;
 
 		goto on_error;
 	}
@@ -1293,15 +1433,11 @@ on_error:
 		 &file_entry,
 		 NULL );
 	}
-#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 	return( result );
-#else
-	return( DokanNtStatusFromWin32( result ) );
-#endif
 }
 
 /* Retrieves the volume information
- * Returns 0 if successful or a negative error code otherwise
+ * Returns 0 if successful or an error code otherwise
  */
 #if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 int __stdcall mount_dokan_GetVolumeInformation(
@@ -1331,6 +1467,15 @@ NTSTATUS __stdcall mount_dokan_GetVolumeInformation(
 
 	QCOWTOOLS_UNREFERENCED_PARAMETER( file_info )
 
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
+	{
+		libcnotify_printf(
+		 "%s: %ls\n",
+		 function,
+		 volume_name );
+	}
+#endif
 	if( ( volume_name != NULL )
 	 && ( volume_name_size > (DWORD) ( sizeof( wchar_t ) * 5 ) ) )
 	{
@@ -1348,7 +1493,7 @@ NTSTATUS __stdcall mount_dokan_GetVolumeInformation(
 			 "%s: unable to copy volume name.",
 			 function );
 
-			result = -ERROR_GEN_FAILURE;
+			result = MOUNT_DOKAN_ERROR_GENERIC_FAILURE;
 
 			goto on_error;
 		}
@@ -1387,7 +1532,7 @@ NTSTATUS __stdcall mount_dokan_GetVolumeInformation(
 			 "%s: unable to copy file system name.",
 			 function );
 
-			result = -ERROR_GEN_FAILURE;
+			result = MOUNT_DOKAN_ERROR_GENERIC_FAILURE;
 
 			goto on_error;
 		}
@@ -1402,17 +1547,13 @@ on_error:
 		libcerror_error_free(
 		 &error );
 	}
-#if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 	return( result );
-#else
-	return( DokanNtStatusFromWin32( result ) );
-#endif
 }
 
 #if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 
 /* Unmount the image
- * Returns 0 if successful or a negative error code otherwise
+ * Returns 0 if successful or an error code otherwise
  */
 int __stdcall mount_dokan_Unmount(
                DOKAN_FILE_INFO *file_info QCOWTOOLS_ATTRIBUTE_UNUSED )
@@ -1421,6 +1562,14 @@ int __stdcall mount_dokan_Unmount(
 
 	QCOWTOOLS_UNREFERENCED_PARAMETER( file_info )
 
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
+	{
+		libcnotify_printf(
+		 "%s\n",
+		 function );
+	}
+#endif
 	return( 0 );
 }
 

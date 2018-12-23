@@ -526,7 +526,7 @@ int main( int argc, char * const argv[] )
 	qcowmount_dokan_operations.Unmount              = &mount_dokan_Unmount;
 
 #else
-	qcowmount_dokan_operations.ZwCreateFile         = &mount_dokan_CreateFile;
+	qcowmount_dokan_operations.ZwCreateFile         = &mount_dokan_ZwCreateFile;
 	qcowmount_dokan_operations.Cleanup              = NULL;
 	qcowmount_dokan_operations.CloseFile            = &mount_dokan_CloseFile;
 	qcowmount_dokan_operations.ReadFile             = &mount_dokan_ReadFile;

@@ -504,11 +504,12 @@ int mount_file_system_get_image_index_from_path(
      int *image_index,
      libcerror_error_t **error )
 {
-	static char *function = "mount_file_system_get_image_index_from_path";
-	size_t path_index     = 0;
-	size_t path_length    = 0;
-	int image_number      = 0;
-	int result            = 0;
+	static char *function        = "mount_file_system_get_image_index_from_path";
+	system_character_t character = 0;
+	size_t path_index            = 0;
+	size_t path_length           = 0;
+	int image_number             = 0;
+	int result                   = 0;
 
 	if( file_system == NULL )
 	{
@@ -584,18 +585,20 @@ int mount_file_system_get_image_index_from_path(
 	{
 		return( 0 );
 	}
+	image_number = 0;
 	path_index   = file_system->path_prefix_size - 1;
-	image_number = path[ path_index++ ] - '0';
 
-	if( path_index < path_length )
+	while( path_index < path_length )
 	{
+		character = path[ path_index++ ];
+
+		if( ( character < (system_character_t) '0' )
+		 || ( character > (system_character_t) '9' ) )
+		{
+			return( 0 );
+		}
 		image_number *= 10;
-		image_number += path[ path_index++ ] - '0';
-	}
-	if( path_index < path_length )
-	{
-		image_number *= 10;
-		image_number += path[ path_index++ ] - '0';
+		image_number += character - (system_character_t) '0';
 	}
 	*image_index = image_number - 1;
 
