@@ -51,15 +51,16 @@ extern mount_handle_t *qcowmount_mount_handle;
 #endif /* ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 ) */
 
 /* Sets the values in a file information structure
+ * The time values contain a unsigned 64-bit FILETIME timestamp
  * Returns 1 if successful or -1 on error
  */
 int mount_dokan_set_file_information(
      BY_HANDLE_FILE_INFORMATION *file_information,
      size64_t size,
      uint16_t file_mode,
-     int64_t access_time,
-     int64_t inode_change_time,
-     int64_t modification_time,
+     uint64_t creation_time,
+     uint64_t access_time,
+     uint64_t modification_time,
      libcerror_error_t **error )
 {
 	static char *function = "mount_dokan_set_file_information";
@@ -80,27 +81,37 @@ int mount_dokan_set_file_information(
 		file_information->nFileSizeHigh = (DWORD) ( size >> 32 );
 		file_information->nFileSizeLow  = (DWORD) ( size & 0xffffffffUL );
 	}
-	file_information->dwFileAttributes = FILE_ATTRIBUTE_READONLY;
-
 	if( ( file_mode & 0x4000 ) != 0 )
 	{
-		file_information->dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+		file_information->dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
 	}
-/* TODO implement time values */
+	else
+	{
+		file_information->dwFileAttributes = FILE_ATTRIBUTE_NORMAL;
+	}
+	file_information->ftCreationTime.dwLowDateTime  = (uint32_t) ( creation_time & 0x00000000ffffffffULL );
+	file_information->ftCreationTime.dwHighDateTime = creation_time >> 32;
+
+	file_information->ftLastAccessTime.dwLowDateTime  = (uint32_t) ( access_time & 0x00000000ffffffffULL );
+	file_information->ftLastAccessTime.dwHighDateTime = access_time >> 32;
+
+	file_information->ftLastWriteTime.dwLowDateTime  = (uint32_t) ( modification_time & 0x00000000ffffffffULL );
+	file_information->ftLastWriteTime.dwHighDateTime = modification_time >> 32;
 
 	return( 1 );
 }
 
 /* Sets the values in a find data structure
+ * The time values contain a unsigned 64-bit FILETIME timestamp
  * Returns 1 if successful or -1 on error
  */
 int mount_dokan_set_find_data(
      WIN32_FIND_DATAW *find_data,
      size64_t size,
      uint16_t file_mode,
-     int64_t access_time,
-     int64_t inode_change_time,
-     int64_t modification_time,
+     uint64_t creation_time,
+     uint64_t access_time,
+     uint64_t modification_time,
      libcerror_error_t **error )
 {
 	static char *function = "mount_dokan_set_find_data";
@@ -121,13 +132,22 @@ int mount_dokan_set_find_data(
 		find_data->nFileSizeHigh = (DWORD) ( size >> 32 );
 		find_data->nFileSizeLow  = (DWORD) ( size & 0xffffffffUL );
 	}
-	find_data->dwFileAttributes = FILE_ATTRIBUTE_READONLY;
-
 	if( ( file_mode & 0x4000 ) != 0 )
 	{
-		find_data->dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+		find_data->dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
 	}
-/* TODO implement time values */
+	else
+	{
+		find_data->dwFileAttributes = FILE_ATTRIBUTE_NORMAL;
+	}
+	find_data->ftCreationTime.dwLowDateTime  = (uint32_t) ( creation_time & 0x00000000ffffffffULL );
+	find_data->ftCreationTime.dwHighDateTime = creation_time >> 32;
+
+	find_data->ftLastAccessTime.dwLowDateTime  = (uint32_t) ( access_time & 0x00000000ffffffffULL );
+	find_data->ftLastAccessTime.dwHighDateTime = access_time >> 32;
+
+	find_data->ftLastWriteTime.dwLowDateTime  = (uint32_t) ( modification_time & 0x00000000ffffffffULL );
+	find_data->ftLastWriteTime.dwHighDateTime = modification_time >> 32;
 
 	return( 1 );
 }
@@ -147,7 +167,7 @@ int mount_dokan_filldir(
 	static char *function     = "mount_dokan_filldir";
 	size64_t file_size        = 0;
 	int64_t access_time       = 0;
-	int64_t inode_change_time = 0;
+	int64_t creation_time     = 0;
 	int64_t modification_time = 0;
 	uint16_t file_mode        = 0;
 
@@ -214,6 +234,25 @@ int mount_dokan_filldir(
 
 			return( -1 );
 		}
+		if( mount_file_entry_get_creation_time(
+		     file_entry,
+		     &creation_time,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve creation time.",
+			 function );
+
+			return( -1 );
+		}
+		if( creation_time != 0 )
+		{
+			creation_time /= 100;
+			creation_time += 116444736000000000L;
+		}
 		if( mount_file_entry_get_access_time(
 		     file_entry,
 		     &access_time,
@@ -227,6 +266,11 @@ int mount_dokan_filldir(
 			 function );
 
 			return( -1 );
+		}
+		if( access_time != 0 )
+		{
+			access_time /= 100;
+			access_time += 116444736000000000L;
 		}
 		if( mount_file_entry_get_modification_time(
 		     file_entry,
@@ -242,19 +286,10 @@ int mount_dokan_filldir(
 
 			return( -1 );
 		}
-		if( mount_file_entry_get_inode_change_time(
-		     file_entry,
-		     &inode_change_time,
-		     error ) != 1 )
+		if( modification_time != 0 )
 		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve inode change time.",
-			 function );
-
-			return( -1 );
+			modification_time /= 100;
+			modification_time += 116444736000000000L;
 		}
 	}
 	if( memory_set(
@@ -306,9 +341,9 @@ int mount_dokan_filldir(
 	     find_data,
 	     file_size,
 	     file_mode,
+	     creation_time,
 	     access_time,
 	     modification_time,
-	     inode_change_time,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -1252,7 +1287,7 @@ NTSTATUS __stdcall mount_dokan_GetFileInformation(
 	static char *function          = "mount_dokan_GetFileInformation";
 	size64_t file_size             = 0;
 	int64_t access_time            = 0;
-	int64_t inode_change_time      = 0;
+	int64_t creation_time          = 0;
 	int64_t modification_time      = 0;
 	uint16_t file_mode             = 0;
 	int result                     = 0;
@@ -1333,6 +1368,27 @@ NTSTATUS __stdcall mount_dokan_GetFileInformation(
 
 			goto on_error;
 		}
+		if( mount_file_entry_get_creation_time(
+		     file_entry,
+		     &creation_time,
+		     &error ) != 1 )
+		{
+			libcerror_error_set(
+			 &error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve creation time.",
+			 function );
+
+			result = MOUNT_DOKAN_ERROR_GENERIC_FAILURE;
+
+			goto on_error;
+		}
+		if( creation_time != 0 )
+		{
+			creation_time /= 100;
+			creation_time += 116444736000000000L;
+		}
 		if( mount_file_entry_get_access_time(
 		     file_entry,
 		     &access_time,
@@ -1348,6 +1404,11 @@ NTSTATUS __stdcall mount_dokan_GetFileInformation(
 			result = MOUNT_DOKAN_ERROR_GENERIC_FAILURE;
 
 			goto on_error;
+		}
+		if( access_time != 0 )
+		{
+			access_time /= 100;
+			access_time += 116444736000000000L;
 		}
 		if( mount_file_entry_get_modification_time(
 		     file_entry,
@@ -1365,30 +1426,19 @@ NTSTATUS __stdcall mount_dokan_GetFileInformation(
 
 			goto on_error;
 		}
-		if( mount_file_entry_get_inode_change_time(
-		     file_entry,
-		     &inode_change_time,
-		     &error ) != 1 )
+		if( modification_time != 0 )
 		{
-			libcerror_error_set(
-			 &error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve inode change time.",
-			 function );
-
-			result = MOUNT_DOKAN_ERROR_GENERIC_FAILURE;
-
-			goto on_error;
+			modification_time /= 100;
+			modification_time += 116444736000000000L;
 		}
 	}
 	if( mount_dokan_set_file_information(
 	     file_information,
 	     file_size,
 	     file_mode,
+	     creation_time,
 	     access_time,
 	     modification_time,
-	     inode_change_time,
 	     &error ) != 1 )
 	{
 		libcerror_error_set(

@@ -61,11 +61,8 @@ extern mount_handle_t *qcowmount_mount_handle;
 #error Size of off_t not supported
 #endif
 
-#if defined( HAVE_TIME )
-time_t mount_timestamp                      = 0;
-#endif
-
 /* Sets the values in a stat info structure
+ * The time values are a signed 64-bit POSIX date and time value in number of nanoseconds
  * Returns 1 if successful or -1 on error
  */
 int mount_fuse_set_stat_info(
@@ -123,10 +120,15 @@ int mount_fuse_set_stat_info(
 	stat_info->st_gid = getegid();
 #endif
 
-	stat_info->st_atime = access_time;
-	stat_info->st_mtime = modification_time;
-	stat_info->st_ctime = inode_change_time;
+	stat_info->st_atime = access_time / 1000000000;
+	stat_info->st_mtime = modification_time / 1000000000;
+	stat_info->st_ctime = inode_change_time / 1000000000;
 
+#if defined( STAT_HAVE_NSEC )
+	stat_info->st_atime_nsec = access_time % 1000000000;
+	stat_info->st_mtime_nsec = modification_time % 1000000000;
+	stat_info->st_ctime_nsec = inode_change_time % 1000000000;
+#endif
 	return( 1 );
 }
 

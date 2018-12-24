@@ -1,6 +1,6 @@
 dnl Checks for required headers and functions
 dnl
-dnl Version: 20170919
+dnl Version: 20181223
 
 dnl Function to detect if libqcow dependencies are available
 AC_DEFUN([AX_LIBQCOW_CHECK_LOCAL],
@@ -48,10 +48,10 @@ AC_DEFUN([AX_QCOWTOOLS_CHECK_LOCAL],
 
   AC_HEADER_TIME
 
-  dnl Functions included in qcowtools/qcowmount.c
+  dnl Functions included in qcowtools/mount_file_system.c and qcowtools/mount_file_entry.c
   AS_IF(
     [test "x$ac_cv_enable_winapi" = xno],
-    [AC_CHECK_FUNCS([getegid geteuid time])
+    [AC_CHECK_FUNCS([clock_gettime getegid geteuid time])
   ])
 
   dnl Check if tools should be build as static executables

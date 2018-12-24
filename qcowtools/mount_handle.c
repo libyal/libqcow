@@ -769,6 +769,7 @@ int mount_handle_get_file_entry_by_path(
 	libqcow_file_t *image              = NULL;
 	const system_character_t *filename = NULL;
 	static char *function              = "mount_handle_get_file_entry_by_path";
+	size_t path_length                 = 0;
 	int image_index                    = 0;
 	int result                         = 0;
 
@@ -794,9 +795,24 @@ int mount_handle_get_file_entry_by_path(
 
 		return( -1 );
 	}
+	path_length = system_string_length(
+	               path );
+
+	if( path_length == 0 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid path length value out of bounds.",
+		 function );
+
+		return( -1 );
+	}
 	result = mount_file_system_get_image_index_from_path(
 	          mount_handle->file_system,
 	          path,
+	          path_length,
 	          &image_index,
 	          error );
 

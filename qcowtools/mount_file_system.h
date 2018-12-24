@@ -44,6 +44,10 @@ struct mount_file_system
 	 */
 	size_t path_prefix_size;
 
+	/* The mounted timestamp
+	 */
+	int64_t mounted_timestamp;
+
 	/* The images array
 	 */
 	libcdata_array_t *images_array;
@@ -67,6 +71,11 @@ int mount_file_system_set_path_prefix(
      size_t path_prefix_size,
      libcerror_error_t **error );
 
+int mount_file_system_get_mounted_timestamp(
+     mount_file_system_t *file_system,
+     int64_t *mounted_timestamp,
+     libcerror_error_t **error );
+
 int mount_file_system_get_number_of_images(
      mount_file_system_t *file_system,
      int *number_of_images,
@@ -86,7 +95,15 @@ int mount_file_system_append_image(
 int mount_file_system_get_image_index_from_path(
      mount_file_system_t *file_system,
      const system_character_t *path,
+     size_t path_length,
      int *image_index,
+     libcerror_error_t **error );
+
+int mount_file_system_get_path_from_image_index(
+     mount_file_system_t *file_system,
+     int image_index,
+     system_character_t *path,
+     size_t path_size,
      libcerror_error_t **error );
 
 #if defined( __cplusplus )

@@ -30,7 +30,6 @@
 #include <sys/stat.h>
 #endif
 
-#if !defined( WINAPI )
 #if defined( TIME_WITH_SYS_TIME )
 #include <sys/time.h>
 #include <time.h>
@@ -38,7 +37,6 @@
 #include <sys/time.h>
 #else
 #include <time.h>
-#endif
 #endif
 
 #include "mount_file_system.h"
@@ -54,6 +52,10 @@ int mount_file_system_initialize(
      mount_file_system_t **file_system,
      libcerror_error_t **error )
 {
+#if defined( HAVE_CLOCK_GETTIME )
+	struct timespec time_structure;
+#endif
+
 	static char *function = "mount_file_system_initialize";
 
 	if( file_system == NULL )
@@ -125,6 +127,40 @@ int mount_file_system_initialize(
 
 		goto on_error;
 	}
+#if defined( HAVE_CLOCK_GETTIME )
+	if( clock_gettime(
+	     CLOCK_REALTIME,
+	     &time_structure ) != 0 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve current time structure.",
+		 function );
+
+		goto on_error;
+	}
+	( *file_system )->mounted_timestamp = ( (int64_t) time_structure.tv_sec * 1000000000 ) + time_structure.tv_nsec;
+
+#else
+	( *file_system )->mounted_timestamp = (int64_t) time( NULL );
+
+	if( ( *file_system )->mounted_timestamp == (time_t) -1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve current time.",
+		 function );
+
+		goto on_error;
+	}
+	( *file_system )->mounted_timestamp *= 1000000000;
+
+#endif /* defined( HAVE_CLOCK_GETTIME ) */
+
 	return( 1 );
 
 on_error:
@@ -414,6 +450,44 @@ int mount_file_system_get_number_of_images(
 	return( 1 );
 }
 
+/* Retrieves the mounted timestamp
+ * The timestamp is a signed 64-bit POSIX date and time value in number of nanoseconds
+ * Returns 1 if successful or -1 on error
+ */
+int mount_file_system_get_mounted_timestamp(
+     mount_file_system_t *file_system,
+     int64_t *mounted_timestamp,
+     libcerror_error_t **error )
+{
+	static char *function = "mount_file_system_get_mounted_timestamp";
+
+	if( file_system == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file system.",
+		 function );
+
+		return( -1 );
+	}
+	if( mounted_timestamp == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid mounted timestamp.",
+		 function );
+
+		return( -1 );
+	}
+	*mounted_timestamp = file_system->mounted_timestamp;
+
+	return( 1 );
+}
+
 /* Retrieves a specific image
  * Returns 1 if successful or -1 on error
  */
@@ -501,13 +575,13 @@ int mount_file_system_append_image(
 int mount_file_system_get_image_index_from_path(
      mount_file_system_t *file_system,
      const system_character_t *path,
+     size_t path_length,
      int *image_index,
      libcerror_error_t **error )
 {
 	static char *function        = "mount_file_system_get_image_index_from_path";
 	system_character_t character = 0;
 	size_t path_index            = 0;
-	size_t path_length           = 0;
 	int image_number             = 0;
 	int result                   = 0;
 
@@ -544,13 +618,24 @@ int mount_file_system_get_image_index_from_path(
 
 		return( -1 );
 	}
-	if( file_system == NULL )
+	if( path_length > (size_t) ( SSIZE_MAX - 1 ) )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_VALUE_EXCEEDS_MAXIMUM,
+		 "%s: invalid path length value exceeds maximum.",
+		 function );
+
+		return( -1 );
+	}
+	if( image_index == NULL )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
 		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid file system.",
+		 "%s: invalid image index.",
 		 function );
 
 		return( -1 );
@@ -602,6 +687,113 @@ int mount_file_system_get_image_index_from_path(
 	}
 	*image_index = image_number - 1;
 
+	return( 1 );
+}
+
+/* Retrieves the path rrom an image index.
+ * Returns 1 if successful or -1 on error
+ */
+int mount_file_system_get_path_from_image_index(
+     mount_file_system_t *file_system,
+     int image_index,
+     system_character_t *path,
+     size_t path_size,
+     libcerror_error_t **error )
+{
+	static char *function     = "mount_file_system_get_path_from_image_index";
+	size_t path_index         = 0;
+	size_t required_path_size = 0;
+	int image_number          = 0;
+
+	if( file_system == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file system.",
+		 function );
+
+		return( -1 );
+	}
+	if( file_system->path_prefix == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid file system - missing path prefix.",
+		 function );
+
+		return( -1 );
+	}
+	if( path == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid path.",
+		 function );
+
+		return( -1 );
+	}
+	if( path_size > (size_t) SSIZE_MAX )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_VALUE_EXCEEDS_MAXIMUM,
+		 "%s: invalid path length value exceeds maximum.",
+		 function );
+
+		return( -1 );
+	}
+        required_path_size = file_system->path_prefix_size;
+	image_number       = image_index + 1;
+
+	while( image_number > 0 )
+	{
+		required_path_size++;
+
+		image_number /= 10;
+	}
+	if( path_size <= required_path_size )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_VALUE_TOO_SMALL,
+		 "%s: invalid path size value too small.",
+		 function );
+
+		return( -1 );
+	}
+	if( system_string_copy(
+	     path,
+	     file_system->path_prefix,
+	     file_system->path_prefix_size ) == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_COPY_FAILED,
+		 "%s: unable to copy path prefix.",
+		 function );
+
+		return( -1 );
+	}
+	path_index   = required_path_size - 1;
+	image_number = image_index + 1;
+
+	path[ path_index-- ] = 0;
+
+	while( image_number > 0 )
+	{
+		path[ path_index-- ] = (system_character_t) '0' + ( image_number % 10 );
+
+		image_number /= 10;
+	}
 	return( 1 );
 }
 

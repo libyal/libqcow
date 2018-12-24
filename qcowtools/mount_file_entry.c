@@ -275,24 +275,39 @@ int mount_file_entry_get_parent_file_entry(
 
 		return( -1 );
 	}
-	if( file_entry->image_index == -1 )
+	if( file_entry->image_index != -1 )
 	{
-		return( 0 );
+		if( mount_file_entry_initialize(
+		     parent_file_entry,
+		     file_entry->file_system,
+		     -1,
+		     "",
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+			 "%s: unable to initialize parent file entry.",
+			 function );
+
+			return( -1 );
+		}
+		return( 1 );
 	}
-/* TODO implement */
-	return( -1 );
+	return( 0 );
 }
 
-/* Retrieves the modification date and time
- * The timestamp is a signed 64-bit POSIX date and time value in number of seconds
+/* Retrieves the creation date and time
+ * The timestamp is a signed 64-bit POSIX date and time value in number of nanoseconds
  * Returns 1 if successful or -1 on error
  */
-int mount_file_entry_get_modification_time(
+int mount_file_entry_get_creation_time(
      mount_file_entry_t *file_entry,
      int64_t *posix_time,
      libcerror_error_t **error )
 {
-	static char *function = "mount_file_entry_get_modification_time";
+	static char *function = "mount_file_entry_get_creation_time";
 
 	if( file_entry == NULL )
 	{
@@ -305,42 +320,25 @@ int mount_file_entry_get_modification_time(
 
 		return( -1 );
 	}
-/* TODO get mount timestamp from mount handle */
-	*posix_time = 0;
-
-	return( 1 );
-}
-
-/* Retrieves the inode change date and time
- * The timestamp is a signed 64-bit POSIX date and time value in number of seconds
- * Returns 1 if successful or -1 on error
- */
-int mount_file_entry_get_inode_change_time(
-     mount_file_entry_t *file_entry,
-     int64_t *posix_time,
-     libcerror_error_t **error )
-{
-	static char *function = "mount_file_entry_get_inode_change_time";
-
-	if( file_entry == NULL )
+	if( mount_file_system_get_mounted_timestamp(
+	     file_entry->file_system,
+	     posix_time,
+	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid file entry.",
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve mounted timestamp.",
 		 function );
 
 		return( -1 );
 	}
-/* TODO get mount timestamp from mount handle */
-	*posix_time = 0;
-
 	return( 1 );
 }
 
 /* Retrieves the access date and time
- * The timestamp is a signed 64-bit POSIX date and time value in number of seconds
+ * The timestamp is a signed 64-bit POSIX date and time value in number of nanoseconds
  * Returns 1 if successful or -1 on error
  */
 int mount_file_entry_get_access_time(
@@ -361,9 +359,98 @@ int mount_file_entry_get_access_time(
 
 		return( -1 );
 	}
-/* TODO get mount timestamp from mount handle */
-	*posix_time = 0;
+	if( mount_file_system_get_mounted_timestamp(
+	     file_entry->file_system,
+	     posix_time,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve mounted timestamp.",
+		 function );
 
+		return( -1 );
+	}
+	return( 1 );
+}
+
+/* Retrieves the modification date and time
+ * The timestamp is a signed 64-bit POSIX date and time value in number of nanoseconds
+ * Returns 1 if successful or -1 on error
+ */
+int mount_file_entry_get_modification_time(
+     mount_file_entry_t *file_entry,
+     int64_t *posix_time,
+     libcerror_error_t **error )
+{
+	static char *function = "mount_file_entry_get_modification_time";
+
+	if( file_entry == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file entry.",
+		 function );
+
+		return( -1 );
+	}
+	if( mount_file_system_get_mounted_timestamp(
+	     file_entry->file_system,
+	     posix_time,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve mounted timestamp.",
+		 function );
+
+		return( -1 );
+	}
+	return( 1 );
+}
+
+/* Retrieves the inode change date and time
+ * The timestamp is a signed 64-bit POSIX date and time value in number of nanoseconds
+ * Returns 1 if successful or -1 on error
+ */
+int mount_file_entry_get_inode_change_time(
+     mount_file_entry_t *file_entry,
+     int64_t *posix_time,
+     libcerror_error_t **error )
+{
+	static char *function = "mount_file_entry_get_inode_change_time";
+
+	if( file_entry == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file entry.",
+		 function );
+
+		return( -1 );
+	}
+	if( mount_file_system_get_mounted_timestamp(
+	     file_entry->file_system,
+	     posix_time,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve mounted timestamp.",
+		 function );
+
+		return( -1 );
+	}
 	return( 1 );
 }
 
@@ -610,12 +697,9 @@ int mount_file_entry_get_sub_file_entry_by_index(
      mount_file_entry_t **sub_file_entry,
      libcerror_error_t **error )
 {
-	system_character_t name[ 10 ];
+	system_character_t path[ 32 ];
 
 	static char *function          = "mount_file_entry_get_sub_file_entry_by_index";
-	size_t name_index              = 0;
-	size_t name_size               = 0;
-	int file_entry_index           = 0;
 	int number_of_sub_file_entries = 0;
 
 	if( file_entry == NULL )
@@ -677,41 +761,28 @@ int mount_file_entry_get_sub_file_entry_by_index(
 
 		return( -1 );
 	}
-/* TODO get image name prefix size from mount handle */
-	file_entry_index = sub_file_entry_index + 1;
-	name_size        = 5;
-
-	while( file_entry_index > 0 )
+	if( mount_file_system_get_path_from_image_index(
+	     file_entry->file_system,
+	     sub_file_entry_index,
+	     path,
+	     32,
+	     error ) != 1 )
 	{
-		name_size++;
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve path for file entry: %d.",
+		 function,
+		 sub_file_entry_index );
 
-		file_entry_index /= 10;
+		return( -1 );
 	}
-
-/* TODO get image name prefix from mount handle */
-	name[ 0 ] = 'q';
-	name[ 1 ] = 'c';
-	name[ 2 ] = 'o';
-	name[ 3 ] = 'w';
-
-	file_entry_index = sub_file_entry_index + 1;
-	name_index       = name_size - 1;
-
-	name[ name_index-- ] = 0;
-
-	while( file_entry_index > 0 )
-	{
-		name[ name_index-- ] = '0' + ( file_entry_index % 10 );
-
-		file_entry_index /= 10;
-	}
-
-/* TODO get image from mount handle */
 	if( mount_file_entry_initialize(
 	     sub_file_entry,
 	     file_entry->file_system,
 	     sub_file_entry_index,
-	     name,
+	     &( path[ 1 ] ),
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -722,24 +793,9 @@ int mount_file_entry_get_sub_file_entry_by_index(
 		 function,
 		 sub_file_entry_index );
 
-		goto on_error;
+		return( -1 );
 	}
-/* TODO enable when name is dynamically allocated
-	memory_free(
-	 name );
-*/
-
 	return( 1 );
-
-on_error:
-	if( name != NULL )
-	{
-/* TODO enable when name is dynamically allocated
-		memory_free(
-		 name );
-*/
-	}
-	return( -1 );
 }
 
 /* Reads data at a specific offset

@@ -70,12 +70,17 @@ int mount_file_entry_get_parent_file_entry(
      mount_file_entry_t **parent_file_entry,
      libcerror_error_t **error );
 
-int mount_file_entry_get_modification_time(
+int mount_file_entry_get_creation_time(
      mount_file_entry_t *file_entry,
      int64_t *posix_time,
      libcerror_error_t **error );
 
 int mount_file_entry_get_access_time(
+     mount_file_entry_t *file_entry,
+     int64_t *posix_time,
+     libcerror_error_t **error );
+
+int mount_file_entry_get_modification_time(
      mount_file_entry_t *file_entry,
      int64_t *posix_time,
      libcerror_error_t **error );

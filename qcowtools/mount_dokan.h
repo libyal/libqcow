@@ -43,18 +43,18 @@ int mount_dokan_set_file_information(
      BY_HANDLE_FILE_INFORMATION *file_information,
      size64_t size,
      uint16_t file_mode,
-     int64_t access_time,
-     int64_t inode_change_time,
-     int64_t modification_time,
+     uint64_t creation_time,
+     uint64_t access_time,
+     uint64_t modification_time,
      libcerror_error_t **error );
 
 int mount_dokan_set_find_data(
      WIN32_FIND_DATAW *find_data,
      size64_t size,
      uint16_t file_mode,
-     int64_t access_time,
-     int64_t inode_change_time,
-     int64_t modification_time,
+     uint64_t creation_time,
+     uint64_t access_time,
+     uint64_t modification_time,
      libcerror_error_t **error );
 
 int mount_dokan_filldir(
