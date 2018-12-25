@@ -43,6 +43,7 @@
 #include "mount_fuse.h"
 #include "mount_handle.h"
 #include "qcowtools_getopt.h"
+#include "qcowtools_i18n.h"
 #include "qcowtools_libcerror.h"
 #include "qcowtools_libclocale.h"
 #include "qcowtools_libcnotify.h"
@@ -137,9 +138,11 @@ int main( int argc, char * const argv[] )
 	system_character_t *option_extended_options = NULL;
 	system_character_t *option_keys             = NULL;
 	system_character_t *option_password         = NULL;
+	const system_character_t *path_prefix       = NULL;
 	system_character_t *source                  = NULL;
 	char *program                               = "qcowmount";
 	system_integer_t option                     = 0;
+	size_t path_prefix_size                     = 0;
 	int result                                  = 0;
 	int verbose                                 = 0;
 
@@ -309,22 +312,18 @@ int main( int argc, char * const argv[] )
 			goto on_error;
 		}
 	}
-	if( mount_handle_open(
-	     qcowmount_mount_handle,
-	     source,
-	     &error ) != 1 )
-	{
-		fprintf(
-		 stderr,
-		 "Unable to open source image.\n" );
+#if defined( WINAPI )
+	path_prefix = _SYSTEM_STRING( "\\QCOW" );
+#else
+	path_prefix = _SYSTEM_STRING( "/qcow" );
+#endif
+	path_prefix_size = 1 + system_string_length(
+	                        path_prefix );
 
-		goto on_error;
-	}
-#if defined( HAVE_LIBFUSE ) || defined( HAVE_LIBOSXFUSE )
 	if( mount_handle_set_path_prefix(
 	     qcowmount_mount_handle,
-	     _SYSTEM_STRING( "/qcow" ),
-	     6,
+	     path_prefix,
+	     path_prefix_size,
 	     &error ) != 1 )
 	{
 		fprintf(
@@ -333,6 +332,30 @@ int main( int argc, char * const argv[] )
 
 		goto on_error;
 	}
+	if( mount_handle_open(
+	     qcowmount_mount_handle,
+	     source,
+	     &error ) != 1 )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to open: %" PRIs_SYSTEM "\n",
+		 source );
+
+		goto on_error;
+	}
+	if( mount_handle_is_locked(
+	     qcowmount_mount_handle,
+	     &error ) != 0 )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to unlock: %" PRIs_SYSTEM "\n",
+		 source );
+
+		goto on_error;
+	}
+#if defined( HAVE_LIBFUSE ) || defined( HAVE_LIBOSXFUSE )
 	if( option_extended_options != NULL )
 	{
 		/* This argument is required but ignored
@@ -447,18 +470,6 @@ int main( int argc, char * const argv[] )
 	return( EXIT_SUCCESS );
 
 #elif defined( HAVE_LIBDOKAN )
-	if( mount_handle_set_path_prefix(
-	     qcowmount_mount_handle,
-	     _SYSTEM_STRING( "\\QCOW" ),
-	     6,
-	     &error ) != 1 )
-	{
-		fprintf(
-		 stderr,
-		 "Unable to set path prefix.\n" );
-
-		goto on_error;
-	}
 	if( memory_set(
 	     &qcowmount_dokan_operations,
 	     0,
@@ -481,7 +492,7 @@ int main( int argc, char * const argv[] )
 
 		goto on_error;
 	}
-	qcowmount_dokan_options.Version     = 600;
+	qcowmount_dokan_options.Version     = DOKAN_VERSION;
 	qcowmount_dokan_options.ThreadCount = 0;
 	qcowmount_dokan_options.MountPoint  = mount_point;
 

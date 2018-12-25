@@ -111,6 +111,10 @@ struct libqcow_internal_file
 	 */
 	int abort;
 
+	/* Value to indicate if the file is locked
+	 */
+	uint8_t is_locked;
+
 #if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	/* The read/write lock
 	 */
@@ -166,6 +170,11 @@ int libqcow_file_close(
 int libqcow_internal_file_open_read(
      libqcow_internal_file_t *internal_file,
      libbfio_handle_t *file_io_handle,
+     libcerror_error_t **error );
+
+LIBQCOW_EXTERN \
+int libqcow_file_is_locked(
+     libqcow_file_t *file,
      libcerror_error_t **error );
 
 ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(

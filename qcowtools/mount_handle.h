@@ -53,11 +53,11 @@ struct mount_handle
 
 	/* The key data
 	 */
-	uint8_t key_data[ 16 ];
+	uint8_t key_data[ 64 ];
 
-	/* Value to indicate the key data is set
+	/* The key size
 	 */
-	uint8_t key_data_is_set;
+	uint8_t key_size;
 
 	/* The password
 	 */
@@ -66,6 +66,10 @@ struct mount_handle
 	/* The password length
 	 */
 	size_t password_length;
+
+	/* Value to indicate the mount handle is locked
+	 */
+	int is_locked;
 
 	/* The notification output stream
 	 */
@@ -84,6 +88,12 @@ int mount_handle_signal_abort(
      mount_handle_t *mount_handle,
      libcerror_error_t **error );
 
+int mount_handle_set_basename(
+     mount_handle_t *mount_handle,
+     const system_character_t *basename,
+     size_t basename_size,
+     libcerror_error_t **error );
+
 int mount_handle_set_keys(
      mount_handle_t *mount_handle,
      const system_character_t *string,
@@ -92,6 +102,12 @@ int mount_handle_set_keys(
 int mount_handle_set_password(
      mount_handle_t *mount_handle,
      const system_character_t *string,
+     libcerror_error_t **error );
+
+int mount_handle_set_path_prefix(
+     mount_handle_t *mount_handle,
+     const system_character_t *path_prefix,
+     size_t path_prefix_size,
      libcerror_error_t **error );
 
 int mount_handle_open(
@@ -103,16 +119,8 @@ int mount_handle_close(
      mount_handle_t *mount_handle,
      libcerror_error_t **error );
 
-int mount_handle_set_basename(
+int mount_handle_is_locked(
      mount_handle_t *mount_handle,
-     const system_character_t *basename,
-     size_t basename_size,
-     libcerror_error_t **error );
-
-int mount_handle_set_path_prefix(
-     mount_handle_t *mount_handle,
-     const system_character_t *path_prefix,
-     size_t path_prefix_size,
      libcerror_error_t **error );
 
 int mount_handle_get_file_entry_by_path(

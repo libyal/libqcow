@@ -272,6 +272,14 @@ int libqcow_file_close(
      libqcow_file_t *file,
      libqcow_error_t **error );
 
+/* Determines if the file is locked
+ * Returns 1 if locked, 0 if not or -1 on error
+ */
+LIBQCOW_EXTERN \
+int libqcow_file_is_locked(
+     libqcow_file_t *file,
+     libqcow_error_t **error );
+
 /* Reads (media) data at the current offset
  * Returns the number of bytes read or -1 on error
  */

@@ -51,7 +51,7 @@ extern mount_handle_t *qcowmount_mount_handle;
 #endif /* ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 ) */
 
 /* Sets the values in a file information structure
- * The time values contain a unsigned 64-bit FILETIME timestamp
+ * The time values contain an unsigned 64-bit FILETIME timestamp
  * Returns 1 if successful or -1 on error
  */
 int mount_dokan_set_file_information(
@@ -102,7 +102,7 @@ int mount_dokan_set_file_information(
 }
 
 /* Sets the values in a find data structure
- * The time values contain a unsigned 64-bit FILETIME timestamp
+ * The time values contain an unsigned 64-bit FILETIME timestamp
  * Returns 1 if successful or -1 on error
  */
 int mount_dokan_set_find_data(
@@ -164,12 +164,12 @@ int mount_dokan_filldir(
      mount_file_entry_t *file_entry,
      libcerror_error_t **error )
 {
-	static char *function     = "mount_dokan_filldir";
-	size64_t file_size        = 0;
-	int64_t access_time       = 0;
-	int64_t creation_time     = 0;
-	int64_t modification_time = 0;
-	uint16_t file_mode        = 0;
+	static char *function      = "mount_dokan_filldir";
+	size64_t file_size         = 0;
+	uint64_t access_time       = 0;
+	uint64_t creation_time     = 0;
+	uint64_t modification_time = 0;
+	uint16_t file_mode         = 0;
 
 	if( fill_find_data == NULL )
 	{
@@ -248,11 +248,6 @@ int mount_dokan_filldir(
 
 			return( -1 );
 		}
-		if( creation_time != 0 )
-		{
-			creation_time /= 100;
-			creation_time += 116444736000000000L;
-		}
 		if( mount_file_entry_get_access_time(
 		     file_entry,
 		     &access_time,
@@ -267,11 +262,6 @@ int mount_dokan_filldir(
 
 			return( -1 );
 		}
-		if( access_time != 0 )
-		{
-			access_time /= 100;
-			access_time += 116444736000000000L;
-		}
 		if( mount_file_entry_get_modification_time(
 		     file_entry,
 		     &modification_time,
@@ -285,11 +275,6 @@ int mount_dokan_filldir(
 			 function );
 
 			return( -1 );
-		}
-		if( modification_time != 0 )
-		{
-			modification_time /= 100;
-			modification_time += 116444736000000000L;
 		}
 	}
 	if( memory_set(
@@ -1286,9 +1271,9 @@ NTSTATUS __stdcall mount_dokan_GetFileInformation(
 	mount_file_entry_t *file_entry = NULL;
 	static char *function          = "mount_dokan_GetFileInformation";
 	size64_t file_size             = 0;
-	int64_t access_time            = 0;
-	int64_t creation_time          = 0;
-	int64_t modification_time      = 0;
+	uint64_t access_time           = 0;
+	uint64_t creation_time         = 0;
+	uint64_t modification_time     = 0;
 	uint16_t file_mode             = 0;
 	int result                     = 0;
 
@@ -1384,11 +1369,6 @@ NTSTATUS __stdcall mount_dokan_GetFileInformation(
 
 			goto on_error;
 		}
-		if( creation_time != 0 )
-		{
-			creation_time /= 100;
-			creation_time += 116444736000000000L;
-		}
 		if( mount_file_entry_get_access_time(
 		     file_entry,
 		     &access_time,
@@ -1405,11 +1385,6 @@ NTSTATUS __stdcall mount_dokan_GetFileInformation(
 
 			goto on_error;
 		}
-		if( access_time != 0 )
-		{
-			access_time /= 100;
-			access_time += 116444736000000000L;
-		}
 		if( mount_file_entry_get_modification_time(
 		     file_entry,
 		     &modification_time,
@@ -1425,11 +1400,6 @@ NTSTATUS __stdcall mount_dokan_GetFileInformation(
 			result = MOUNT_DOKAN_ERROR_GENERIC_FAILURE;
 
 			goto on_error;
-		}
-		if( modification_time != 0 )
-		{
-			modification_time /= 100;
-			modification_time += 116444736000000000L;
 		}
 	}
 	if( mount_dokan_set_file_information(
@@ -1512,7 +1482,9 @@ NTSTATUS __stdcall mount_dokan_GetVolumeInformation(
 #endif
 {
 	libcerror_error_t *error = NULL;
+	const wchar_t *name      = NULL;
 	static char *function    = "mount_dokan_GetVolumeInformation";
+	size_t name_size         = 0;
 	int result               = 0;
 
 	QCOWTOOLS_UNREFERENCED_PARAMETER( file_info )
@@ -1526,15 +1498,19 @@ NTSTATUS __stdcall mount_dokan_GetVolumeInformation(
 		 volume_name );
 	}
 #endif
+	name      = L"QCOW";
+	name_size = 1 + wide_string_length(
+	                 name );
+
 	if( ( volume_name != NULL )
-	 && ( volume_name_size > (DWORD) ( sizeof( wchar_t ) * 5 ) ) )
+	 && ( volume_name_size > (DWORD) name_size ) )
 	{
 		/* Using wcsncpy seems to cause strange behavior here
 		 */
 		if( memory_copy(
 		     volume_name,
-		     L"QCOW",
-		     sizeof( wchar_t ) * 5 ) == NULL )
+		     name,
+		     name_size * sizeof( wchar_t ) ) == NULL )
 		{
 			libcerror_error_set(
 			 &error,
@@ -1565,15 +1541,19 @@ NTSTATUS __stdcall mount_dokan_GetVolumeInformation(
 		                   | FILE_UNICODE_ON_DISK
 		                   | FILE_READ_ONLY_VOLUME;
 	}
+	name      = L"Dokan";
+	name_size = 1 + wide_string_length(
+	                 name );
+
 	if( ( file_system_name != NULL )
-	 && ( file_system_name_size > (DWORD) ( sizeof( wchar_t ) * 6 ) ) )
+	 && ( file_system_name_size > (DWORD) name_size ) )
 	{
 		/* Using wcsncpy seems to cause strange behavior here
 		 */
 		if( memory_copy(
 		     file_system_name,
-		     L"Dokan",
-		     sizeof( wchar_t ) * 6 ) == NULL )
+		     name,
+		     name_size * sizeof( wchar_t ) ) == NULL )
 		{
 			libcerror_error_set(
 			 &error,
@@ -1602,7 +1582,7 @@ on_error:
 
 #if ( DOKAN_VERSION >= 600 ) && ( DOKAN_VERSION < 800 )
 
-/* Unmount the image
+/* Unmounts the volume
  * Returns 0 if successful or an error code otherwise
  */
 int __stdcall mount_dokan_Unmount(

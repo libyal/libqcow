@@ -1,4 +1,4 @@
-.Dd October 22, 2016
+.Dd December 25, 2018
 .Dt libqcow 3
 .Os libqcow
 .Sh NAME
@@ -66,6 +66,8 @@ File functions
 .Fn libqcow_file_open "libqcow_file_t *file, const char *filename, int access_flags, libqcow_error_t **error"
 .Ft int
 .Fn libqcow_file_close "libqcow_file_t *file, libqcow_error_t **error"
+.Ft int
+.Fn libqcow_file_is_locked "libqcow_file_t *file, libqcow_error_t **error"
 .Ft ssize_t
 .Fn libqcow_file_read_buffer "libqcow_file_t *file, void *buffer, size_t buffer_size, libqcow_error_t **error"
 .Ft ssize_t

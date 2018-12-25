@@ -147,6 +147,8 @@ int libqcow_file_initialize(
 		goto on_error;
 	}
 #endif
+	internal_file->is_locked = 1;
+
 	*file = (libqcow_file_t *) internal_file;
 
 	return( 1 );
@@ -898,6 +900,8 @@ int libqcow_file_close(
 		internal_file->file_io_handle_created_in_library = 0;
 	}
 	internal_file->file_io_handle = NULL;
+	internal_file->current_offset = 0;
+	internal_file->is_locked      = 1;
 
 	if( libqcow_io_handle_clear(
 	     internal_file->io_handle,
@@ -1367,6 +1371,8 @@ int libqcow_internal_file_open_read(
 
 		goto on_error;
 	}
+	internal_file->is_locked = 0;
+
 	return( 1 );
 
 on_error:
@@ -1401,6 +1407,65 @@ on_error:
 		 NULL );
 	}
 	return( -1 );
+}
+
+/* Determines if the file is locked
+ * Returns 1 if locked, 0 if not or -1 on error
+ */
+int libqcow_file_is_locked(
+     libqcow_file_t *file,
+     libcerror_error_t **error )
+{
+	libqcow_internal_file_t *internal_file = NULL;
+	static char *function                  = "libqcow_file_is_locked";
+	uint8_t is_locked                      = 0;
+
+	if( file == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file.",
+		 function );
+
+		return( -1 );
+	}
+	internal_file = (libqcow_internal_file_t *) file;
+
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_read(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	is_locked = internal_file->is_locked;
+
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_read(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	return( is_locked );
 }
 
 /* Reads (media) data from the current offset into a buffer using a Basic File IO (bfio) handle
