@@ -145,7 +145,6 @@ int main( int argc, char * const argv[] )
 	size_t path_prefix_size                     = 0;
 	int result                                  = 0;
 	int verbose                                 = 0;
-
 #if defined( HAVE_LIBFUSE ) || defined( HAVE_LIBOSXFUSE )
 	struct fuse_operations qcowmount_fuse_operations;
 
@@ -339,8 +338,7 @@ int main( int argc, char * const argv[] )
 	{
 		fprintf(
 		 stderr,
-		 "Unable to open: %" PRIs_SYSTEM "\n",
-		 source );
+		 "Unable to open source image\n" );
 
 		goto on_error;
 	}
@@ -350,8 +348,7 @@ int main( int argc, char * const argv[] )
 	{
 		fprintf(
 		 stderr,
-		 "Unable to unlock: %" PRIs_SYSTEM "\n",
-		 source );
+		 "Unable to unlock source image\n" );
 
 		goto on_error;
 	}
