@@ -1,5 +1,5 @@
 /*
- * The internal unused definition
+ * Definitions to silence compiler warnings about unused function attributes/parameters.
  *
  * Copyright (C) 2010-2018, Joachim Metz <joachim.metz@gmail.com>
  *
@@ -19,8 +19,8 @@
  * along with this software.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !defined( _PYQCOW_INTERNAL_UNUSED_H )
-#define _PYQCOW_INTERNAL_UNUSED_H
+#if !defined( _PYQCOW_UNUSED_H )
+#define _PYQCOW_UNUSED_H
 
 #include <common.h>
 
@@ -40,5 +40,5 @@
 	/* parameter */
 #endif
 
-#endif /* !defined( _PYQCOW_INTERNAL_UNUSED_H ) */
+#endif /* !defined( _PYQCOW_UNUSED_H ) */
 
