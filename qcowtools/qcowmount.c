@@ -1,7 +1,7 @@
 /*
  * Mounts a QEMU Copy-On-Write (QCOW) image file
  *
- * Copyright (C) 2010-2018, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2010-2019, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
@@ -73,7 +73,7 @@ void usage_fprint(
 	fprintf( stream, "\tmount_point: the directory to serve as mount point\n\n" );
 
 	fprintf( stream, "\t-h:          shows this help\n" );
-	fprintf( stream, "\t-k:          the key formatted in base16\n" );
+	fprintf( stream, "\t-k:          specify the key formatted in base16\n" );
 	fprintf( stream, "\t-p:          specify the password/passphrase\n" );
 	fprintf( stream, "\t-v:          verbose output to stderr, while qcowmount will remain running in the\n"
 	                 "\t             foreground\n" );
@@ -145,6 +145,7 @@ int main( int argc, char * const argv[] )
 	size_t path_prefix_size                     = 0;
 	int result                                  = 0;
 	int verbose                                 = 0;
+
 #if defined( HAVE_LIBFUSE ) || defined( HAVE_LIBOSXFUSE )
 	struct fuse_operations qcowmount_fuse_operations;
 
@@ -164,7 +165,7 @@ int main( int argc, char * const argv[] )
 	 1 );
 
 	if( libclocale_initialize(
-             "qcowtools",
+	     "qcowtools",
 	     &error ) != 1 )
 	{
 		fprintf(
@@ -174,8 +175,8 @@ int main( int argc, char * const argv[] )
 		goto on_error;
 	}
 	if( qcowtools_output_initialize(
-             _IONBF,
-             &error ) != 1 )
+	     _IONBF,
+	     &error ) != 1 )
 	{
 		fprintf(
 		 stderr,
@@ -426,7 +427,7 @@ int main( int argc, char * const argv[] )
 	                         &qcowmount_fuse_operations,
 	                         sizeof( struct fuse_operations ),
 	                         qcowmount_mount_handle );
-	
+
 	if( qcowmount_fuse_handle == NULL )
 	{
 		fprintf(
@@ -622,7 +623,8 @@ int main( int argc, char * const argv[] )
 	 "No sub system to mount QCOW format.\n" );
 
 	return( EXIT_FAILURE );
-#endif
+
+#endif /* defined( HAVE_LIBFUSE ) || defined( HAVE_LIBOSXFUSE ) */
 
 on_error:
 	if( error != NULL )

@@ -2,7 +2,7 @@ AC_PREREQ( 2.59 )
 
 AC_INIT(
  [libqcow],
- [20181230],
+ [20190105],
  [joachim.metz@gmail.com])
 
 AC_CONFIG_SRCDIR(
@@ -247,7 +247,7 @@ Building:
    libfdata support:                          $ac_cv_libfdata
    DEFLATE compression support:               $ac_cv_inflate
    libcaes support:                           $ac_cv_libcaes
-   AES support:                               $ac_cv_libcaes_aes
+   AES-CBC support:                           $ac_cv_libcaes_aes_cbc
    FUSE support:                              $ac_cv_libfuse
 
 Features:

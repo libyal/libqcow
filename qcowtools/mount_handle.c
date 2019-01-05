@@ -1,7 +1,7 @@
 /*
  * Mount handle
  *
- * Copyright (C) 2010-2018, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2010-2019, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
@@ -30,6 +30,7 @@
 #include "mount_file_system.h"
 #include "mount_handle.h"
 #include "qcowtools_libcerror.h"
+#include "qcowtools_libcpath.h"
 #include "qcowtools_libqcow.h"
 #include "qcowtools_libuna.h"
 
@@ -391,7 +392,7 @@ int mount_handle_set_path_prefix(
 	return( 1 );
 }
 
-/* Opens a mount handle
+/* Opens the mount handle
  * Returns 1 if successful, 0 if not or -1 on error
  */
 int mount_handle_open(
@@ -399,9 +400,9 @@ int mount_handle_open(
      const system_character_t *filename,
      libcerror_error_t **error )
 {
-	libqcow_file_t *file  = NULL;
-	static char *function = "mount_handle_open";
-	int result            = 0;
+	libqcow_file_t *qcow_file = NULL;
+	static char *function     = "mount_handle_open";
+	int result                = 0;
 
 	if( mount_handle == NULL )
 	{
@@ -426,7 +427,7 @@ int mount_handle_open(
 		return( -1 );
 	}
 	if( libqcow_file_initialize(
-	     &file,
+	     &qcow_file,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -441,7 +442,7 @@ int mount_handle_open(
 	if( mount_handle->key_size > 0 )
 	{
 		if( libqcow_file_set_keys(
-		     file,
+		     qcow_file,
 		     mount_handle->key_data,
 		     mount_handle->key_size,
 		     error ) != 1 )
@@ -460,13 +461,13 @@ int mount_handle_open(
 	{
 #if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 		if( libqcow_file_set_utf16_password(
-		     file,
+		     qcow_file,
 		     (uint16_t *) mount_handle->password,
 		     mount_handle->password_length,
 		     error ) != 1 )
 #else
 		if( libqcow_file_set_utf8_password(
-		     file,
+		     qcow_file,
 		     (uint8_t *) mount_handle->password,
 		     mount_handle->password_length,
 		     error ) != 1 )
@@ -484,13 +485,13 @@ int mount_handle_open(
 	}
 #if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 	result = libqcow_file_open_wide(
-	          file,
+	          qcow_file,
 	          filename,
 	          LIBQCOW_OPEN_READ,
 	          error );
 #else
 	result = libqcow_file_open(
-	          file,
+	          qcow_file,
 	          filename,
 	          LIBQCOW_OPEN_READ,
 	          error );
@@ -507,7 +508,7 @@ int mount_handle_open(
 		goto on_error;
 	}
 	result = libqcow_file_is_locked(
-	          file,
+	          qcow_file,
 	          error );
 
 	if( result == -1 )
@@ -525,7 +526,7 @@ int mount_handle_open(
 
 	if( mount_file_system_append_file(
 	     mount_handle->file_system,
-	     file,
+	     qcow_file,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -540,10 +541,10 @@ int mount_handle_open(
 	return( 1 );
 
 on_error:
-	if( file != NULL )
+	if( qcow_file != NULL )
 	{
 		libqcow_file_free(
-		 &file,
+		 &qcow_file,
 		 NULL );
 	}
 	return( -1 );
@@ -556,10 +557,10 @@ int mount_handle_close(
      mount_handle_t *mount_handle,
      libcerror_error_t **error )
 {
-	libqcow_file_t *file  = NULL;
-	static char *function = "mount_handle_close";
-	int file_index        = 0;
-	int number_of_files   = 0;
+	libqcow_file_t *qcow_file = NULL;
+	static char *function     = "mount_handle_close";
+	int file_index            = 0;
+	int number_of_files       = 0;
 
 	if( mount_handle == NULL )
 	{
@@ -584,7 +585,7 @@ int mount_handle_close(
 		 "%s: unable to retrieve number of files.",
 		 function );
 
-		return( -1 );
+		goto on_error;
 	}
 	for( file_index = number_of_files - 1;
 	     file_index > 0;
@@ -593,7 +594,7 @@ int mount_handle_close(
 		if( mount_file_system_get_file_by_index(
 		     mount_handle->file_system,
 		     file_index,
-		     &file,
+		     &qcow_file,
 		     error ) != 1 )
 		{
 			libcerror_error_set(
@@ -604,10 +605,12 @@ int mount_handle_close(
 			 function,
 			 file_index );
 
-			return( -1 );
+			goto on_error;
 		}
+/* TODO remove qcow_file from file system */
+
 		if( libqcow_file_close(
-		     file,
+		     qcow_file,
 		     error ) != 0 )
 		{
 			libcerror_error_set(
@@ -618,10 +621,10 @@ int mount_handle_close(
 			 function,
 			 file_index );
 
-			return( -1 );
+			goto on_error;
 		}
 		if( libqcow_file_free(
-		     &file,
+		     &qcow_file,
 		     error ) != 1 )
 		{
 			libcerror_error_set(
@@ -632,10 +635,19 @@ int mount_handle_close(
 			 function,
 			 file_index );
 
-			return( -1 );
+			goto on_error;
 		}
 	}
 	return( 0 );
+
+on_error:
+	if( qcow_file != NULL )
+	{
+		libqcow_file_free(
+		 &qcow_file,
+		 NULL );
+	}
+	return( -1 );
 }
 
 /* Determine if the mount handle is locked
@@ -670,9 +682,11 @@ int mount_handle_get_file_entry_by_path(
      mount_file_entry_t **file_entry,
      libcerror_error_t **error )
 {
-	libqcow_file_t *file               = NULL;
+	libqcow_file_t *qcow_file          = NULL;
 	const system_character_t *filename = NULL;
 	static char *function              = "mount_handle_get_file_entry_by_path";
+	size_t filename_length             = 0;
+	size_t path_index                  = 0;
 	size_t path_length                 = 0;
 	int result                         = 0;
 
@@ -710,13 +724,40 @@ int mount_handle_get_file_entry_by_path(
 		 "%s: invalid path length value out of bounds.",
 		 function );
 
-		return( -1 );
+		goto on_error;
+	}
+	if( ( path_length >= 2 )
+	 && ( path[ path_length - 1 ] == LIBCPATH_SEPARATOR ) )
+	{
+		path_length--;
+	}
+	path_index = path_length;
+
+	while( path_index > 0 )
+	{
+		if( path[ path_index ] == LIBCPATH_SEPARATOR )
+		{
+			break;
+		}
+		path_index--;
+	}
+	/* Ignore the name of the root item
+	 */
+	if( path_length == 0 )
+	{
+		filename        = _SYSTEM_STRING( "" );
+		filename_length = 0;
+	}
+	else
+	{
+		filename        = &( path[ path_index + 1 ] );
+		filename_length = path_length - ( path_index + 1 );
 	}
 	result = mount_file_system_get_file_by_path(
 	          mount_handle->file_system,
 	          path,
 	          path_length,
-	          &file,
+	          &qcow_file,
 	          error );
 
 	if( result == -1 )
@@ -728,35 +769,31 @@ int mount_handle_get_file_entry_by_path(
 		 "%s: unable to retrieve file.",
 		 function );
 
-		return( -1 );
+		goto on_error;
 	}
 	else if( result != 0 )
 	{
-		if( file == NULL )
-		{
-			filename = "";
-		}
-		else
-		{
-			filename = &( path[ 0 ] );
-		}
 		if( mount_file_entry_initialize(
 		     file_entry,
 		     mount_handle->file_system,
 		     filename,
-		     file,
+		     filename_length,
+		     qcow_file,
 		     error ) != 1 )
 		{
 			libcerror_error_set(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 			 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-			 "%s: unable to initialize file entry for file.",
+			 "%s: unable to initialize file entry.",
 			 function );
 
-			return( -1 );
+			goto on_error;
 		}
 	}
 	return( result );
+
+on_error:
+	return( -1 );
 }
 

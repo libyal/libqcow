@@ -13,6 +13,14 @@ BuildRequires: gcc @ax_libbfio_spec_build_requires@ @ax_libcaes_spec_build_requi
 %description -n libqcow
 Library to access the QEMU Copy-On-Write (QCOW) image format
 
+%package -n libqcow-static
+Summary: Library to access the QEMU Copy-On-Write (QCOW) image format
+Group: Development/Libraries
+Requires: libqcow = %{version}-%{release}
+
+%description -n libqcow-static
+Static library version of libqcow.
+
 %package -n libqcow-devel
 Summary: Header files and libraries for developing applications for libqcow
 Group: Development/Libraries
@@ -74,11 +82,16 @@ rm -rf %{buildroot}
 %doc AUTHORS README
 %attr(755,root,root) %{_libdir}/*.so.*
 
+%files -n libqcow-static
+%defattr(644,root,root,755)
+%license COPYING
+%doc AUTHORS README
+%attr(755,root,root) %{_libdir}/*.a
+
 %files -n libqcow-devel
 %defattr(644,root,root,755)
 %license COPYING
 %doc AUTHORS README
-%{_libdir}/*.a
 %{_libdir}/*.la
 %{_libdir}/*.so
 %{_libdir}/pkgconfig/libqcow.pc
