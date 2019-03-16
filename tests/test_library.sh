@@ -7,7 +7,7 @@ EXIT_SUCCESS=0;
 EXIT_FAILURE=1;
 EXIT_IGNORE=77;
 
-LIBRARY_TESTS="cluster_block cluster_table error io_handle notify";
+LIBRARY_TESTS="cluster_block cluster_table deflate error io_handle notify";
 LIBRARY_TESTS_WITH_INPUT="file support";
 OPTION_SETS="";
 

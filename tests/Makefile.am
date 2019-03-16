@@ -26,7 +26,6 @@ endif
 
 TESTS = \
 	test_library.sh \
-	test_manpage.sh \
 	test_qcowinfo.sh \
 	$(TESTS_PYQCOW)
 
@@ -46,6 +45,7 @@ EXTRA_DIST = \
 check_PROGRAMS = \
 	qcow_test_cluster_block \
 	qcow_test_cluster_table \
+	qcow_test_deflate \
 	qcow_test_error \
 	qcow_test_file \
 	qcow_test_io_handle \
@@ -73,6 +73,19 @@ qcow_test_cluster_table_SOURCES = \
 	qcow_test_unused.h
 
 qcow_test_cluster_table_LDADD = \
+	../libqcow/libqcow.la \
+	@LIBCERROR_LIBADD@
+
+qcow_test_deflate_SOURCES = \
+	qcow_test_deflate.c \
+	qcow_test_libcerror.h \
+	qcow_test_libcnotify.h \
+	qcow_test_libqcow.h \
+	qcow_test_macros.h \
+	qcow_test_unused.h
+
+qcow_test_deflate_LDADD = \
+	@LIBCNOTIFY_LIBADD@ \
 	../libqcow/libqcow.la \
 	@LIBCERROR_LIBADD@
 

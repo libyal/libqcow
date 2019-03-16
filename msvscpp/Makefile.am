@@ -16,6 +16,7 @@ MSVSCPP_FILES = \
 	pyqcow/pyqcow.vcproj \
 	qcow_test_cluster_block/qcow_test_cluster_block.vcproj \
 	qcow_test_cluster_table/qcow_test_cluster_table.vcproj \
+	qcow_test_deflate/qcow_test_deflate.vcproj \
 	qcow_test_error/qcow_test_error.vcproj \
 	qcow_test_file/qcow_test_file.vcproj \
 	qcow_test_io_handle/qcow_test_io_handle.vcproj \

@@ -6,7 +6,7 @@ $ExitSuccess = 0
 $ExitFailure = 1
 $ExitIgnore = 77
 
-$LibraryTests = "cluster_block cluster_table error io_handle notify"
+$LibraryTests = "cluster_block cluster_table deflate error io_handle notify"
 $LibraryTestsWithInput = "file support"
 
 $InputGlob = "*"
