@@ -74,7 +74,7 @@ struct libqcow_deflate_huffman_table
 	 */
 	uint8_t maximum_number_of_bits;
 
-/* TODO create initialize and set size? */
+/* TODO create initialize function that sets the size of codes array? */
 	/* The codes array
 	 */
 	int codes_array[ 288 ];
@@ -126,7 +126,35 @@ int libqcow_deflate_decode_huffman(
      size_t *uncompressed_data_offset,
      libcerror_error_t **error );
 
+int libqcow_deflate_calculate_adler32(
+     uint32_t *checksum_value,
+     const uint8_t *buffer,
+     size_t size,
+     uint32_t initial_value,
+     libcerror_error_t **error );
+
+int libqcow_deflate_read_data_header(
+     const uint8_t *compressed_data,
+     size_t compressed_data_size,
+     size_t *compressed_data_offset,
+     libcerror_error_t **error );
+
+int libqcow_deflate_read_block(
+     libqcow_deflate_bit_stream_t *bit_stream,
+     uint8_t *uncompressed_data,
+     size_t uncompressed_data_size,
+     size_t *uncompressed_data_offset,
+     uint8_t *last_block_flag,
+     libcerror_error_t **error );
+
 int libqcow_deflate_decompress(
+     const uint8_t *compressed_data,
+     size_t compressed_data_size,
+     uint8_t *uncompressed_data,
+     size_t *uncompressed_data_size,
+     libcerror_error_t **error );
+
+int libqcow_deflate_decompress_zlib(
      const uint8_t *compressed_data,
      size_t compressed_data_size,
      uint8_t *uncompressed_data,

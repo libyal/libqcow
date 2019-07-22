@@ -933,6 +933,11 @@ int qcow_test_deflate_bit_stream_get_value(
 	return( 1 );
 
 on_error:
+	if( error != NULL )
+	{
+		libcerror_error_free(
+		 &error );
+	}
 	return( 0 );
 }
 
@@ -1097,6 +1102,11 @@ int qcow_test_deflate_huffman_table_construct(
 	return( 1 );
 
 on_error:
+	if( error != NULL )
+	{
+		libcerror_error_free(
+		 &error );
+	}
 	return( 0 );
 }
 
@@ -1244,6 +1254,11 @@ int qcow_test_deflate_bit_stream_get_huffman_encoded_value(
 	return( 1 );
 
 on_error:
+	if( error != NULL )
+	{
+		libcerror_error_free(
+		 &error );
+	}
 	return( 0 );
 }
 
@@ -1364,6 +1379,11 @@ int qcow_test_deflate_initialize_dynamic_huffman_tables(
 	return( 1 );
 
 on_error:
+	if( error != NULL )
+	{
+		libcerror_error_free(
+		 &error );
+	}
 	return( 0 );
 }
 
@@ -1475,6 +1495,11 @@ int qcow_test_deflate_initialize_fixed_huffman_tables(
 	return( 1 );
 
 on_error:
+	if( error != NULL )
+	{
+		libcerror_error_free(
+		 &error );
+	}
 	return( 0 );
 }
 
@@ -1628,6 +1653,401 @@ int qcow_test_deflate_decode_huffman(
 	return( 1 );
 
 on_error:
+	if( error != NULL )
+	{
+		libcerror_error_free(
+		 &error );
+	}
+	return( 0 );
+}
+
+/* Tests the libqcow_deflate_calculate_adler32 function
+ * Returns 1 if successful or 0 if not
+ */
+int qcow_test_deflate_calculate_adler32(
+     void )
+{
+	libcerror_error_t *error = NULL;
+	uint32_t checksum        = 0;
+	int result               = 0;
+
+	/* Test regular cases
+	 */
+	result = libqcow_deflate_calculate_adler32(
+	          &checksum,
+	          qcow_test_deflate_uncompressed_byte_stream,
+	          7640,
+	          1,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 1 );
+
+	QCOW_TEST_ASSERT_EQUAL_UINT32(
+	 "checksum",
+	 checksum,
+	 (uint32_t) 0x304a56a4UL );
+
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
+
+	/* Test error cases
+	 */
+	result = libqcow_deflate_calculate_adler32(
+	          NULL,
+	          qcow_test_deflate_uncompressed_byte_stream,
+	          7640,
+	          1,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	result = libqcow_deflate_calculate_adler32(
+	          &checksum,
+	          NULL,
+	          7640,
+	          1,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	result = libqcow_deflate_calculate_adler32(
+	          &checksum,
+	          qcow_test_deflate_uncompressed_byte_stream,
+	          (size_t) SSIZE_MAX + 1,
+	          1,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	return( 1 );
+
+on_error:
+	if( error != NULL )
+	{
+		libcerror_error_free(
+		 &error );
+	}
+	return( 0 );
+}
+
+/* Tests the libqcow_deflate_read_data_header function
+ * Returns 1 if successful or 0 if not
+ */
+int qcow_test_deflate_read_data_header(
+     void )
+{
+	libcerror_error_t *error        = NULL;
+	size_t uncompressed_data_offset = 0;
+	int result                      = 0;
+
+	/* Test regular cases
+	 */
+	uncompressed_data_offset = 0;
+
+	result = libqcow_deflate_read_data_header(
+	          qcow_test_deflate_compressed_byte_stream,
+	          2627,
+	          &uncompressed_data_offset,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 1 );
+
+	QCOW_TEST_ASSERT_EQUAL_SIZE(
+	 "uncompressed_data_offset",
+	 uncompressed_data_offset,
+	 (size_t) 2 );
+
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
+
+	/* Test error cases
+	 */
+	uncompressed_data_offset = 0;
+
+	result = libqcow_deflate_read_data_header(
+	          NULL,
+	          2627,
+	          &uncompressed_data_offset,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	result = libqcow_deflate_read_data_header(
+	          qcow_test_deflate_compressed_byte_stream,
+	          (size_t) SSIZE_MAX + 1,
+	          &uncompressed_data_offset,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	result = libqcow_deflate_read_data_header(
+	          qcow_test_deflate_compressed_byte_stream,
+	          2627,
+	          NULL,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	result = libqcow_deflate_read_data_header(
+	          qcow_test_deflate_compressed_byte_stream,
+	          1,
+	          &uncompressed_data_offset,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+/* TODO test compression_method != 8 */
+/* TODO test compression_window_size > 32768 */
+
+	return( 1 );
+
+on_error:
+	if( error != NULL )
+	{
+		libcerror_error_free(
+		 &error );
+	}
+	return( 0 );
+}
+
+/* Tests the libqcow_deflate_read_block function
+ * Returns 1 if successful or 0 if not
+ */
+int qcow_test_deflate_read_block(
+     void )
+{
+	uint8_t uncompressed_data[ 8192 ];
+
+	libqcow_deflate_bit_stream_t bit_stream;
+
+	libcerror_error_t *error        = NULL;
+	size_t uncompressed_data_offset = 0;
+	size_t uncompressed_data_size   = 7640;
+	uint8_t last_block_flag         = 0;
+	int result                      = 0;
+
+	/* Initialize test
+	 */
+        bit_stream.byte_stream        = qcow_test_deflate_compressed_byte_stream;
+        bit_stream.byte_stream_size   = 2627;
+        bit_stream.byte_stream_offset = 2;
+        bit_stream.bit_buffer         = 0;
+        bit_stream.bit_buffer_size    = 0;
+
+	/* Test regular cases
+	 */
+	result = libqcow_deflate_read_block(
+	          &bit_stream,
+	          uncompressed_data,
+	          uncompressed_data_size,
+	          &uncompressed_data_offset,
+	          &last_block_flag,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 1 );
+
+	QCOW_TEST_ASSERT_EQUAL_SIZE(
+	 "uncompressed_data_size",
+	 uncompressed_data_size,
+	 (size_t) 7640 );
+
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
+
+/* TODO: test uncompressed data too small */
+
+	/* Test error cases
+	 */
+	result = libqcow_deflate_read_block(
+	          NULL,
+	          uncompressed_data,
+	          uncompressed_data_size,
+	          &uncompressed_data_offset,
+	          &last_block_flag,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	result = libqcow_deflate_read_block(
+	          &bit_stream,
+	          NULL,
+	          uncompressed_data_size,
+	          &uncompressed_data_offset,
+	          &last_block_flag,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	result = libqcow_deflate_read_block(
+	          &bit_stream,
+	          uncompressed_data,
+	          (size_t) SSIZE_MAX + 1,
+	          &uncompressed_data_offset,
+	          &last_block_flag,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	result = libqcow_deflate_read_block(
+	          &bit_stream,
+	          uncompressed_data,
+	          uncompressed_data_size,
+	          NULL,
+	          &last_block_flag,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	result = libqcow_deflate_read_block(
+	          &bit_stream,
+	          uncompressed_data,
+	          uncompressed_data_size,
+	          &uncompressed_data_offset,
+	          NULL,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	return( 1 );
+
+on_error:
+	if( error != NULL )
+	{
+		libcerror_error_free(
+		 &error );
+	}
 	return( 0 );
 }
 
@@ -1749,6 +2169,137 @@ int qcow_test_deflate_decompress(
 	return( 1 );
 
 on_error:
+	if( error != NULL )
+	{
+		libcerror_error_free(
+		 &error );
+	}
+	return( 0 );
+}
+
+/* Tests the libqcow_deflate_decompress_zlib function
+ * Returns 1 if successful or 0 if not
+ */
+int qcow_test_deflate_decompress_zlib(
+     void )
+{
+	uint8_t uncompressed_data[ 8192 ];
+
+	libcerror_error_t *error      = NULL;
+	size_t uncompressed_data_size = 7640;
+	int result                    = 0;
+
+	/* Test regular cases
+	 */
+	result = libqcow_deflate_decompress_zlib(
+	          qcow_test_deflate_compressed_byte_stream,
+	          2627,
+	          uncompressed_data,
+	          &uncompressed_data_size,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 1 );
+
+	QCOW_TEST_ASSERT_EQUAL_SIZE(
+	 "uncompressed_data_size",
+	 uncompressed_data_size,
+	 (size_t) 7640 );
+
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
+
+/* TODO: test uncompressed data too small */
+
+	/* Test error cases
+	 */
+	result = libqcow_deflate_decompress_zlib(
+	          NULL,
+	          2627,
+	          uncompressed_data,
+	          &uncompressed_data_size,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	result = libqcow_deflate_decompress_zlib(
+	          qcow_test_deflate_compressed_byte_stream,
+	          (size_t) SSIZE_MAX + 1,
+	          uncompressed_data,
+	          &uncompressed_data_size,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	result = libqcow_deflate_decompress_zlib(
+	          qcow_test_deflate_compressed_byte_stream,
+	          2627,
+	          NULL,
+	          &uncompressed_data_size,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	result = libqcow_deflate_decompress_zlib(
+	          qcow_test_deflate_compressed_byte_stream,
+	          2627,
+	          uncompressed_data,
+	          NULL,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	return( 1 );
+
+on_error:
+	if( error != NULL )
+	{
+		libcerror_error_free(
+		 &error );
+	}
 	return( 0 );
 }
 
@@ -1769,7 +2320,6 @@ int main(
 	QCOW_TEST_UNREFERENCED_PARAMETER( argc )
 	QCOW_TEST_UNREFERENCED_PARAMETER( argv )
 
-#define QCOW_TEST_DEFLATE
 #if defined( HAVE_DEBUG_OUTPUT ) && defined( QCOW_TEST_DEFLATE )
 	libcnotify_verbose_set(
 	 1 );
@@ -1805,8 +2355,24 @@ int main(
 	 qcow_test_deflate_decode_huffman );
 
 	QCOW_TEST_RUN(
+	 "libqcow_deflate_calculate_adler32",
+	 qcow_test_deflate_calculate_adler32 );
+
+	QCOW_TEST_RUN(
+	 "libqcow_deflate_read_data_header",
+	 qcow_test_deflate_read_data_header );
+
+	QCOW_TEST_RUN(
+	 "libqcow_deflate_read_block",
+	 qcow_test_deflate_read_block );
+
+	QCOW_TEST_RUN(
 	 "libqcow_deflate_decompress",
 	 qcow_test_deflate_decompress );
+
+	QCOW_TEST_RUN(
+	 "libqcow_deflate_decompress_zlib",
+	 qcow_test_deflate_decompress_zlib );
 
 #endif /* defined( __GNUC__ ) && !defined( LIBQCOW_DLL_IMPORT ) */
 
