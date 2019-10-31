@@ -1611,7 +1611,7 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 			libcnotify_printf(
 			 "%s: level 2 table file offset\t\t: 0x%08" PRIx64 "\n",
 			 function,
-			 level1_table_index );
+			 level2_table_file_offset );
 		}
 #endif
 		level2_table_file_offset &= internal_file->io_handle->offset_bit_mask;
