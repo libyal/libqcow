@@ -31,7 +31,6 @@ TESTS = \
 
 check_SCRIPTS = \
 	pyqcow_test_file.py \
-	pyqcow_test_read.py \
 	pyqcow_test_support.py \
 	test_library.sh \
 	test_manpage.sh \
