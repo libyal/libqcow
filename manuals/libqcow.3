@@ -88,6 +88,8 @@ File functions
 .Fn libqcow_file_set_utf8_password "libqcow_file_t *file" "const uint8_t *utf8_string" "size_t utf8_string_length" "libqcow_error_t **error"
 .Ft int
 .Fn libqcow_file_set_utf16_password "libqcow_file_t *file" "const uint16_t *utf16_string" "size_t utf16_string_length" "libqcow_error_t **error"
+.Ft int
+.Fn libqcow_file_get_media_size "libqcow_file_t *file" "size64_t *media_size" "libqcow_error_t **error"
 .Pp
 Available when compiled with wide character string support:
 .Ft int
@@ -96,10 +98,6 @@ Available when compiled with wide character string support:
 Available when compiled with libbfio support:
 .Ft int
 .Fn libqcow_file_open_file_io_handle "libqcow_file_t *file" "libbfio_handle_t *file_io_handle" "int access_flags" "libqcow_error_t **error"
-.Pp
-Meta data functions
-.Ft int
-.Fn libqcow_file_get_media_size "libqcow_file_t *file" "size64_t *media_size" "libqcow_error_t **error"
 .Sh DESCRIPTION
 The
 .Fn libqcow_get_version

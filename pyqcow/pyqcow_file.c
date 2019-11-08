@@ -134,19 +134,19 @@ PyMethodDef pyqcow_file_object_methods[] = {
 
 	/* Functions to access the file values */
 
-	{ "get_media_size",
-	  (PyCFunction) pyqcow_file_get_media_size,
-	  METH_NOARGS,
-	  "get_media_size() -> Integer\n"
-	  "\n"
-	  "Retrieves the media size of the data." },
-
 	{ "set_password",
 	  (PyCFunction) pyqcow_file_set_password,
 	  METH_VARARGS | METH_KEYWORDS,
 	  "set_password(password) -> None\n"
 	  "\n"
 	  "Sets the password." },
+
+	{ "get_media_size",
+	  (PyCFunction) pyqcow_file_get_media_size,
+	  METH_NOARGS,
+	  "get_media_size() -> Integer\n"
+	  "\n"
+	  "Retrieves the media size of the data." },
 
 	/* Sentinel */
 	{ NULL, NULL, 0, NULL }
@@ -1353,58 +1353,6 @@ PyObject *pyqcow_file_get_offset(
 	return( integer_object );
 }
 
-/* Retrieves the media size
- * Returns a Python object if successful or NULL on error
- */
-PyObject *pyqcow_file_get_media_size(
-           pyqcow_file_t *pyqcow_file,
-           PyObject *arguments PYQCOW_ATTRIBUTE_UNUSED )
-{
-	libcerror_error_t *error = NULL;
-	PyObject *integer_object = NULL;
-	static char *function    = "pyqcow_file_get_media_size";
-	size64_t media_size      = 0;
-	int result               = 0;
-
-	PYQCOW_UNREFERENCED_PARAMETER( arguments )
-
-	if( pyqcow_file == NULL )
-	{
-		PyErr_Format(
-		 PyExc_TypeError,
-		 "%s: invalid file.",
-		 function );
-
-		return( NULL );
-	}
-	Py_BEGIN_ALLOW_THREADS
-
-	result = libqcow_file_get_media_size(
-	          pyqcow_file->file,
-	          &media_size,
-	          &error );
-
-	Py_END_ALLOW_THREADS
-
-	if( result != 1 )
-	{
-		pyqcow_error_raise(
-		 error,
-		 PyExc_IOError,
-		 "%s: failed to retrieve media size.",
-		 function );
-
-		libcerror_error_free(
-		 &error );
-
-		return( NULL );
-	}
-	integer_object = pyqcow_integer_unsigned_new_from_64bit(
-	                  (uint64_t) media_size );
-
-	return( integer_object );
-}
-
 /* Sets the password
  * Returns a Python object if successful or NULL on error
  */
@@ -1477,5 +1425,57 @@ PyObject *pyqcow_file_set_password(
 	 Py_None );
 
 	return( Py_None );
+}
+
+/* Retrieves the media size
+ * Returns a Python object if successful or NULL on error
+ */
+PyObject *pyqcow_file_get_media_size(
+           pyqcow_file_t *pyqcow_file,
+           PyObject *arguments PYQCOW_ATTRIBUTE_UNUSED )
+{
+	libcerror_error_t *error = NULL;
+	PyObject *integer_object = NULL;
+	static char *function    = "pyqcow_file_get_media_size";
+	size64_t media_size      = 0;
+	int result               = 0;
+
+	PYQCOW_UNREFERENCED_PARAMETER( arguments )
+
+	if( pyqcow_file == NULL )
+	{
+		PyErr_Format(
+		 PyExc_TypeError,
+		 "%s: invalid file.",
+		 function );
+
+		return( NULL );
+	}
+	Py_BEGIN_ALLOW_THREADS
+
+	result = libqcow_file_get_media_size(
+	          pyqcow_file->file,
+	          &media_size,
+	          &error );
+
+	Py_END_ALLOW_THREADS
+
+	if( result != 1 )
+	{
+		pyqcow_error_raise(
+		 error,
+		 PyExc_IOError,
+		 "%s: failed to retrieve media size.",
+		 function );
+
+		libcerror_error_free(
+		 &error );
+
+		return( NULL );
+	}
+	integer_object = pyqcow_integer_unsigned_new_from_64bit(
+	                  (uint64_t) media_size );
+
+	return( integer_object );
 }
 

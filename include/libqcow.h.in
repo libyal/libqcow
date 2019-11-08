@@ -400,10 +400,6 @@ int libqcow_file_set_utf16_password(
      size_t utf16_string_length,
      libqcow_error_t **error );
 
-/* -------------------------------------------------------------------------
- * Meta data functions
- * ------------------------------------------------------------------------- */
-
 /* Retrieves the media size
  * Returns the 1 if succesful or -1 on error
  */
