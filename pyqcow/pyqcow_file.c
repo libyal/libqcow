@@ -1,5 +1,5 @@
 /*
- * Python object definition of the libqcow file
+ * Python object wrapper of libqcow_file_t
  *
  * Copyright (C) 2010-2019, Joachim Metz <joachim.metz@gmail.com>
  *
@@ -39,13 +39,15 @@
 #include "pyqcow_file.h"
 
 #if !defined( LIBQCOW_HAVE_BFIO )
+
 LIBQCOW_EXTERN \
 int libqcow_file_open_file_io_handle(
      libqcow_file_t *file,
      libbfio_handle_t *file_io_handle,
      int access_flags,
      libqcow_error_t **error );
-#endif
+
+#endif /* !defined( LIBQCOW_HAVE_BFIO ) */
 
 PyMethodDef pyqcow_file_object_methods[] = {
 
@@ -82,14 +84,14 @@ PyMethodDef pyqcow_file_object_methods[] = {
 	{ "read_buffer",
 	  (PyCFunction) pyqcow_file_read_buffer,
 	  METH_VARARGS | METH_KEYWORDS,
-	  "read_buffer(size) -> String\n"
+	  "read_buffer(size) -> Binary string\n"
 	  "\n"
 	  "Reads a buffer of data." },
 
 	{ "read_buffer_at_offset",
 	  (PyCFunction) pyqcow_file_read_buffer_at_offset,
 	  METH_VARARGS | METH_KEYWORDS,
-	  "read_buffer_at_offset(size, offset) -> String\n"
+	  "read_buffer_at_offset(size, offset) -> Binary string\n"
 	  "\n"
 	  "Reads a buffer of data at a specific offset." },
 
@@ -112,7 +114,7 @@ PyMethodDef pyqcow_file_object_methods[] = {
 	{ "read",
 	  (PyCFunction) pyqcow_file_read_buffer,
 	  METH_VARARGS | METH_KEYWORDS,
-	  "read(size) -> String\n"
+	  "read(size) -> Binary string\n"
 	  "\n"
 	  "Reads a buffer of data." },
 
@@ -257,101 +259,14 @@ PyTypeObject pyqcow_file_type_object = {
 	0
 };
 
-/* Creates a new file object
- * Returns a Python object if successful or NULL on error
- */
-PyObject *pyqcow_file_new(
-           void )
-{
-	pyqcow_file_t *pyqcow_file = NULL;
-	static char *function      = "pyqcow_file_new";
-
-	pyqcow_file = PyObject_New(
-	               struct pyqcow_file,
-	               &pyqcow_file_type_object );
-
-	if( pyqcow_file == NULL )
-	{
-		PyErr_Format(
-		 PyExc_MemoryError,
-		 "%s: unable to initialize file.",
-		 function );
-
-		goto on_error;
-	}
-	if( pyqcow_file_init(
-	     pyqcow_file ) != 0 )
-	{
-		PyErr_Format(
-		 PyExc_MemoryError,
-		 "%s: unable to initialize file.",
-		 function );
-
-		goto on_error;
-	}
-	return( (PyObject *) pyqcow_file );
-
-on_error:
-	if( pyqcow_file != NULL )
-	{
-		Py_DecRef(
-		 (PyObject *) pyqcow_file );
-	}
-	return( NULL );
-}
-
-/* Creates a new file object and opens it
- * Returns a Python object if successful or NULL on error
- */
-PyObject *pyqcow_file_new_open(
-           PyObject *self PYQCOW_ATTRIBUTE_UNUSED,
-           PyObject *arguments,
-           PyObject *keywords )
-{
-	PyObject *pyqcow_file = NULL;
-
-	PYQCOW_UNREFERENCED_PARAMETER( self )
-
-	pyqcow_file = pyqcow_file_new();
-
-	pyqcow_file_open(
-	 (pyqcow_file_t *) pyqcow_file,
-	 arguments,
-	 keywords );
-
-	return( pyqcow_file );
-}
-
-/* Creates a new file object and opens it
- * Returns a Python object if successful or NULL on error
- */
-PyObject *pyqcow_file_new_open_file_object(
-           PyObject *self PYQCOW_ATTRIBUTE_UNUSED,
-           PyObject *arguments,
-           PyObject *keywords )
-{
-	PyObject *pyqcow_file = NULL;
-
-	PYQCOW_UNREFERENCED_PARAMETER( self )
-
-	pyqcow_file = pyqcow_file_new();
-
-	pyqcow_file_open_file_object(
-	 (pyqcow_file_t *) pyqcow_file,
-	 arguments,
-	 keywords );
-
-	return( pyqcow_file );
-}
-
 /* Intializes a file object
  * Returns 0 if successful or -1 on error
  */
 int pyqcow_file_init(
      pyqcow_file_t *pyqcow_file )
 {
-	static char *function    = "pyqcow_file_init";
 	libcerror_error_t *error = NULL;
+	static char *function    = "pyqcow_file_init";
 
 	if( pyqcow_file == NULL )
 	{
@@ -362,6 +277,8 @@ int pyqcow_file_init(
 
 		return( -1 );
 	}
+	/* Make sure libqcow file is set to NULL
+	 */
 	pyqcow_file->file           = NULL;
 	pyqcow_file->file_io_handle = NULL;
 
@@ -388,8 +305,8 @@ int pyqcow_file_init(
 void pyqcow_file_free(
       pyqcow_file_t *pyqcow_file )
 {
-	libcerror_error_t *error    = NULL;
 	struct _typeobject *ob_type = NULL;
+	libcerror_error_t *error    = NULL;
 	static char *function       = "pyqcow_file_free";
 	int result                  = 0;
 
@@ -398,15 +315,6 @@ void pyqcow_file_free(
 		PyErr_Format(
 		 PyExc_ValueError,
 		 "%s: invalid file.",
-		 function );
-
-		return;
-	}
-	if( pyqcow_file->file == NULL )
-	{
-		PyErr_Format(
-		 PyExc_ValueError,
-		 "%s: invalid file - missing libqcow file.",
 		 function );
 
 		return;
@@ -432,24 +340,27 @@ void pyqcow_file_free(
 
 		return;
 	}
-	Py_BEGIN_ALLOW_THREADS
-
-	result = libqcow_file_free(
-	          &( pyqcow_file->file ),
-	          &error );
-
-	Py_END_ALLOW_THREADS
-
-	if( result != 1 )
+	if( pyqcow_file->file != NULL )
 	{
-		pyqcow_error_raise(
-		 error,
-		 PyExc_MemoryError,
-		 "%s: unable to free libqcow file.",
-		 function );
+		Py_BEGIN_ALLOW_THREADS
 
-		libcerror_error_free(
-		 &error );
+		result = libqcow_file_free(
+		          &( pyqcow_file->file ),
+		          &error );
+
+		Py_END_ALLOW_THREADS
+
+		if( result != 1 )
+		{
+			pyqcow_error_raise(
+			 error,
+			 PyExc_MemoryError,
+			 "%s: unable to free libqcow file.",
+			 function );
+
+			libcerror_error_free(
+			 &error );
+		}
 	}
 	ob_type->tp_free(
 	 (PyObject*) pyqcow_file );
@@ -514,9 +425,9 @@ PyObject *pyqcow_file_open(
 {
 	PyObject *string_object      = NULL;
 	libcerror_error_t *error     = NULL;
+	const char *filename_narrow  = NULL;
 	static char *function        = "pyqcow_file_open";
 	static char *keyword_list[]  = { "filename", "mode", NULL };
-	const char *filename_narrow  = NULL;
 	char *mode                   = NULL;
 	int result                   = 0;
 
@@ -570,8 +481,8 @@ PyObject *pyqcow_file_open(
 	if( result == -1 )
 	{
 		pyqcow_error_fetch_and_raise(
-	         PyExc_RuntimeError,
-		 "%s: unable to determine if string object is of type unicode.",
+		 PyExc_RuntimeError,
+		 "%s: unable to determine if string object is of type Unicode.",
 		 function );
 
 		return( NULL );
@@ -587,7 +498,7 @@ PyObject *pyqcow_file_open(
 
 		result = libqcow_file_open_wide(
 		          pyqcow_file->file,
-	                  filename_wide,
+		          filename_wide,
 		          LIBQCOW_OPEN_READ,
 		          &error );
 
@@ -600,23 +511,23 @@ PyObject *pyqcow_file_open(
 		{
 			pyqcow_error_fetch_and_raise(
 			 PyExc_RuntimeError,
-			 "%s: unable to convert unicode string to UTF-8.",
+			 "%s: unable to convert Unicode string to UTF-8.",
 			 function );
 
 			return( NULL );
 		}
 #if PY_MAJOR_VERSION >= 3
 		filename_narrow = PyBytes_AsString(
-				   utf8_string_object );
+		                   utf8_string_object );
 #else
 		filename_narrow = PyString_AsString(
-				   utf8_string_object );
+		                   utf8_string_object );
 #endif
 		Py_BEGIN_ALLOW_THREADS
 
 		result = libqcow_file_open(
 		          pyqcow_file->file,
-	                  filename_narrow,
+		          filename_narrow,
 		          LIBQCOW_OPEN_READ,
 		          &error );
 
@@ -647,17 +558,17 @@ PyObject *pyqcow_file_open(
 
 #if PY_MAJOR_VERSION >= 3
 	result = PyObject_IsInstance(
-		  string_object,
-		  (PyObject *) &PyBytes_Type );
+	          string_object,
+	          (PyObject *) &PyBytes_Type );
 #else
 	result = PyObject_IsInstance(
-		  string_object,
-		  (PyObject *) &PyString_Type );
+	          string_object,
+	          (PyObject *) &PyString_Type );
 #endif
 	if( result == -1 )
 	{
 		pyqcow_error_fetch_and_raise(
-	         PyExc_RuntimeError,
+		 PyExc_RuntimeError,
 		 "%s: unable to determine if string object is of type string.",
 		 function );
 
@@ -669,16 +580,16 @@ PyObject *pyqcow_file_open(
 
 #if PY_MAJOR_VERSION >= 3
 		filename_narrow = PyBytes_AsString(
-				   string_object );
+		                   string_object );
 #else
 		filename_narrow = PyString_AsString(
-				   string_object );
+		                   string_object );
 #endif
 		Py_BEGIN_ALLOW_THREADS
 
 		result = libqcow_file_open(
 		          pyqcow_file->file,
-	                  filename_narrow,
+		          filename_narrow,
 		          LIBQCOW_OPEN_READ,
 		          &error );
 
@@ -720,9 +631,9 @@ PyObject *pyqcow_file_open_file_object(
 {
 	PyObject *file_object       = NULL;
 	libcerror_error_t *error    = NULL;
-	char *mode                  = NULL;
-	static char *keyword_list[] = { "file_object", "mode", NULL };
 	static char *function       = "pyqcow_file_open_file_object";
+	static char *keyword_list[] = { "file_object", "mode", NULL };
+	char *mode                  = NULL;
 	int result                  = 0;
 
 	if( pyqcow_file == NULL )
@@ -754,6 +665,16 @@ PyObject *pyqcow_file_open_file_object(
 		 mode );
 
 		return( NULL );
+	}
+	if( pyqcow_file->file_io_handle != NULL )
+	{
+		pyqcow_error_raise(
+		 error,
+		 PyExc_IOError,
+		 "%s: invalid file - file IO handle already set.",
+		 function );
+
+		goto on_error;
 	}
 	if( pyqcow_file_object_initialize(
 	     &( pyqcow_file->file_io_handle ),
@@ -866,7 +787,7 @@ PyObject *pyqcow_file_close(
 		{
 			pyqcow_error_raise(
 			 error,
-			 PyExc_IOError,
+			 PyExc_MemoryError,
 			 "%s: unable to free libbfio file IO handle.",
 			 function );
 
@@ -890,18 +811,20 @@ PyObject *pyqcow_file_read_buffer(
            PyObject *arguments,
            PyObject *keywords )
 {
-	libcerror_error_t *error    = NULL;
+	PyObject *integer_object    = NULL;
 	PyObject *string_object     = NULL;
+	libcerror_error_t *error    = NULL;
+	char *buffer                = NULL;
 	static char *function       = "pyqcow_file_read_buffer";
 	static char *keyword_list[] = { "size", NULL };
-	char *buffer                = NULL;
 	ssize_t read_count          = 0;
-	int read_size               = -1;
+	int64_t read_size           = 0;
+	int result                  = 0;
 
 	if( pyqcow_file == NULL )
 	{
 		PyErr_Format(
-		 PyExc_TypeError,
+		 PyExc_ValueError,
 		 "%s: invalid file.",
 		 function );
 
@@ -910,24 +833,130 @@ PyObject *pyqcow_file_read_buffer(
 	if( PyArg_ParseTupleAndKeywords(
 	     arguments,
 	     keywords,
-	     "|i",
+	     "|O",
 	     keyword_list,
-	     &read_size ) == 0 )
+	     &integer_object ) == 0 )
 	{
 		return( NULL );
+	}
+	if( integer_object == NULL )
+	{
+		result = 0;
+	}
+	else
+	{
+		result = PyObject_IsInstance(
+		          integer_object,
+		          (PyObject *) &PyLong_Type );
+
+		if( result == -1 )
+		{
+			pyqcow_error_fetch_and_raise(
+			 PyExc_RuntimeError,
+			 "%s: unable to determine if integer object is of type long.",
+			 function );
+
+			return( NULL );
+		}
+#if PY_MAJOR_VERSION < 3
+		else if( result == 0 )
+		{
+			PyErr_Clear();
+
+			result = PyObject_IsInstance(
+			          integer_object,
+			          (PyObject *) &PyInt_Type );
+
+			if( result == -1 )
+			{
+				pyqcow_error_fetch_and_raise(
+				 PyExc_RuntimeError,
+				 "%s: unable to determine if integer object is of type int.",
+				 function );
+
+				return( NULL );
+			}
+		}
+#endif
+	}
+	if( result != 0 )
+	{
+		if( pyqcow_integer_signed_copy_to_64bit(
+		     integer_object,
+		     &read_size,
+		     &error ) != 1 )
+		{
+			pyqcow_error_raise(
+			 error,
+			 PyExc_IOError,
+			 "%s: unable to convert integer object into read size.",
+			 function );
+
+			libcerror_error_free(
+			 &error );
+
+			return( NULL );
+		}
+	}
+	else if( ( integer_object == NULL )
+	      || ( integer_object == Py_None ) )
+	{
+		Py_BEGIN_ALLOW_THREADS
+
+		result = libqcow_file_get_media_size(
+		          pyqcow_file->file,
+		          (size64_t *) &read_size,
+		          &error );
+
+		Py_END_ALLOW_THREADS
+
+		if( result != 1 )
+		{
+			pyqcow_error_raise(
+			 error,
+			 PyExc_IOError,
+			 "%s: unable to retrieve media size.",
+			 function );
+
+			libcerror_error_free(
+			 &error );
+
+			return( NULL );
+		}
+	}
+	else
+	{
+		PyErr_Format(
+		 PyExc_TypeError,
+		 "%s: unsupported integer object type.",
+		 function );
+
+		return( NULL );
+	}
+	if( read_size == 0 )
+	{
+#if PY_MAJOR_VERSION >= 3
+		string_object = PyBytes_FromString(
+		                 "" );
+#else
+		string_object = PyString_FromString(
+		                 "" );
+#endif
+		return( string_object );
 	}
 	if( read_size < 0 )
 	{
 		PyErr_Format(
 		 PyExc_ValueError,
-		 "%s: invalid argument read size value less than zero.",
+		 "%s: invalid read size value less than zero.",
 		 function );
 
 		return( NULL );
 	}
-	/* Make sure the data fits into the memory buffer
+	/* Make sure the data fits into a memory buffer
 	 */
-	if( read_size > INT_MAX )
+	if( ( read_size > (int64_t) INT_MAX )
+	 || ( read_size > (int64_t) SSIZE_MAX ) )
 	{
 		PyErr_Format(
 		 PyExc_ValueError,
@@ -939,14 +968,16 @@ PyObject *pyqcow_file_read_buffer(
 #if PY_MAJOR_VERSION >= 3
 	string_object = PyBytes_FromStringAndSize(
 	                 NULL,
-	                 read_size );
+	                 (Py_ssize_t) read_size );
 
 	buffer = PyBytes_AsString(
 	          string_object );
 #else
+	/* Note that a size of 0 is not supported
+	 */
 	string_object = PyString_FromStringAndSize(
 	                 NULL,
-	                 read_size );
+	                 (Py_ssize_t) read_size );
 
 	buffer = PyString_AsString(
 	          string_object );
@@ -961,7 +992,7 @@ PyObject *pyqcow_file_read_buffer(
 
 	Py_END_ALLOW_THREADS
 
-	if( read_count <= -1 )
+	if( read_count == -1 )
 	{
 		pyqcow_error_raise(
 		 error,
@@ -997,7 +1028,7 @@ PyObject *pyqcow_file_read_buffer(
 	return( string_object );
 }
 
-/* Reads data at a specific offset
+/* Reads data at a specific offset into a buffer
  * Returns a Python object if successful or NULL on error
  */
 PyObject *pyqcow_file_read_buffer_at_offset(
@@ -1005,19 +1036,21 @@ PyObject *pyqcow_file_read_buffer_at_offset(
            PyObject *arguments,
            PyObject *keywords )
 {
-	libcerror_error_t *error    = NULL;
+	PyObject *integer_object    = NULL;
 	PyObject *string_object     = NULL;
+	libcerror_error_t *error    = NULL;
+	char *buffer                = NULL;
 	static char *function       = "pyqcow_file_read_buffer_at_offset";
 	static char *keyword_list[] = { "size", "offset", NULL };
-	char *buffer                = NULL;
-	off64_t read_offset         = 0;
 	ssize_t read_count          = 0;
-	int read_size               = 0;
+	off64_t read_offset         = 0;
+	int64_t read_size           = 0;
+	int result                  = 0;
 
 	if( pyqcow_file == NULL )
 	{
 		PyErr_Format(
-		 PyExc_TypeError,
+		 PyExc_ValueError,
 		 "%s: invalid file.",
 		 function );
 
@@ -1026,25 +1059,98 @@ PyObject *pyqcow_file_read_buffer_at_offset(
 	if( PyArg_ParseTupleAndKeywords(
 	     arguments,
 	     keywords,
-	     "i|L",
+	     "OL",
 	     keyword_list,
-	     &read_size,
+	     &integer_object,
 	     &read_offset ) == 0 )
 	{
 		return( NULL );
+	}
+	result = PyObject_IsInstance(
+	          integer_object,
+	          (PyObject *) &PyLong_Type );
+
+	if( result == -1 )
+	{
+		pyqcow_error_fetch_and_raise(
+		 PyExc_RuntimeError,
+		 "%s: unable to determine if integer object is of type long.",
+		 function );
+
+		return( NULL );
+	}
+#if PY_MAJOR_VERSION < 3
+	else if( result == 0 )
+	{
+		PyErr_Clear();
+
+		result = PyObject_IsInstance(
+		          integer_object,
+		          (PyObject *) &PyInt_Type );
+
+		if( result == -1 )
+		{
+			pyqcow_error_fetch_and_raise(
+			 PyExc_RuntimeError,
+			 "%s: unable to determine if integer object is of type int.",
+			 function );
+
+			return( NULL );
+		}
+	}
+#endif
+	if( result != 0 )
+	{
+		if( pyqcow_integer_signed_copy_to_64bit(
+		     integer_object,
+		     &read_size,
+		     &error ) != 1 )
+		{
+			pyqcow_error_raise(
+			 error,
+			 PyExc_IOError,
+			 "%s: unable to convert integer object into read size.",
+			 function );
+
+			libcerror_error_free(
+			 &error );
+
+			return( NULL );
+		}
+	}
+	else
+	{
+		PyErr_Format(
+		 PyExc_TypeError,
+		 "%s: unsupported integer object type.",
+		 function );
+
+		return( NULL );
+	}
+	if( read_size == 0 )
+	{
+#if PY_MAJOR_VERSION >= 3
+		string_object = PyBytes_FromString(
+		                 "" );
+#else
+		string_object = PyString_FromString(
+		                 "" );
+#endif
+		return( string_object );
 	}
 	if( read_size < 0 )
 	{
 		PyErr_Format(
 		 PyExc_ValueError,
-		 "%s: invalid argument read size value less than zero.",
+		 "%s: invalid read size value less than zero.",
 		 function );
 
 		return( NULL );
 	}
-	/* Make sure the data fits into the memory buffer
+	/* Make sure the data fits into a memory buffer
 	 */
-	if( read_size > INT_MAX )
+	if( ( read_size > (int64_t) INT_MAX )
+	 || ( read_size > (int64_t) SSIZE_MAX ) )
 	{
 		PyErr_Format(
 		 PyExc_ValueError,
@@ -1057,24 +1163,24 @@ PyObject *pyqcow_file_read_buffer_at_offset(
 	{
 		PyErr_Format(
 		 PyExc_ValueError,
-		 "%s: invalid argument read offset value less than zero.",
+		 "%s: invalid read offset value less than zero.",
 		 function );
 
 		return( NULL );
 	}
-	/* Make sure the data fits into the memory buffer
-	 */
 #if PY_MAJOR_VERSION >= 3
 	string_object = PyBytes_FromStringAndSize(
 	                 NULL,
-	                 read_size );
+	                 (Py_ssize_t) read_size );
 
 	buffer = PyBytes_AsString(
 	          string_object );
 #else
+	/* Note that a size of 0 is not supported
+	 */
 	string_object = PyString_FromStringAndSize(
 	                 NULL,
-	                 read_size );
+	                 (Py_ssize_t) read_size );
 
 	buffer = PyString_AsString(
 	          string_object );
@@ -1090,7 +1196,7 @@ PyObject *pyqcow_file_read_buffer_at_offset(
 
 	Py_END_ALLOW_THREADS
 
-	if( read_count <= -1 )
+	if( read_count == -1 )
 	{
 		pyqcow_error_raise(
 		 error,
@@ -1126,7 +1232,7 @@ PyObject *pyqcow_file_read_buffer_at_offset(
 	return( string_object );
 }
 
-/* Seeks a certain offset in the data
+/* Seeks a certain offset
  * Returns a Python object if successful or NULL on error
  */
 PyObject *pyqcow_file_seek_offset(
@@ -1143,7 +1249,7 @@ PyObject *pyqcow_file_seek_offset(
 	if( pyqcow_file == NULL )
 	{
 		PyErr_Format(
-		 PyExc_TypeError,
+		 PyExc_ValueError,
 		 "%s: invalid file.",
 		 function );
 
@@ -1188,17 +1294,17 @@ PyObject *pyqcow_file_seek_offset(
 	return( Py_None );
 }
 
-/* Retrieves the current offset in the data
+/* Retrieves the current offset of the (media) data
  * Returns a Python object if successful or NULL on error
  */
 PyObject *pyqcow_file_get_offset(
            pyqcow_file_t *pyqcow_file,
            PyObject *arguments PYQCOW_ATTRIBUTE_UNUSED )
 {
-	libcerror_error_t *error = NULL;
 	PyObject *integer_object = NULL;
+	libcerror_error_t *error = NULL;
 	static char *function    = "pyqcow_file_get_offset";
-	off64_t current_offset   = 0;
+	off64_t offset           = 0;
 	int result               = 0;
 
 	PYQCOW_UNREFERENCED_PARAMETER( arguments )
@@ -1206,7 +1312,7 @@ PyObject *pyqcow_file_get_offset(
 	if( pyqcow_file == NULL )
 	{
 		PyErr_Format(
-		 PyExc_TypeError,
+		 PyExc_ValueError,
 		 "%s: invalid file.",
 		 function );
 
@@ -1216,17 +1322,17 @@ PyObject *pyqcow_file_get_offset(
 
 	result = libqcow_file_get_offset(
 	          pyqcow_file->file,
-	          &current_offset,
+	          &offset,
 	          &error );
 
 	Py_END_ALLOW_THREADS
 
-	if( result != 1 )
+	if( result == -1 )
 	{
 		pyqcow_error_raise(
 		 error,
 		 PyExc_IOError,
-		 "%s: unable to retrieve offset.",
+		 "%s: unable to retrieve current offset of the.",
 		 function );
 
 		libcerror_error_free(
@@ -1234,8 +1340,15 @@ PyObject *pyqcow_file_get_offset(
 
 		return( NULL );
 	}
+	else if( result == 0 )
+	{
+		Py_IncRef(
+		 Py_None );
+
+		return( Py_None );
+	}
 	integer_object = pyqcow_integer_signed_new_from_64bit(
-	                  (int64_t) current_offset );
+	                  (int64_t) offset );
 
 	return( integer_object );
 }

@@ -1,7 +1,7 @@
 Name: libqcow
 Version: @VERSION@
 Release: 1
-Summary: Library to access the QEMU Copy-On-Write (QCOW) image format
+Summary: Library to access the QEMU Copy-On-Write (QCOW) image file format
 Group: System Environment/Libraries
 License: LGPL
 Source: %{name}-%{version}.tar.gz
@@ -11,10 +11,10 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: gcc @ax_libbfio_spec_build_requires@ @ax_libcaes_spec_build_requires@ @ax_libcdata_spec_build_requires@ @ax_libcerror_spec_build_requires@ @ax_libcfile_spec_build_requires@ @ax_libclocale_spec_build_requires@ @ax_libcnotify_spec_build_requires@ @ax_libcpath_spec_build_requires@ @ax_libcrypto_spec_build_requires@ @ax_libcsplit_spec_build_requires@ @ax_libcthreads_spec_build_requires@ @ax_libfcache_spec_build_requires@ @ax_libfdata_spec_build_requires@ @ax_libuna_spec_build_requires@ @ax_zlib_spec_build_requires@
 
 %description -n libqcow
-Library to access the QEMU Copy-On-Write (QCOW) image format
+Library to access the QEMU Copy-On-Write (QCOW) image file format
 
 %package -n libqcow-static
-Summary: Library to access the QEMU Copy-On-Write (QCOW) image format
+Summary: Library to access the QEMU Copy-On-Write (QCOW) image file format
 Group: Development/Libraries
 Requires: libqcow = %{version}-%{release}
 

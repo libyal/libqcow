@@ -12,8 +12,8 @@ Depends: ${shlibs:Depends}, ${misc:Depends}
 Conflicts: libqcow1
 Replaces: libqcow1
 Suggests: libqcow-dbg
-Description: Library to access the QEMU Copy-On-Write (QCOW) image format
- libqcow is a library to access the QEMU Copy-On-Write (QCOW) image format.
+Description: Library to access the QEMU Copy-On-Write (QCOW) image file format
+ libqcow is a library to access the QEMU Copy-On-Write (QCOW) image file format.
 
 Package: libqcow-dbg
 Architecture: any

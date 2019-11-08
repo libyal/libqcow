@@ -1,5 +1,5 @@
 /*
- * Library to access the QEMU Copy-On-Write (QCOW) image format
+ * Library to access the QEMU Copy-On-Write (QCOW) image file format
  *
  * Copyright (C) 2010-2019, Joachim Metz <joachim.metz@gmail.com>
  *

@@ -1,5 +1,5 @@
 /*
- * Python object definition of the libqcow file
+ * Python object wrapper of libqcow_file_t
  *
  * Copyright (C) 2010-2019, Joachim Metz <joachim.metz@gmail.com>
  *
@@ -52,19 +52,6 @@ struct pyqcow_file
 
 extern PyMethodDef pyqcow_file_object_methods[];
 extern PyTypeObject pyqcow_file_type_object;
-
-PyObject *pyqcow_file_new(
-           void );
-
-PyObject *pyqcow_file_new_open(
-           PyObject *self,
-           PyObject *arguments,
-           PyObject *keywords );
-
-PyObject *pyqcow_file_new_open_file_object(
-           PyObject *self,
-           PyObject *arguments,
-           PyObject *keywords );
 
 int pyqcow_file_init(
      pyqcow_file_t *pyqcow_file );
@@ -122,5 +109,5 @@ PyObject *pyqcow_file_set_password(
 }
 #endif
 
-#endif
+#endif /* !defined( _PYQCOW_FILE_H ) */
 

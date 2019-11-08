@@ -1,5 +1,5 @@
 /*
- * Python bindings for libqcow (pyqcow)
+ * Python bindings module for libqcow (pyqcow)
  *
  * Copyright (C) 2010-2019, Joachim Metz <joachim.metz@gmail.com>
  *
@@ -41,6 +41,16 @@ PyObject *pyqcow_check_file_signature(
            PyObject *keywords );
 
 PyObject *pyqcow_check_file_signature_file_object(
+           PyObject *self,
+           PyObject *arguments,
+           PyObject *keywords );
+
+PyObject *pyqcow_open_new_file(
+           PyObject *self,
+           PyObject *arguments,
+           PyObject *keywords );
+
+PyObject *pyqcow_open_new_file_with_file_object(
            PyObject *self,
            PyObject *arguments,
            PyObject *keywords );

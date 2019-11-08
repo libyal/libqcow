@@ -21,6 +21,7 @@
 
 import argparse
 import os
+import random
 import sys
 import unittest
 
@@ -30,10 +31,16 @@ import pyqcow
 class FileTypeTests(unittest.TestCase):
   """Tests the file type."""
 
+  def test_signal_abort(self):
+    """Tests the signal_abort function."""
+    qcow_file = pyqcow.file()
+
+    qcow_file.signal_abort()
+
   def test_open(self):
     """Tests the open function."""
     if not unittest.source:
-      return
+      raise unittest.SkipTest("missing source")
 
     qcow_file = pyqcow.file()
 
@@ -53,7 +60,10 @@ class FileTypeTests(unittest.TestCase):
   def test_open_file_object(self):
     """Tests the open_file_object function."""
     if not unittest.source:
-      return
+      raise unittest.SkipTest("missing source")
+
+    if not os.path.isfile(unittest.source):
+      raise unittest.SkipTest("source not a regular file")
 
     file_object = open(unittest.source, "rb")
 
@@ -61,8 +71,7 @@ class FileTypeTests(unittest.TestCase):
 
     qcow_file.open_file_object(file_object)
 
-    # TODO: change MemoryError into IOError
-    with self.assertRaises(MemoryError):
+    with self.assertRaises(IOError):
       qcow_file.open_file_object(file_object)
 
     qcow_file.close()
@@ -77,7 +86,7 @@ class FileTypeTests(unittest.TestCase):
   def test_close(self):
     """Tests the close function."""
     if not unittest.source:
-      return
+      raise unittest.SkipTest("missing source")
 
     qcow_file = pyqcow.file()
 
@@ -99,52 +108,91 @@ class FileTypeTests(unittest.TestCase):
     qcow_file.open(unittest.source)
     qcow_file.close()
 
-    file_object = open(unittest.source, "rb")
+    if os.path.isfile(unittest.source):
+      file_object = open(unittest.source, "rb")
 
-    # Test open_file_object and close.
-    qcow_file.open_file_object(file_object)
-    qcow_file.close()
+      # Test open_file_object and close.
+      qcow_file.open_file_object(file_object)
+      qcow_file.close()
 
-    # Test open_file_object and close a second time to validate clean up on close.
-    qcow_file.open_file_object(file_object)
-    qcow_file.close()
+      # Test open_file_object and close a second time to validate clean up on close.
+      qcow_file.open_file_object(file_object)
+      qcow_file.close()
 
-    # Test open_file_object and close and dereferencing file_object.
-    qcow_file.open_file_object(file_object)
-    del file_object
+      # Test open_file_object and close and dereferencing file_object.
+      qcow_file.open_file_object(file_object)
+      del file_object
+
     qcow_file.close()
 
   def test_read_buffer(self):
     """Tests the read_buffer function."""
     if not unittest.source:
-      return
+      raise unittest.SkipTest("missing source")
 
     qcow_file = pyqcow.file()
 
     qcow_file.open(unittest.source)
 
-    file_size = qcow_file.get_media_size()
+    media_size = qcow_file.get_media_size()
 
-    # Test normal read.
-    data = qcow_file.read_buffer(size=4096)
+    if media_size < 4096:
+      # Test read without maximum size.
+      qcow_file.seek_offset(0, os.SEEK_SET)
 
-    self.assertIsNotNone(data)
-    self.assertEqual(len(data), min(file_size, 4096))
-
-    if file_size < 4096:
       data = qcow_file.read_buffer()
 
       self.assertIsNotNone(data)
-      self.assertEqual(len(data), file_size)
+      self.assertEqual(len(data), media_size)
 
-    # Test read beyond file size.
-    if file_size > 16:
-      qcow_file.seek_offset(-16, os.SEEK_END)
+    # Test read with maximum size.
+    qcow_file.seek_offset(0, os.SEEK_SET)
 
+    data = qcow_file.read_buffer(size=4096)
+
+    self.assertIsNotNone(data)
+    self.assertEqual(len(data), min(media_size, 4096))
+
+    if media_size > 8:
+      qcow_file.seek_offset(-8, os.SEEK_END)
+
+      # Read buffer on media_size boundary.
       data = qcow_file.read_buffer(size=4096)
 
       self.assertIsNotNone(data)
-      self.assertEqual(len(data), 16)
+      self.assertEqual(len(data), 8)
+
+      # Read buffer beyond media_size boundary.
+      data = qcow_file.read_buffer(size=4096)
+
+      self.assertIsNotNone(data)
+      self.assertEqual(len(data), 0)
+
+    # Stress test read buffer.
+    qcow_file.seek_offset(0, os.SEEK_SET)
+
+    remaining_media_size = media_size
+
+    for _ in range(1024):
+      read_size = int(random.random() * 4096)
+
+      data = qcow_file.read_buffer(size=read_size)
+
+      self.assertIsNotNone(data)
+
+      data_size = len(data)
+
+      if read_size > remaining_media_size:
+        read_size = remaining_media_size
+
+      self.assertEqual(data_size, read_size)
+
+      remaining_media_size -= data_size
+
+      if not remaining_media_size:
+        qcow_file.seek_offset(0, os.SEEK_SET)
+
+        remaining_media_size = media_size
 
     with self.assertRaises(ValueError):
       qcow_file.read_buffer(size=-1)
@@ -158,7 +206,10 @@ class FileTypeTests(unittest.TestCase):
   def test_read_buffer_file_object(self):
     """Tests the read_buffer function on a file-like object."""
     if not unittest.source:
-      return
+      raise unittest.SkipTest("missing source")
+
+    if not os.path.isfile(unittest.source):
+      raise unittest.SkipTest("source not a regular file")
 
     file_object = open(unittest.source, "rb")
 
@@ -166,39 +217,70 @@ class FileTypeTests(unittest.TestCase):
 
     qcow_file.open_file_object(file_object)
 
-    file_size = qcow_file.get_media_size()
+    media_size = qcow_file.get_media_size()
 
     # Test normal read.
     data = qcow_file.read_buffer(size=4096)
 
     self.assertIsNotNone(data)
-    self.assertEqual(len(data), min(file_size, 4096))
+    self.assertEqual(len(data), min(media_size, 4096))
 
     qcow_file.close()
 
   def test_read_buffer_at_offset(self):
     """Tests the read_buffer_at_offset function."""
     if not unittest.source:
-      return
+      raise unittest.SkipTest("missing source")
 
     qcow_file = pyqcow.file()
 
     qcow_file.open(unittest.source)
 
-    file_size = qcow_file.get_media_size()
+    media_size = qcow_file.get_media_size()
 
     # Test normal read.
     data = qcow_file.read_buffer_at_offset(4096, 0)
 
     self.assertIsNotNone(data)
-    self.assertEqual(len(data), min(file_size, 4096))
+    self.assertEqual(len(data), min(media_size, 4096))
 
-    # Test read beyond file size.
-    if file_size > 16:
-      data = qcow_file.read_buffer_at_offset(4096, file_size - 16)
+    if media_size > 8:
+      # Read buffer on media_size boundary.
+      data = qcow_file.read_buffer_at_offset(4096, media_size - 8)
 
       self.assertIsNotNone(data)
-      self.assertEqual(len(data), 16)
+      self.assertEqual(len(data), 8)
+
+      # Read buffer beyond media_size boundary.
+      data = qcow_file.read_buffer_at_offset(4096, media_size + 8)
+
+      self.assertIsNotNone(data)
+      self.assertEqual(len(data), 0)
+
+    # Stress test read buffer.
+    for _ in range(1024):
+      random_number = random.random()
+
+      media_offset = int(random_number * media_size)
+      read_size = int(random_number * 4096)
+
+      data = qcow_file.read_buffer_at_offset(read_size, media_offset)
+
+      self.assertIsNotNone(data)
+
+      remaining_media_size = media_size - media_offset
+
+      data_size = len(data)
+
+      if read_size > remaining_media_size:
+        read_size = remaining_media_size
+
+      self.assertEqual(data_size, read_size)
+
+      remaining_media_size -= data_size
+
+      if not remaining_media_size:
+        qcow_file.seek_offset(0, os.SEEK_SET)
 
     with self.assertRaises(ValueError):
       qcow_file.read_buffer_at_offset(-1, 0)
@@ -215,13 +297,13 @@ class FileTypeTests(unittest.TestCase):
   def test_seek_offset(self):
     """Tests the seek_offset function."""
     if not unittest.source:
-      return
+      raise unittest.SkipTest("missing source")
 
     qcow_file = pyqcow.file()
 
     qcow_file.open(unittest.source)
 
-    file_size = qcow_file.get_media_size()
+    media_size = qcow_file.get_media_size()
 
     qcow_file.seek_offset(16, os.SEEK_SET)
 
@@ -238,15 +320,16 @@ class FileTypeTests(unittest.TestCase):
     offset = qcow_file.get_offset()
     self.assertEqual(offset, 16)
 
-    qcow_file.seek_offset(-16, os.SEEK_END)
+    if media_size > 16:
+      qcow_file.seek_offset(-16, os.SEEK_END)
 
-    offset = qcow_file.get_offset()
-    self.assertEqual(offset, file_size - 16)
+      offset = qcow_file.get_offset()
+      self.assertEqual(offset, media_size - 16)
 
     qcow_file.seek_offset(16, os.SEEK_END)
 
     offset = qcow_file.get_offset()
-    self.assertEqual(offset, file_size + 16)
+    self.assertEqual(offset, media_size + 16)
 
     # TODO: change IOError into ValueError
     with self.assertRaises(IOError):
@@ -254,11 +337,11 @@ class FileTypeTests(unittest.TestCase):
 
     # TODO: change IOError into ValueError
     with self.assertRaises(IOError):
-      qcow_file.seek_offset(-32 - file_size, os.SEEK_CUR)
+      qcow_file.seek_offset(-32 - media_size, os.SEEK_CUR)
 
     # TODO: change IOError into ValueError
     with self.assertRaises(IOError):
-      qcow_file.seek_offset(-32 - file_size, os.SEEK_END)
+      qcow_file.seek_offset(-32 - media_size, os.SEEK_END)
 
     # TODO: change IOError into ValueError
     with self.assertRaises(IOError):
@@ -270,17 +353,50 @@ class FileTypeTests(unittest.TestCase):
     with self.assertRaises(IOError):
       qcow_file.seek_offset(16, os.SEEK_SET)
 
+  def test_get_offset(self):
+    """Tests the get_offset function and offset property."""
+    if not unittest.source:
+      raise unittest.SkipTest("missing source")
+
+    qcow_file = pyqcow.file()
+    qcow_file.open(unittest.source)
+
+    offset = qcow_file.get_offset()
+    self.assertIsNotNone(offset)
+
+    qcow_file.close()
+
+  def test_get_media_size(self):
+    """Tests the get_media_size function and media_size property."""
+    if not unittest.source:
+      raise unittest.SkipTest("missing source")
+
+    qcow_file = pyqcow.file()
+    qcow_file.open(unittest.source)
+
+    media_size = qcow_file.get_media_size()
+    self.assertIsNotNone(media_size)
+
+    self.assertIsNotNone(qcow_file.media_size)
+
+    qcow_file.close()
+
 
 if __name__ == "__main__":
   argument_parser = argparse.ArgumentParser()
 
   argument_parser.add_argument(
+      "-p", "--password", dest="password", action="store", default=None,
+      type=str, help="password to unlock the source file.")
+
+  argument_parser.add_argument(
       "source", nargs="?", action="store", metavar="PATH",
-      default=None, help="The path of the source file.")
+      default=None, help="path of the source file.")
 
   options, unknown_options = argument_parser.parse_known_args()
   unknown_options.insert(0, sys.argv[0])
 
+  setattr(unittest, "password", options.password)
   setattr(unittest, "source", options.source)
 
   unittest.main(argv=unknown_options, verbosity=2)

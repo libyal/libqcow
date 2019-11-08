@@ -30,6 +30,15 @@
 #include <stdlib.h>
 #endif
 
+#if defined( TIME_WITH_SYS_TIME )
+#include <sys/time.h>
+#include <time.h>
+#elif defined( HAVE_SYS_TIME_H )
+#include <sys/time.h>
+#else
+#include <time.h>
+#endif
+
 #include "qcow_test_functions.h"
 #include "qcow_test_getopt.h"
 #include "qcow_test_libbfio.h"
@@ -37,9 +46,18 @@
 #include "qcow_test_libqcow.h"
 #include "qcow_test_macros.h"
 #include "qcow_test_memory.h"
-#include "qcow_test_unused.h"
 
 #include "../libqcow/libqcow_file.h"
+
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER ) && SIZEOF_WCHAR_T != 2 && SIZEOF_WCHAR_T != 4
+#error Unsupported size of wchar_t
+#endif
+
+/* Define to make qcow_test_file generate verbose output
+#define QCOW_TEST_FILE_VERBOSE
+ */
+
+#define QCOW_TEST_FILE_READ_BUFFER_SIZE	4096
 
 #if !defined( LIBQCOW_HAVE_BFIO )
 
@@ -56,14 +74,6 @@ int libqcow_file_open_file_io_handle(
      libqcow_error_t **error );
 
 #endif /* !defined( LIBQCOW_HAVE_BFIO ) */
-
-#if defined( HAVE_WIDE_SYSTEM_CHARACTER ) && SIZEOF_WCHAR_T != 2 && SIZEOF_WCHAR_T != 4
-#error Unsupported size of wchar_t
-#endif
-
-/* Define to make qcow_test_file generate verbose output
-#define QCOW_TEST_FILE_VERBOSE
- */
 
 /* Creates and opens a source file
  * Returns 1 if successful or -1 on error
@@ -1387,13 +1397,23 @@ on_error:
 int qcow_test_file_read_buffer(
      libqcow_file_t *file )
 {
-	uint8_t buffer[ 16 ];
+	uint8_t buffer[ QCOW_TEST_FILE_READ_BUFFER_SIZE ];
 
-	libcerror_error_t *error = NULL;
-	size64_t media_size      = 0;
-	ssize_t read_count       = 0;
-	off64_t offset           = 0;
-	int result               = 0;
+	libcerror_error_t *error      = NULL;
+	time_t timestamp              = 0;
+	size64_t media_size           = 0;
+	size64_t remaining_media_size = 0;
+	size_t read_size              = 0;
+	ssize_t read_count            = 0;
+	off64_t offset                = 0;
+	int number_of_tests           = 1024;
+	int random_number             = 0;
+	int result                    = 0;
+	int test_number               = 0;
+
+#if defined( QCOW_TEST_FILE_VERBOSE )
+	off64_t media_offset          = 0;
+#endif
 
 	/* Determine size
 	 */
@@ -1430,23 +1450,29 @@ int qcow_test_file_read_buffer(
 
 	/* Test regular cases
 	 */
-	if( media_size > 16 )
+	read_size = QCOW_TEST_FILE_READ_BUFFER_SIZE;
+
+	if( media_size < QCOW_TEST_FILE_READ_BUFFER_SIZE )
 	{
-		read_count = libqcow_file_read_buffer(
-		              file,
-		              buffer,
-		              16,
-		              &error );
+		read_size = (size_t) media_size;
+	}
+	read_count = libqcow_file_read_buffer(
+	              file,
+	              buffer,
+	              QCOW_TEST_FILE_READ_BUFFER_SIZE,
+	              &error );
 
-		QCOW_TEST_ASSERT_EQUAL_SSIZE(
-		 "read_count",
-		 read_count,
-		 (ssize_t) 16 );
+	QCOW_TEST_ASSERT_EQUAL_SSIZE(
+	 "read_count",
+	 read_count,
+	 (ssize_t) read_size );
 
-		QCOW_TEST_ASSERT_IS_NULL(
-		 "error",
-		 error );
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
 
+	if( media_size > 8 )
+	{
 		/* Set offset to media_size - 8
 		 */
 		offset = libqcow_file_seek_offset(
@@ -1469,7 +1495,7 @@ int qcow_test_file_read_buffer(
 		read_count = libqcow_file_read_buffer(
 		              file,
 		              buffer,
-		              16,
+		              QCOW_TEST_FILE_READ_BUFFER_SIZE,
 		              &error );
 
 		QCOW_TEST_ASSERT_EQUAL_SSIZE(
@@ -1486,7 +1512,7 @@ int qcow_test_file_read_buffer(
 		read_count = libqcow_file_read_buffer(
 		              file,
 		              buffer,
-		              16,
+		              QCOW_TEST_FILE_READ_BUFFER_SIZE,
 		              &error );
 
 		QCOW_TEST_ASSERT_EQUAL_SSIZE(
@@ -1497,30 +1523,108 @@ int qcow_test_file_read_buffer(
 		QCOW_TEST_ASSERT_IS_NULL(
 		 "error",
 		 error );
+	}
+	/* Stress test read buffer
+	 */
+	timestamp = time(
+	             NULL );
 
-		/* Reset offset to 0
-		 */
-		offset = libqcow_file_seek_offset(
-		          file,
-		          0,
-		          SEEK_SET,
-		          &error );
+	srand(
+	 (unsigned int) timestamp );
 
-		QCOW_TEST_ASSERT_EQUAL_INT64(
-		 "offset",
-		 offset,
-		 (int64_t) 0 );
+	offset = libqcow_file_seek_offset(
+	          file,
+	          0,
+	          SEEK_SET,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT64(
+	 "offset",
+	 offset,
+	 (int64_t) 0 );
+
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
+
+	remaining_media_size = media_size;
+
+	for( test_number = 0;
+	     test_number < number_of_tests;
+	     test_number++ )
+	{
+		random_number = rand();
+
+		QCOW_TEST_ASSERT_GREATER_THAN_INT(
+		 "random_number",
+		 random_number,
+		 -1 );
+
+		read_size = (size_t) random_number % QCOW_TEST_FILE_READ_BUFFER_SIZE;
+
+#if defined( QCOW_TEST_FILE_VERBOSE )
+		fprintf(
+		 stdout,
+		 "libqcow_file_read_buffer: at offset: %" PRIi64 " (0x%08" PRIx64 ") of size: %" PRIzd "\n",
+		 media_offset,
+		 media_offset,
+		 read_size );
+#endif
+		read_count = libqcow_file_read_buffer(
+		              file,
+		              buffer,
+		              read_size,
+		              &error );
+
+		if( read_size > remaining_media_size )
+		{
+			read_size = (size_t) remaining_media_size;
+		}
+		QCOW_TEST_ASSERT_EQUAL_SSIZE(
+		 "read_count",
+		 read_count,
+		 (ssize_t) read_size );
 
 		QCOW_TEST_ASSERT_IS_NULL(
 		 "error",
 		 error );
+
+		remaining_media_size -= read_count;
+
+#if defined( QCOW_TEST_FILE_VERBOSE )
+		media_offset += read_count;
+#endif
+
+		if( remaining_media_size == 0 )
+		{
+			offset = libqcow_file_seek_offset(
+			          file,
+			          0,
+			          SEEK_SET,
+			          &error );
+
+			QCOW_TEST_ASSERT_EQUAL_INT64(
+			 "offset",
+			 offset,
+			 (int64_t) 0 );
+
+			QCOW_TEST_ASSERT_IS_NULL(
+			 "error",
+			 error );
+
+			remaining_media_size = media_size;
+
+#if defined( QCOW_TEST_FILE_VERBOSE )
+			media_offset = 0;
+#endif
+		}
 	}
 	/* Test error cases
 	 */
 	read_count = libqcow_file_read_buffer(
 	              NULL,
 	              buffer,
-	              16,
+	              QCOW_TEST_FILE_READ_BUFFER_SIZE,
 	              &error );
 
 	QCOW_TEST_ASSERT_EQUAL_SSIZE(
@@ -1538,7 +1642,7 @@ int qcow_test_file_read_buffer(
 	read_count = libqcow_file_read_buffer(
 	              file,
 	              NULL,
-	              16,
+	              QCOW_TEST_FILE_READ_BUFFER_SIZE,
 	              &error );
 
 	QCOW_TEST_ASSERT_EQUAL_SSIZE(
@@ -1588,12 +1692,20 @@ on_error:
 int qcow_test_file_read_buffer_at_offset(
      libqcow_file_t *file )
 {
-	uint8_t buffer[ 16 ];
+	uint8_t buffer[ QCOW_TEST_FILE_READ_BUFFER_SIZE ];
 
-	libcerror_error_t *error = NULL;
-	size64_t media_size      = 0;
-	ssize_t read_count       = 0;
-	int result               = 0;
+	libcerror_error_t *error      = NULL;
+	time_t timestamp              = 0;
+	size64_t media_size           = 0;
+	size64_t remaining_media_size = 0;
+	size_t read_size              = 0;
+	ssize_t read_count            = 0;
+	off64_t media_offset          = 0;
+	off64_t offset                = 0;
+	int number_of_tests           = 1024;
+	int random_number             = 0;
+	int result                    = 0;
+	int test_number               = 0;
 
 	/* Determine size
 	 */
@@ -1613,30 +1725,36 @@ int qcow_test_file_read_buffer_at_offset(
 
 	/* Test regular cases
 	 */
-	if( media_size > 16 )
+	read_size = QCOW_TEST_FILE_READ_BUFFER_SIZE;
+
+	if( media_size < QCOW_TEST_FILE_READ_BUFFER_SIZE )
 	{
-		read_count = libqcow_file_read_buffer_at_offset(
-		              file,
-		              buffer,
-		              16,
-		              0,
-		              &error );
+		read_size = (size_t) media_size;
+	}
+	read_count = libqcow_file_read_buffer_at_offset(
+	              file,
+	              buffer,
+	              QCOW_TEST_FILE_READ_BUFFER_SIZE,
+	              0,
+	              &error );
 
-		QCOW_TEST_ASSERT_EQUAL_SSIZE(
-		 "read_count",
-		 read_count,
-		 (ssize_t) 16 );
+	QCOW_TEST_ASSERT_EQUAL_SSIZE(
+	 "read_count",
+	 read_count,
+	 (ssize_t) read_size );
 
-		QCOW_TEST_ASSERT_IS_NULL(
-		 "error",
-		 error );
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
 
+	if( media_size > 8 )
+	{
 		/* Read buffer on media_size boundary
 		 */
 		read_count = libqcow_file_read_buffer_at_offset(
 		              file,
 		              buffer,
-		              16,
+		              QCOW_TEST_FILE_READ_BUFFER_SIZE,
 		              media_size - 8,
 		              &error );
 
@@ -1654,7 +1772,7 @@ int qcow_test_file_read_buffer_at_offset(
 		read_count = libqcow_file_read_buffer_at_offset(
 		              file,
 		              buffer,
-		              16,
+		              QCOW_TEST_FILE_READ_BUFFER_SIZE,
 		              media_size + 8,
 		              &error );
 
@@ -1667,12 +1785,89 @@ int qcow_test_file_read_buffer_at_offset(
 		 "error",
 		 error );
 	}
+	/* Stress test read buffer
+	 */
+	timestamp = time(
+	             NULL );
+
+	srand(
+	 (unsigned int) timestamp );
+
+	for( test_number = 0;
+	     test_number < number_of_tests;
+	     test_number++ )
+	{
+		random_number = rand();
+
+		QCOW_TEST_ASSERT_GREATER_THAN_INT(
+		 "random_number",
+		 random_number,
+		 -1 );
+
+		if( media_size > 0 )
+		{
+			media_offset = (off64_t) random_number % media_size;
+		}
+		read_size = (size_t) random_number % QCOW_TEST_FILE_READ_BUFFER_SIZE;
+
+#if defined( QCOW_TEST_FILE_VERBOSE )
+		fprintf(
+		 stdout,
+		 "libqcow_file_read_buffer_at_offset: at offset: %" PRIi64 " (0x%08" PRIx64 ") of size: %" PRIzd "\n",
+		 media_offset,
+		 media_offset,
+		 read_size );
+#endif
+		read_count = libqcow_file_read_buffer_at_offset(
+		              file,
+		              buffer,
+		              read_size,
+		              media_offset,
+		              &error );
+
+		remaining_media_size = media_size - media_offset;
+
+		if( read_size > remaining_media_size )
+		{
+			read_size = (size_t) remaining_media_size;
+		}
+		QCOW_TEST_ASSERT_EQUAL_SSIZE(
+		 "read_count",
+		 read_count,
+		 (ssize_t) read_size );
+
+		QCOW_TEST_ASSERT_IS_NULL(
+		 "error",
+		 error );
+
+		remaining_media_size -= read_count;
+
+		if( remaining_media_size == 0 )
+		{
+			offset = libqcow_file_seek_offset(
+			          file,
+			          0,
+			          SEEK_SET,
+			          &error );
+
+			QCOW_TEST_ASSERT_EQUAL_INT64(
+			 "offset",
+			 offset,
+			 (int64_t) 0 );
+
+			QCOW_TEST_ASSERT_IS_NULL(
+			 "error",
+			 error );
+
+			remaining_media_size = media_size;
+		}
+	}
 	/* Test error cases
 	 */
 	read_count = libqcow_file_read_buffer_at_offset(
 	              NULL,
 	              buffer,
-	              16,
+	              QCOW_TEST_FILE_READ_BUFFER_SIZE,
 	              0,
 	              &error );
 
@@ -1691,7 +1886,7 @@ int qcow_test_file_read_buffer_at_offset(
 	read_count = libqcow_file_read_buffer_at_offset(
 	              file,
 	              NULL,
-	              16,
+	              QCOW_TEST_FILE_READ_BUFFER_SIZE,
 	              0,
 	              &error );
 
@@ -1729,7 +1924,7 @@ int qcow_test_file_read_buffer_at_offset(
 	read_count = libqcow_file_read_buffer_at_offset(
 	              file,
 	              buffer,
-	              16,
+	              QCOW_TEST_FILE_READ_BUFFER_SIZE,
 	              -1,
 	              &error );
 
@@ -2421,6 +2616,8 @@ int main(
 		 "libqcow_file_signal_abort",
 		 qcow_test_file_signal_abort,
 		 file );
+
+		/* TODO: add tests for libqcow_file_is_locked */
 
 		QCOW_TEST_RUN_WITH_ARGS(
 		 "libqcow_file_read_buffer",

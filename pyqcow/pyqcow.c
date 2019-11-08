@@ -38,11 +38,13 @@
 #include "pyqcow_unused.h"
 
 #if !defined( LIBQCOW_HAVE_BFIO )
+
 LIBQCOW_EXTERN \
 int libqcow_check_file_signature_file_io_handle(
      libbfio_handle_t *file_io_handle,
      libqcow_error_t **error );
-#endif
+
+#endif /* !defined( LIBQCOW_HAVE_BFIO ) */
 
 /* The pyqcow module methods
  */
@@ -64,19 +66,19 @@ PyMethodDef pyqcow_module_methods[] = {
 	{ "check_file_signature_file_object",
 	  (PyCFunction) pyqcow_check_file_signature_file_object,
 	  METH_VARARGS | METH_KEYWORDS,
-	  "check_file_signature(file_object) -> Boolean\n"
+	  "check_file_signature_file_object(file_object) -> Boolean\n"
 	  "\n"
 	  "Checks if a file has a QEMU Copy-On-Write (QCOW) image file signature using a file-like object." },
 
 	{ "open",
-	  (PyCFunction) pyqcow_file_new_open,
+	  (PyCFunction) pyqcow_open_new_file,
 	  METH_VARARGS | METH_KEYWORDS,
 	  "open(filename, mode='r') -> Object\n"
 	  "\n"
 	  "Opens a file." },
 
 	{ "open_file_object",
-	  (PyCFunction) pyqcow_file_new_open_file_object,
+	  (PyCFunction) pyqcow_open_new_file_with_file_object,
 	  METH_VARARGS | METH_KEYWORDS,
 	  "open_file_object(file_object, mode='r') -> Object\n"
 	  "\n"
@@ -119,7 +121,7 @@ PyObject *pyqcow_get_version(
 	         errors ) );
 }
 
-/* Checks if the file has a QEMU Copy-On-Write (QCOW) image file signature
+/* Checks if a file has a QEMU Copy-On-Write (QCOW) image file signature
  * Returns a Python object if successful or NULL on error
  */
 PyObject *pyqcow_check_file_signature(
@@ -150,7 +152,7 @@ PyObject *pyqcow_check_file_signature(
 	if( PyArg_ParseTupleAndKeywords(
 	     arguments,
 	     keywords,
-	     "|O",
+	     "O|",
 	     keyword_list,
 	     &string_object ) == 0 )
 	{
@@ -166,7 +168,7 @@ PyObject *pyqcow_check_file_signature(
 	{
 		pyqcow_error_fetch_and_raise(
 	         PyExc_RuntimeError,
-		 "%s: unable to determine if string object is of type unicode.",
+		 "%s: unable to determine if string object is of type Unicode.",
 		 function );
 
 		return( NULL );
@@ -193,7 +195,7 @@ PyObject *pyqcow_check_file_signature(
 		{
 			pyqcow_error_fetch_and_raise(
 			 PyExc_RuntimeError,
-			 "%s: unable to convert unicode string to UTF-8.",
+			 "%s: unable to convert Unicode string to UTF-8.",
 			 function );
 
 			return( NULL );
@@ -215,7 +217,9 @@ PyObject *pyqcow_check_file_signature(
 
 		Py_DecRef(
 		 utf8_string_object );
-#endif
+
+#endif /* defined( HAVE_WIDE_SYSTEM_CHARACTER ) */
+
 		if( result == -1 )
 		{
 			pyqcow_error_raise(
@@ -313,7 +317,7 @@ PyObject *pyqcow_check_file_signature(
 	return( NULL );
 }
 
-/* Checks if the file has a QEMU Copy-On-Write (QCOW) image file signature using a file-like object
+/* Checks if a file has a QEMU Copy-On-Write (QCOW) image file signature using a file-like object
  * Returns a Python object if successful or NULL on error
  */
 PyObject *pyqcow_check_file_signature_file_object(
@@ -413,6 +417,52 @@ on_error:
 	return( NULL );
 }
 
+/* Creates a new file object and opens it
+ * Returns a Python object if successful or NULL on error
+ */
+PyObject *pyqcow_open_new_file(
+           PyObject *self PYQCOW_ATTRIBUTE_UNUSED,
+           PyObject *arguments,
+           PyObject *keywords )
+{
+	PyObject *pyqcow_file = NULL;
+
+	PYQCOW_UNREFERENCED_PARAMETER( self )
+
+	pyqcow_file_init(
+	 (pyqcow_file_t *) pyqcow_file );
+
+	pyqcow_file_open(
+	 (pyqcow_file_t *) pyqcow_file,
+	 arguments,
+	 keywords );
+
+	return( pyqcow_file );
+}
+
+/* Creates a new file object and opens it using a file-like object
+ * Returns a Python object if successful or NULL on error
+ */
+PyObject *pyqcow_open_new_file_with_file_object(
+           PyObject *self PYQCOW_ATTRIBUTE_UNUSED,
+           PyObject *arguments,
+           PyObject *keywords )
+{
+	PyObject *pyqcow_file = NULL;
+
+	PYQCOW_UNREFERENCED_PARAMETER( self )
+
+	pyqcow_file_init(
+	 (pyqcow_file_t *) pyqcow_file );
+
+	pyqcow_file_open_file_object(
+	 (pyqcow_file_t *) pyqcow_file,
+	 arguments,
+	 keywords );
+
+	return( pyqcow_file );
+}
+
 #if PY_MAJOR_VERSION >= 3
 
 /* The pyqcow module definition
@@ -450,10 +500,8 @@ PyMODINIT_FUNC initpyqcow(
                 void )
 #endif
 {
-	PyObject *module                           = NULL;
-	PyTypeObject *encryption_types_type_object = NULL;
-	PyTypeObject *file_type_object             = NULL;
-	PyGILState_STATE gil_state                 = 0;
+	PyObject *module           = NULL;
+	PyGILState_STATE gil_state = 0;
 
 #if defined( HAVE_DEBUG_OUTPUT )
 	libqcow_notify_set_stream(
@@ -488,6 +536,28 @@ PyMODINIT_FUNC initpyqcow(
 
 	gil_state = PyGILState_Ensure();
 
+	/* Setup the encryption_types type object
+	 */
+	pyqcow_encryption_types_type_object.tp_new = PyType_GenericNew;
+
+	if( PyType_Ready(
+	     &pyqcow_encryption_types_type_object ) < 0 )
+	{
+		goto on_error;
+	}
+	Py_IncRef(
+	 (PyObject *) &pyqcow_encryption_types_type_object );
+
+	PyModule_AddObject(
+	 module,
+	 "encryption_types",
+	 (PyObject *) &pyqcow_encryption_types_type_object );
+
+	if( pyqcow_encryption_types_init_type(
+	     &pyqcow_encryption_types_type_object ) != 1 )
+	{
+		goto on_error;
+	}
 	/* Setup the file type object
 	 */
 	pyqcow_file_type_object.tp_new = PyType_GenericNew;
@@ -500,36 +570,10 @@ PyMODINIT_FUNC initpyqcow(
 	Py_IncRef(
 	 (PyObject *) &pyqcow_file_type_object );
 
-	file_type_object = &pyqcow_file_type_object;
-
 	PyModule_AddObject(
 	 module,
 	 "file",
-	 (PyObject *) file_type_object );
-
-	/* Setup the encryption types type object
-	 */
-	pyqcow_encryption_types_type_object.tp_new = PyType_GenericNew;
-
-	if( pyqcow_encryption_types_init_type(
-	     &pyqcow_encryption_types_type_object ) != 1 )
-	{
-		goto on_error;
-	}
-	if( PyType_Ready(
-	     &pyqcow_encryption_types_type_object ) < 0 )
-	{
-		goto on_error;
-	}
-	Py_IncRef(
-	 (PyObject *) &pyqcow_encryption_types_type_object );
-
-	encryption_types_type_object = &pyqcow_encryption_types_type_object;
-
-	PyModule_AddObject(
-	 module,
-	 "encryption_types",
-	 (PyObject *) encryption_types_type_object );
+	 (PyObject *) &pyqcow_file_type_object );
 
 	PyGILState_Release(
 	 gil_state );
