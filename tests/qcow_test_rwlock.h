@@ -1,5 +1,5 @@
 /*
- * Integer functions
+ * Read/Write lock functions for testing
  *
  * Copyright (C) 2010-2019, Joachim Metz <joachim.metz@gmail.com>
  *
@@ -19,38 +19,38 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#if !defined( _PYQCOW_INTEGER_H )
-#define _PYQCOW_INTEGER_H
+#if !defined( _QCOW_TEST_RWLOCK_H )
+#define _QCOW_TEST_RWLOCK_H
 
 #include <common.h>
-#include <types.h>
 
-#include "pyqcow_libcerror.h"
-#include "pyqcow_python.h"
+#include "qcow_test_libqcow.h"
 
 #if defined( __cplusplus )
 extern "C" {
 #endif
 
-PyObject *pyqcow_integer_signed_new_from_64bit(
-           int64_t value_64bit );
+#if defined( LIBQCOW_HAVE_MULTI_THREAD_SUPPORT ) && defined( HAVE_GNU_DL_DLSYM ) && defined( __GNUC__ ) && !defined( __clang__ ) && !defined( __CYGWIN__ )
+#define HAVE_QCOW_TEST_RWLOCK		1
+#endif
 
-PyObject *pyqcow_integer_unsigned_new_from_64bit(
-           uint64_t value_64bit );
+#if defined( HAVE_QCOW_TEST_RWLOCK )
 
-int pyqcow_integer_signed_copy_to_64bit(
-     PyObject *integer_object,
-     int64_t *value_64bit,
-     libcerror_error_t **error );
+extern int qcow_test_pthread_rwlock_init_attempts_before_fail;
 
-int pyqcow_integer_unsigned_copy_to_64bit(
-     PyObject *integer_object,
-     uint64_t *value_64bit,
-     libcerror_error_t **error );
+extern int qcow_test_pthread_rwlock_destroy_attempts_before_fail;
+
+extern int qcow_test_pthread_rwlock_rdlock_attempts_before_fail;
+
+extern int qcow_test_pthread_rwlock_wrlock_attempts_before_fail;
+
+extern int qcow_test_pthread_rwlock_unlock_attempts_before_fail;
+
+#endif /* defined( HAVE_QCOW_TEST_RWLOCK ) */
 
 #if defined( __cplusplus )
 }
 #endif
 
-#endif /* !defined( _PYQCOW_INTEGER_H ) */
+#endif /* !defined( _QCOW_TEST_RWLOCK_H ) */
 

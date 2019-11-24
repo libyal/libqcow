@@ -2,7 +2,7 @@ AC_PREREQ( 2.59 )
 
 AC_INIT(
  [libqcow],
- [20191110],
+ [20191124],
  [joachim.metz@gmail.com])
 
 AC_CONFIG_SRCDIR(

@@ -109,6 +109,7 @@ qcow_test_file_SOURCES = \
 	qcow_test_libuna.h \
 	qcow_test_macros.h \
 	qcow_test_memory.c qcow_test_memory.h \
+	qcow_test_rwlock.c qcow_test_rwlock.h \
 	qcow_test_unused.h
 
 qcow_test_file_LDADD = \
@@ -121,7 +122,6 @@ qcow_test_file_LDADD = \
 	@LIBCLOCALE_LIBADD@ \
 	@LIBCDATA_LIBADD@ \
 	../libqcow/libqcow.la \
-	@LIBCTHREADS_LIBADD@ \
 	@LIBCERROR_LIBADD@ \
 	@PTHREAD_LIBADD@
 

@@ -191,6 +191,10 @@
 				RelativePath="..\..\tests\qcow_test_memory.c"
 				>
 			</File>
+			<File
+				RelativePath="..\..\tests\qcow_test_rwlock.c"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -235,6 +239,10 @@
 			</File>
 			<File
 				RelativePath="..\..\tests\qcow_test_memory.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\tests\qcow_test_rwlock.h"
 				>
 			</File>
 			<File

@@ -5,18 +5,18 @@
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
@@ -46,6 +46,7 @@
 #include "qcow_test_libqcow.h"
 #include "qcow_test_macros.h"
 #include "qcow_test_memory.h"
+#include "qcow_test_rwlock.h"
 
 #include "../libqcow/libqcow_file.h"
 
@@ -2048,7 +2049,7 @@ int qcow_test_file_read_buffer(
 	read_count = libqcow_file_read_buffer(
 	              file,
 	              buffer,
-	              QCOW_TEST_PARTITION_READ_BUFFER_SIZE,
+	              QCOW_TEST_FILE_READ_BUFFER_SIZE,
 	              &error );
 
 	if( qcow_test_pthread_rwlock_wrlock_attempts_before_fail != -1 )
@@ -2076,7 +2077,7 @@ int qcow_test_file_read_buffer(
 	read_count = libqcow_file_read_buffer(
 	              file,
 	              buffer,
-	              QCOW_TEST_PARTITION_READ_BUFFER_SIZE,
+	              QCOW_TEST_FILE_READ_BUFFER_SIZE,
 	              &error );
 
 	if( qcow_test_pthread_rwlock_unlock_attempts_before_fail != -1 )
@@ -2686,10 +2687,10 @@ int qcow_test_file_get_offset(
 	          &offset,
 	          &error );
 
-	QCOW_TEST_ASSERT_NOT_EQUAL_INT(
+	QCOW_TEST_ASSERT_EQUAL_INT(
 	 "result",
 	 result,
-	 -1 );
+	 1 );
 
 	QCOW_TEST_ASSERT_IS_NULL(
 	 "error",
@@ -2731,6 +2732,64 @@ int qcow_test_file_get_offset(
 	libcerror_error_free(
 	 &error );
 
+#if defined( HAVE_QCOW_TEST_RWLOCK )
+
+	/* Test libqcow_file_get_offset with pthread_rwlock_rdlock failing in libcthreads_read_write_lock_grab_for_read
+	 */
+	qcow_test_pthread_rwlock_rdlock_attempts_before_fail = 0;
+
+	result = libqcow_file_get_offset(
+	          file,
+	          &offset,
+	          &error );
+
+	if( qcow_test_pthread_rwlock_rdlock_attempts_before_fail != -1 )
+	{
+		qcow_test_pthread_rwlock_rdlock_attempts_before_fail = -1;
+	}
+	else
+	{
+		QCOW_TEST_ASSERT_EQUAL_INT(
+		 "result",
+		 result,
+		 -1 );
+
+		QCOW_TEST_ASSERT_IS_NOT_NULL(
+		 "error",
+		 error );
+
+		libcerror_error_free(
+		 &error );
+	}
+	/* Test libqcow_file_get_offset with pthread_rwlock_unlock failing in libcthreads_read_write_lock_release_for_read
+	 */
+	qcow_test_pthread_rwlock_unlock_attempts_before_fail = 0;
+
+	result = libqcow_file_get_offset(
+	          file,
+	          &offset,
+	          &error );
+
+	if( qcow_test_pthread_rwlock_unlock_attempts_before_fail != -1 )
+	{
+		qcow_test_pthread_rwlock_unlock_attempts_before_fail = -1;
+	}
+	else
+	{
+		QCOW_TEST_ASSERT_EQUAL_INT(
+		 "result",
+		 result,
+		 -1 );
+
+		QCOW_TEST_ASSERT_IS_NOT_NULL(
+		 "error",
+		 error );
+
+		libcerror_error_free(
+		 &error );
+	}
+#endif /* defined( HAVE_QCOW_TEST_RWLOCK ) */
+
 	return( 1 );
 
 on_error:
@@ -2759,10 +2818,10 @@ int qcow_test_file_get_media_size(
 	          &media_size,
 	          &error );
 
-	QCOW_TEST_ASSERT_NOT_EQUAL_INT(
+	QCOW_TEST_ASSERT_EQUAL_INT(
 	 "result",
 	 result,
-	 -1 );
+	 1 );
 
 	QCOW_TEST_ASSERT_IS_NULL(
 	 "error",
@@ -2803,6 +2862,64 @@ int qcow_test_file_get_media_size(
 
 	libcerror_error_free(
 	 &error );
+
+#if defined( HAVE_QCOW_TEST_RWLOCK )
+
+	/* Test libqcow_file_get_media_size with pthread_rwlock_rdlock failing in libcthreads_read_write_lock_grab_for_read
+	 */
+	qcow_test_pthread_rwlock_rdlock_attempts_before_fail = 0;
+
+	result = libqcow_file_get_media_size(
+	          file,
+	          &media_size,
+	          &error );
+
+	if( qcow_test_pthread_rwlock_rdlock_attempts_before_fail != -1 )
+	{
+		qcow_test_pthread_rwlock_rdlock_attempts_before_fail = -1;
+	}
+	else
+	{
+		QCOW_TEST_ASSERT_EQUAL_INT(
+		 "result",
+		 result,
+		 -1 );
+
+		QCOW_TEST_ASSERT_IS_NOT_NULL(
+		 "error",
+		 error );
+
+		libcerror_error_free(
+		 &error );
+	}
+	/* Test libqcow_file_get_media_size with pthread_rwlock_unlock failing in libcthreads_read_write_lock_release_for_read
+	 */
+	qcow_test_pthread_rwlock_unlock_attempts_before_fail = 0;
+
+	result = libqcow_file_get_media_size(
+	          file,
+	          &media_size,
+	          &error );
+
+	if( qcow_test_pthread_rwlock_unlock_attempts_before_fail != -1 )
+	{
+		qcow_test_pthread_rwlock_unlock_attempts_before_fail = -1;
+	}
+	else
+	{
+		QCOW_TEST_ASSERT_EQUAL_INT(
+		 "result",
+		 result,
+		 -1 );
+
+		QCOW_TEST_ASSERT_IS_NOT_NULL(
+		 "error",
+		 error );
+
+		libcerror_error_free(
+		 &error );
+	}
+#endif /* defined( HAVE_QCOW_TEST_RWLOCK ) */
 
 	return( 1 );
 
