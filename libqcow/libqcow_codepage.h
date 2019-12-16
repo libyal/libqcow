@@ -29,14 +29,14 @@
 extern "C" {
 #endif
 
-#if !defined( HAVE_LOCAL_LIBQCOW )
-
-#include <libqcow/codepage.h>
-
 /* Define HAVE_LOCAL_LIBQCOW for local use of libqcow
  * The definitions in <libqcow/codepage.h> are copied here
  * for local use of libqcow
  */
+#if !defined( HAVE_LOCAL_LIBQCOW )
+
+#include <libqcow/codepage.h>
+
 #else
 
 /* The codepage definitions
