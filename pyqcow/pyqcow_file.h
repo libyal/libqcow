@@ -77,6 +77,10 @@ PyObject *pyqcow_file_close(
            pyqcow_file_t *pyqcow_file,
            PyObject *arguments );
 
+PyObject *pyqcow_file_is_locked(
+           pyqcow_file_t *pyqcow_file,
+           PyObject *arguments );
+
 PyObject *pyqcow_file_read_buffer(
            pyqcow_file_t *pyqcow_file,
            PyObject *arguments,

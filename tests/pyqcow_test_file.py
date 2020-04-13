@@ -6,18 +6,18 @@
 #
 # Refer to AUTHORS for acknowledgements.
 #
-# This software is free software: you can redistribute it and/or modify
+# This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# This software is distributed in the hope that it will be useful,
+# This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with this software.  If not, see <http://www.gnu.org/licenses/>.
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import argparse
 import os
@@ -43,6 +43,8 @@ class FileTypeTests(unittest.TestCase):
       raise unittest.SkipTest("missing source")
 
     qcow_file = pyqcow.file()
+    if unittest.password:
+      qcow_file.set_password(unittest.password)
 
     qcow_file.open(unittest.source)
 
@@ -65,23 +67,25 @@ class FileTypeTests(unittest.TestCase):
     if not os.path.isfile(unittest.source):
       raise unittest.SkipTest("source not a regular file")
 
-    file_object = open(unittest.source, "rb")
-
     qcow_file = pyqcow.file()
+    if unittest.password:
+      qcow_file.set_password(unittest.password)
 
-    qcow_file.open_file_object(file_object)
+    with open(unittest.source, "rb") as file_object:
 
-    with self.assertRaises(IOError):
       qcow_file.open_file_object(file_object)
 
-    qcow_file.close()
+      with self.assertRaises(IOError):
+        qcow_file.open_file_object(file_object)
 
-    # TODO: change IOError into TypeError
-    with self.assertRaises(IOError):
-      qcow_file.open_file_object(None)
+      qcow_file.close()
 
-    with self.assertRaises(ValueError):
-      qcow_file.open_file_object(file_object, mode="w")
+      # TODO: change IOError into TypeError
+      with self.assertRaises(IOError):
+        qcow_file.open_file_object(None)
+
+      with self.assertRaises(ValueError):
+        qcow_file.open_file_object(file_object, mode="w")
 
   def test_close(self):
     """Tests the close function."""
@@ -89,6 +93,8 @@ class FileTypeTests(unittest.TestCase):
       raise unittest.SkipTest("missing source")
 
     qcow_file = pyqcow.file()
+    if unittest.password:
+      qcow_file.set_password(unittest.password)
 
     with self.assertRaises(IOError):
       qcow_file.close()
@@ -99,6 +105,8 @@ class FileTypeTests(unittest.TestCase):
       return
 
     qcow_file = pyqcow.file()
+    if unittest.password:
+      qcow_file.set_password(unittest.password)
 
     # Test open and close.
     qcow_file.open(unittest.source)
@@ -109,21 +117,48 @@ class FileTypeTests(unittest.TestCase):
     qcow_file.close()
 
     if os.path.isfile(unittest.source):
-      file_object = open(unittest.source, "rb")
+      with open(unittest.source, "rb") as file_object:
 
-      # Test open_file_object and close.
-      qcow_file.open_file_object(file_object)
-      qcow_file.close()
+        # Test open_file_object and close.
+        qcow_file.open_file_object(file_object)
+        qcow_file.close()
 
-      # Test open_file_object and close a second time to validate clean up on close.
-      qcow_file.open_file_object(file_object)
-      qcow_file.close()
+        # Test open_file_object and close a second time to validate clean up on close.
+        qcow_file.open_file_object(file_object)
+        qcow_file.close()
 
-      # Test open_file_object and close and dereferencing file_object.
-      qcow_file.open_file_object(file_object)
-      del file_object
+        # Test open_file_object and close and dereferencing file_object.
+        qcow_file.open_file_object(file_object)
+        del file_object
+        qcow_file.close()
+
+  def test_is_locked(self):
+    """Tests the is_locked function."""
+    if not unittest.source:
+      raise unittest.SkipTest("missing source")
+
+    qcow_file = pyqcow.file()
+
+    qcow_file.open(unittest.source)
+
+    result = qcow_file.is_locked()
+    if unittest.password:
+      self.assertTrue(result)
+    else:
+      self.assertFalse(result)
 
     qcow_file.close()
+
+    if unittest.password:
+      qcow_file = pyqcow.file()
+      qcow_file.set_password(unittest.password)
+
+      qcow_file.open(unittest.source)
+
+      result = qcow_file.is_locked()
+      self.assertFalse(result)
+
+      qcow_file.close()
 
   def test_read_buffer(self):
     """Tests the read_buffer function."""
@@ -131,6 +166,8 @@ class FileTypeTests(unittest.TestCase):
       raise unittest.SkipTest("missing source")
 
     qcow_file = pyqcow.file()
+    if unittest.password:
+      qcow_file.set_password(unittest.password)
 
     qcow_file.open(unittest.source)
 
@@ -211,21 +248,22 @@ class FileTypeTests(unittest.TestCase):
     if not os.path.isfile(unittest.source):
       raise unittest.SkipTest("source not a regular file")
 
-    file_object = open(unittest.source, "rb")
-
     qcow_file = pyqcow.file()
+    if unittest.password:
+      qcow_file.set_password(unittest.password)
 
-    qcow_file.open_file_object(file_object)
+    with open(unittest.source, "rb") as file_object:
+      qcow_file.open_file_object(file_object)
 
-    media_size = qcow_file.get_media_size()
+      media_size = qcow_file.get_media_size()
 
-    # Test normal read.
-    data = qcow_file.read_buffer(size=4096)
+      # Test normal read.
+      data = qcow_file.read_buffer(size=4096)
 
-    self.assertIsNotNone(data)
-    self.assertEqual(len(data), min(media_size, 4096))
+      self.assertIsNotNone(data)
+      self.assertEqual(len(data), min(media_size, 4096))
 
-    qcow_file.close()
+      qcow_file.close()
 
   def test_read_buffer_at_offset(self):
     """Tests the read_buffer_at_offset function."""
@@ -233,6 +271,8 @@ class FileTypeTests(unittest.TestCase):
       raise unittest.SkipTest("missing source")
 
     qcow_file = pyqcow.file()
+    if unittest.password:
+      qcow_file.set_password(unittest.password)
 
     qcow_file.open(unittest.source)
 
@@ -300,6 +340,8 @@ class FileTypeTests(unittest.TestCase):
       raise unittest.SkipTest("missing source")
 
     qcow_file = pyqcow.file()
+    if unittest.password:
+      qcow_file.set_password(unittest.password)
 
     qcow_file.open(unittest.source)
 
@@ -354,11 +396,14 @@ class FileTypeTests(unittest.TestCase):
       qcow_file.seek_offset(16, os.SEEK_SET)
 
   def test_get_offset(self):
-    """Tests the get_offset function and offset property."""
+    """Tests the get_offset function."""
     if not unittest.source:
       raise unittest.SkipTest("missing source")
 
     qcow_file = pyqcow.file()
+    if unittest.password:
+      qcow_file.set_password(unittest.password)
+
     qcow_file.open(unittest.source)
 
     offset = qcow_file.get_offset()
@@ -372,6 +417,9 @@ class FileTypeTests(unittest.TestCase):
       raise unittest.SkipTest("missing source")
 
     qcow_file = pyqcow.file()
+    if unittest.password:
+      qcow_file.set_password(unittest.password)
+
     qcow_file.open(unittest.source)
 
     media_size = qcow_file.get_media_size()

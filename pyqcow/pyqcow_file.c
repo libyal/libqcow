@@ -81,6 +81,13 @@ PyMethodDef pyqcow_file_object_methods[] = {
 	  "\n"
 	  "Closes a file." },
 
+	{ "is_locked",
+	  (PyCFunction) pyqcow_file_is_locked,
+	  METH_NOARGS,
+	  "is_locked() -> Boolean or None\n"
+	  "\n"
+	  "Determines if the file is locked." },
+
 	{ "read_buffer",
 	  (PyCFunction) pyqcow_file_read_buffer,
 	  METH_VARARGS | METH_KEYWORDS,
@@ -801,6 +808,62 @@ PyObject *pyqcow_file_close(
 	 Py_None );
 
 	return( Py_None );
+}
+
+/* Determines if the file is locked
+ * Returns a Python object if successful or NULL on error
+ */
+PyObject *pyqcow_file_is_locked(
+           pyqcow_file_t *pyqcow_file,
+           PyObject *arguments PYQCOW_ATTRIBUTE_UNUSED )
+{
+	libcerror_error_t *error = NULL;
+	static char *function    = "pyqcow_file_is_locked";
+	int result               = 0;
+
+	PYQCOW_UNREFERENCED_PARAMETER( arguments )
+
+	if( pyqcow_file == NULL )
+	{
+		PyErr_Format(
+		 PyExc_ValueError,
+		 "%s: invalid file.",
+		 function );
+
+		return( NULL );
+	}
+	Py_BEGIN_ALLOW_THREADS
+
+	result = libqcow_file_is_locked(
+	          pyqcow_file->file,
+	          &error );
+
+	Py_END_ALLOW_THREADS
+
+	if( result == -1 )
+	{
+		pyqcow_error_raise(
+		 error,
+		 PyExc_IOError,
+		 "%s: unable to determine if file is locked.",
+		 function );
+
+		libcerror_error_free(
+		 &error );
+
+		return( NULL );
+	}
+	if( result != 0 )
+	{
+		Py_IncRef(
+		 (PyObject *) Py_True );
+
+		return( Py_True );
+	}
+	Py_IncRef(
+	 (PyObject *) Py_False );
+
+	return( Py_False );
 }
 
 /* Reads data at the current offset into a buffer
