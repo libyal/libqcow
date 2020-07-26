@@ -133,9 +133,12 @@ stamp-h[1-9]
 /tests/qcow_test_deflate
 /tests/qcow_test_error
 /tests/qcow_test_file
+/tests/qcow_test_file_header
 /tests/qcow_test_io_handle
 /tests/qcow_test_notify
 /tests/qcow_test_support
+/tests/qcow_test_tools_output
+/tests/qcow_test_tools_signal
 /tests/tmp*
 
 # Local library dependencies specific files

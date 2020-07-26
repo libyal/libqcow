@@ -273,24 +273,15 @@ int libqcow_cluster_table_read(
 
 		return( -1 );
 	}
-	if( cluster_table_size > (size_t) SSIZE_MAX )
+	if( ( cluster_table_size == 0 )
+	 || ( cluster_table_size > (size_t) MEMORY_MAXIMUM_ALLOCATION_SIZE )
+	 || ( ( cluster_table_size % 8 ) != 0 ) )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_VALUE_EXCEEDS_MAXIMUM,
-		 "%s: invalid cluster table size value exceeds maximum.",
-		 function );
-
-		return( -1 );
-	}
-	if( ( cluster_table_size % 8 ) != 0 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_UNSUPPORTED_VALUE,
-		 "%s: unsupported cluster table size value - value not a multitude of 8.",
+		 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid cluster table size value out of bounds.",
 		 function );
 
 		return( -1 );
@@ -306,8 +297,6 @@ int libqcow_cluster_table_read(
 
 		return( -1 );
 	}
-	cluster_table->number_of_references = (int) ( cluster_table_size / 8 );
-
 	cluster_table->references = (uint64_t *) memory_allocate(
 	                                          cluster_table_size );
 
@@ -322,6 +311,8 @@ int libqcow_cluster_table_read(
 
 		goto on_error;
 	}
+	cluster_table->number_of_references = (int) ( cluster_table_size / 8 );
+
 #if defined( HAVE_DEBUG_OUTPUT )
 	if( libcnotify_verbose != 0 )
 	{

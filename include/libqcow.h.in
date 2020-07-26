@@ -301,35 +301,6 @@ ssize_t libqcow_file_read_buffer_at_offset(
          off64_t offset,
          libqcow_error_t **error );
 
-#ifdef TODO_WRITE_SUPPORT
-
-/* Writes (media) data at the current offset
- * the necessary settings of the write values must have been made
- * Will initialize write if necessary
- * Returns the number of input bytes written, 0 when no longer bytes can be written or -1 on error
- */
-LIBQCOW_EXTERN \
-ssize_t libqcow_file_write_buffer(
-         libqcow_file_t *file,
-         const void *buffer,
-         size_t buffer_size,
-         libqcow_error_t **error );
-
-/* Writes (media) data at a specific offset
- * the necessary settings of the write values must have been made
- * Will initialize write if necessary
- * Returns the number of input bytes written, 0 when no longer bytes can be written or -1 on error
- */
-LIBQCOW_EXTERN \
-ssize_t libqcow_file_write_buffer_at_offset(
-         libqcow_file_t *file,
-         const void *buffer,
-         size_t buffer_size,
-         off64_t offset,
-         libqcow_error_t **error );
-
-#endif /* TODO_WRITE_SUPPORT */
-
 /* Seeks a certain offset of the (media) data
  * Returns the offset if seek is successful or -1 on error
  */

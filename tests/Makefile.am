@@ -1,3 +1,5 @@
+AUTOMAKE_OPTIONS = subdir-objects
+
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/common \
@@ -26,6 +28,7 @@ endif
 
 TESTS = \
 	test_library.sh \
+	test_tools.sh \
 	test_qcowinfo.sh \
 	$(TESTS_PYQCOW)
 
@@ -36,7 +39,8 @@ check_SCRIPTS = \
 	test_manpage.sh \
 	test_python_module.sh \
 	test_qcowinfo.sh \
-	test_runner.sh
+	test_runner.sh \
+	test_tools.sh
 
 EXTRA_DIST = \
 	$(check_SCRIPTS)
@@ -47,9 +51,12 @@ check_PROGRAMS = \
 	qcow_test_deflate \
 	qcow_test_error \
 	qcow_test_file \
+	qcow_test_file_header \
 	qcow_test_io_handle \
 	qcow_test_notify \
-	qcow_test_support
+	qcow_test_support \
+	qcow_test_tools_output \
+	qcow_test_tools_signal
 
 qcow_test_cluster_block_SOURCES = \
 	qcow_test_cluster_block.c \
@@ -125,6 +132,28 @@ qcow_test_file_LDADD = \
 	@LIBCERROR_LIBADD@ \
 	@PTHREAD_LIBADD@
 
+qcow_test_file_header_SOURCES = \
+	qcow_test_file_header.c \
+	qcow_test_functions.c qcow_test_functions.h \
+	qcow_test_libbfio.h \
+	qcow_test_libcerror.h \
+	qcow_test_libqcow.h \
+	qcow_test_macros.h \
+	qcow_test_memory.c qcow_test_memory.h \
+	qcow_test_unused.h
+
+qcow_test_file_header_LDADD = \
+	@LIBBFIO_LIBADD@ \
+	@LIBCPATH_LIBADD@ \
+	@LIBCFILE_LIBADD@ \
+	@LIBUNA_LIBADD@ \
+	@LIBCSPLIT_LIBADD@ \
+	@LIBCNOTIFY_LIBADD@ \
+	@LIBCLOCALE_LIBADD@ \
+	@LIBCDATA_LIBADD@ \
+	../libqcow/libqcow.la \
+	@LIBCERROR_LIBADD@
+
 qcow_test_io_handle_SOURCES = \
 	qcow_test_io_handle.c \
 	qcow_test_libcerror.h \
@@ -171,6 +200,28 @@ qcow_test_support_LDADD = \
 	@LIBCNOTIFY_LIBADD@ \
 	@LIBCLOCALE_LIBADD@ \
 	@LIBCDATA_LIBADD@ \
+	../libqcow/libqcow.la \
+	@LIBCERROR_LIBADD@
+
+qcow_test_tools_output_SOURCES = \
+	../qcowtools/qcowtools_output.c ../qcowtools/qcowtools_output.h \
+	qcow_test_libcerror.h \
+	qcow_test_macros.h \
+	qcow_test_tools_output.c \
+	qcow_test_unused.h
+
+qcow_test_tools_output_LDADD = \
+	../libqcow/libqcow.la \
+	@LIBCERROR_LIBADD@
+
+qcow_test_tools_signal_SOURCES = \
+	../qcowtools/qcowtools_signal.c ../qcowtools/qcowtools_signal.h \
+	qcow_test_libcerror.h \
+	qcow_test_macros.h \
+	qcow_test_tools_signal.c \
+	qcow_test_unused.h
+
+qcow_test_tools_signal_LDADD = \
 	../libqcow/libqcow.la \
 	@LIBCERROR_LIBADD@
 

@@ -19,9 +19,12 @@ MSVSCPP_FILES = \
 	qcow_test_deflate/qcow_test_deflate.vcproj \
 	qcow_test_error/qcow_test_error.vcproj \
 	qcow_test_file/qcow_test_file.vcproj \
+	qcow_test_file_header/qcow_test_file_header.vcproj \
 	qcow_test_io_handle/qcow_test_io_handle.vcproj \
 	qcow_test_notify/qcow_test_notify.vcproj \
 	qcow_test_support/qcow_test_support.vcproj \
+	qcow_test_tools_output/qcow_test_tools_output.vcproj \
+	qcow_test_tools_signal/qcow_test_tools_signal.vcproj \
 	qcowinfo/qcowinfo.vcproj \
 	qcowmount/qcowmount.vcproj \
 	zlib/zlib.vcproj \

@@ -32,6 +32,7 @@
 #include "libqcow_debug.h"
 #include "libqcow_definitions.h"
 #include "libqcow_encryption.h"
+#include "libqcow_file_header.h"
 #include "libqcow_i18n.h"
 #include "libqcow_io_handle.h"
 #include "libqcow_file.h"
@@ -283,7 +284,18 @@ int libqcow_file_signal_abort(
 	}
 	internal_file = (libqcow_internal_file_t *) file;
 
-	internal_file->abort = 1;
+	if( internal_file->io_handle == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid file - missing IO handle.",
+		 function );
+
+		return( -1 );
+	}
+	internal_file->io_handle->abort = 1;
 
 	return( 1 );
 }
@@ -916,6 +928,27 @@ int libqcow_file_close(
 
 		result = -1;
 	}
+	if( libqcow_file_header_free(
+	     &( internal_file->file_header ),
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+		 "%s: unable to free file header.",
+		 function );
+
+		result = -1;
+	}
+	if( internal_file->backing_filename != NULL )
+	{
+		memory_free(
+		 internal_file->backing_filename );
+
+		internal_file->backing_filename      = NULL;
+		internal_file->backing_filename_size = 0;
+	}
 	if( libqcow_cluster_table_free(
 	     &( internal_file->level1_table ),
 	     error ) != 1 )
@@ -994,18 +1027,21 @@ int libqcow_file_close(
 
 		result = -1;
 	}
-	if( libqcow_encryption_free(
-	     &( internal_file->encryption_context ),
-	     error ) != 1 )
+	if( internal_file->encryption_context != NULL )
 	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
-		 "%s: unable to free encryption context.",
-		 function );
+		if( libqcow_encryption_free(
+		     &( internal_file->encryption_context ),
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+			 "%s: unable to free encryption context.",
+			 function );
 
-		result = -1;
+			result = -1;
+		}
 	}
 #if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_write(
@@ -1033,8 +1069,14 @@ int libqcow_internal_file_open_read(
      libbfio_handle_t *file_io_handle,
      libcerror_error_t **error )
 {
-	static char *function = "libqcow_internal_file_open_read";
-	int entry_index       = 0;
+	static char *function                      = "libqcow_internal_file_open_read";
+	size_t level1_table_size                   = 0;
+	size_t level2_table_size                   = 0;
+	uint64_t backing_filename_offset           = 0;
+	uint32_t backing_filename_size             = 0;
+	uint32_t number_of_level1_table_references = 0;
+	uint32_t number_of_level2_table_bits       = 0;
+	int entry_index                            = 0;
 
 	if( internal_file == NULL )
 	{
@@ -1054,6 +1096,28 @@ int libqcow_internal_file_open_read(
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
 		 "%s: invalid file - missing IO handle.",
+		 function );
+
+		return( -1 );
+	}
+	if( internal_file->file_header != NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
+		 "%s: invalid file - file header value already set.",
+		 function );
+
+		return( -1 );
+	}
+	if( internal_file->backing_filename != NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
+		 "%s: invalid file - backing filename value already set.",
 		 function );
 
 		return( -1 );
@@ -1156,10 +1220,22 @@ int libqcow_internal_file_open_read(
 		 "Reading file header:\n" );
 	}
 #endif
-	if( libqcow_io_handle_read_file_header(
-	     internal_file->io_handle,
+	if( libqcow_file_header_initialize(
+	     &( internal_file->file_header ),
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+		 "%s: unable to create file header.",
+		 function );
+
+		goto on_error;
+	}
+	if( libqcow_file_header_read_file_io_handle(
+	     internal_file->file_header,
 	     file_io_handle,
-	     &( internal_file->encryption_method ),
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -1170,6 +1246,133 @@ int libqcow_internal_file_open_read(
 		 function );
 
 		goto on_error;
+	}
+
+	internal_file->encryption_method  = internal_file->file_header->encryption_method;
+
+	backing_filename_offset           = internal_file->file_header->backing_filename_offset;
+	backing_filename_size             = internal_file->file_header->backing_filename_size;
+	number_of_level1_table_references = internal_file->file_header->number_of_level1_table_references;
+
+	if( internal_file->file_header->format_version == 1 )
+	{
+		number_of_level2_table_bits       = internal_file->file_header->number_of_level2_table_bits;
+
+		internal_file->offset_bit_mask           = 0x7fffffffffffffffULL;
+		internal_file->compression_flag_bit_mask = (uint64_t) 1 << 63;
+		internal_file->compression_bit_shift     = 63 - internal_file->file_header->number_of_cluster_block_bits;
+	}
+	else if( ( internal_file->file_header->format_version == 2 )
+	      || ( internal_file->file_header->format_version == 3 ) )
+	{
+		if( internal_file->file_header->number_of_cluster_block_bits <= 8 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+			 "%s: invalid number of cluster block bits value out of bounds.",
+			 function );
+
+			goto on_error;
+		}
+		number_of_level2_table_bits = internal_file->file_header->number_of_cluster_block_bits - 3;
+
+		internal_file->offset_bit_mask           = 0x3fffffffffffffffULL;
+		internal_file->compression_flag_bit_mask = (uint64_t) 1 << 62;
+		internal_file->compression_bit_shift     = 62 - ( internal_file->file_header->number_of_cluster_block_bits - 8 );
+	}
+	internal_file->level1_index_bit_shift = internal_file->file_header->number_of_cluster_block_bits + number_of_level2_table_bits;
+	internal_file->level2_index_bit_mask  = ~( (uint64_t) -1 << number_of_level2_table_bits );
+	internal_file->cluster_block_bit_mask = ~( (uint64_t) -1 << internal_file->file_header->number_of_cluster_block_bits );
+	internal_file->compression_bit_mask   = ~( (uint64_t) -1 << internal_file->compression_bit_shift );
+	internal_file->cluster_block_size     = (size_t) 1 << internal_file->file_header->number_of_cluster_block_bits;
+
+	level2_table_size = (size_t) 1 << number_of_level2_table_bits;
+
+	if( internal_file->file_header->format_version == 1 )
+	{
+		level1_table_size = (uint32_t) ( internal_file->cluster_block_size * level2_table_size );
+
+		if( level1_table_size == 0 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+			 "%s: invalid level1 table size value out of bounds.",
+			 function );
+
+			goto on_error;
+		}
+		if( ( internal_file->file_header->media_size % level1_table_size ) != 0 )
+		{
+			level1_table_size = (uint32_t) ( ( internal_file->file_header->media_size / level1_table_size ) + 1 );
+		}
+		else
+		{
+			level1_table_size = (uint32_t) ( internal_file->file_header->media_size / level1_table_size );
+		}
+	}
+	else if( ( internal_file->file_header->format_version == 2 )
+	      || ( internal_file->file_header->format_version == 3 ) )
+	{
+		level1_table_size = number_of_level1_table_references;
+	}
+	level1_table_size *= 8;
+	level2_table_size *= 8;
+
+#if UINT32_MAX > SSIZE_MAX
+	if( level1_table_size > (uint32_t) SSIZE_MAX )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_EXCEEDS_MAXIMUM,
+		 "%s: invalid level 1 table size value exceeds maximum.",
+		 function );
+
+		goto on_error;
+	}
+#endif
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
+	{
+		libcnotify_printf(
+		 "%s: level 1 table size\t\t\t: %" PRIzd "\n",
+		 function,
+		 level1_table_size );
+
+		libcnotify_printf(
+		 "%s: level 2 table size\t\t\t: %" PRIzd "\n",
+		 function,
+		 level2_table_size );
+
+		libcnotify_printf(
+		 "%s: cluster block size\t\t\t: %" PRIzd "\n",
+		 function,
+		 internal_file->cluster_block_size );
+	}
+#endif
+	if( ( backing_filename_offset > 0 )
+	 && ( backing_filename_size > 0 ) )
+	{
+		if( libqcow_internal_file_open_read_backing_filename(
+		     internal_file,
+		     file_io_handle,
+		     backing_filename_offset,
+		     backing_filename_size,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_IO,
+			 LIBCERROR_IO_ERROR_READ_FAILED,
+			 "%s: unable to read backing filename.",
+			 function );
+
+			goto on_error;
+		}
 	}
 	if( internal_file->encryption_method != LIBQCOW_ENCRYPTION_METHOD_NONE )
 	{
@@ -1238,8 +1441,8 @@ int libqcow_internal_file_open_read(
 	if( libqcow_cluster_table_read(
 	     internal_file->level1_table,
 	     file_io_handle,
-	     internal_file->io_handle->level1_table_offset,
-	     (size_t) internal_file->io_handle->level1_table_size,
+	     internal_file->file_header->level1_table_offset,
+	     level1_table_size,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -1254,7 +1457,7 @@ int libqcow_internal_file_open_read(
 /* TODO clone function ? */
 	if( libfdata_vector_initialize(
 	     &( internal_file->level2_table_vector ),
-	     (size64_t) internal_file->io_handle->level2_table_size,
+	     (size64_t) level2_table_size,
 	     (intptr_t *) internal_file->io_handle,
 	     NULL,
 	     NULL,
@@ -1307,7 +1510,7 @@ int libqcow_internal_file_open_read(
 /* TODO clone function ? */
 	if( libfdata_vector_initialize(
 	     &( internal_file->cluster_block_vector ),
-	     (size64_t) internal_file->io_handle->cluster_block_size,
+	     (size64_t) internal_file->cluster_block_size,
 	     (intptr_t *) internal_file->io_handle,
 	     NULL,
 	     NULL,
@@ -1406,6 +1609,160 @@ on_error:
 		 &( internal_file->level1_table ),
 		 NULL );
 	}
+	if( internal_file->encryption_context != NULL )
+	{
+		libqcow_encryption_free(
+		 &( internal_file->encryption_context ),
+		 NULL );
+	}
+	if( internal_file->backing_filename != NULL )
+	{
+		memory_free(
+		 internal_file->backing_filename );
+
+		internal_file->backing_filename = NULL;
+	}
+	internal_file->backing_filename_size = 0;
+
+	if( internal_file->file_header != NULL )
+	{
+		libqcow_file_header_free(
+		 &( internal_file->file_header ),
+		 NULL );
+	}
+	return( -1 );
+}
+
+/* Reads the backing filename
+ * Returns 1 if successful or -1 on error
+ */
+int libqcow_internal_file_open_read_backing_filename(
+     libqcow_internal_file_t *internal_file,
+     libbfio_handle_t *file_io_handle,
+     off64_t backing_filename_offset,
+     uint32_t backing_filename_size,
+     libcerror_error_t **error )
+{
+	static char *function = "libqcow_internal_file_open_read_backing_filename";
+	ssize_t read_count    = 0;
+
+	if( internal_file == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file.",
+		 function );
+
+		return( -1 );
+	}
+	if( internal_file->backing_filename != NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
+		 "%s: invalid file - backing filename value already set.",
+		 function );
+
+		return( -1 );
+	}
+	if( ( backing_filename_size == 0 )
+	 || ( backing_filename_size > MEMORY_MAXIMUM_ALLOCATION_SIZE ) )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid backing filename size value out of bounds.",
+		 function );
+
+		goto on_error;
+	}
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
+	{
+		libcnotify_printf(
+		 "%s: reading backing filename at offset: %" PRIu64 " (0x%08" PRIx64 ")\n",
+		 function,
+		 backing_filename_offset,
+		 backing_filename_offset );
+	}
+#endif
+	if( libbfio_handle_seek_offset(
+	     file_io_handle,
+	     backing_filename_offset,
+	     SEEK_SET,
+	     error ) == -1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_IO,
+		 LIBCERROR_IO_ERROR_SEEK_FAILED,
+		 "%s: unable to seek file header offset: %" PRIu64 ".",
+		 function,
+		 backing_filename_offset );
+
+		goto on_error;
+	}
+	internal_file->backing_filename = (uint8_t *) memory_allocate(
+	                                               sizeof( uint8_t ) * backing_filename_size );
+
+	if( internal_file->backing_filename == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_MEMORY,
+		 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
+		 "%s: unable to create backing filename.",
+		 function );
+
+		goto on_error;
+	}
+	internal_file->backing_filename_size = (size_t) backing_filename_size;
+
+	read_count = libbfio_handle_read_buffer(
+		      file_io_handle,
+		      internal_file->backing_filename,
+		      (size_t) backing_filename_size,
+		      error );
+
+	if( read_count != (ssize_t) backing_filename_size )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_IO,
+		 LIBCERROR_IO_ERROR_READ_FAILED,
+		 "%s: unable to read backing filename data.",
+		 function );
+
+		goto on_error;
+	}
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
+	{
+		libcnotify_printf(
+		 "%s: backing filename data:\n",
+		 function );
+		libcnotify_print_data(
+		 internal_file->backing_filename,
+		 (size_t) backing_filename_size,
+		 0 );
+	}
+#endif
+	return( 1 );
+
+on_error:
+	if( internal_file->backing_filename != NULL )
+	{
+		memory_free(
+		 internal_file->backing_filename );
+
+		internal_file->backing_filename = NULL;
+	}
+	internal_file->backing_filename_size = 0;
+
 	return( -1 );
 }
 
@@ -1508,13 +1865,13 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 
 		return( -1 );
 	}
-	if( internal_file->io_handle == NULL )
+	if( internal_file->file_header == NULL )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
-		 "%s: invalid file - missing IO handle.",
+		 "%s: invalid file - missing file header.",
 		 function );
 
 		return( -1 );
@@ -1526,6 +1883,17 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
 		 "%s: invalid file - current offset value out of bounds.",
+		 function );
+
+		return( -1 );
+	}
+	if( internal_file->cluster_block_size == 0 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid file - cluster block size value out of bounds.",
 		 function );
 
 		return( -1 );
@@ -1552,7 +1920,7 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 
 		return( -1 );
 	}
-	if( (size64_t) internal_file->current_offset >= internal_file->io_handle->media_size )
+	if( (size64_t) internal_file->current_offset >= internal_file->file_header->media_size )
 	{
 		return( 0 );
 	}
@@ -1567,7 +1935,7 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 			 internal_file->current_offset );
 		}
 #endif
-		level1_table_index = internal_file->current_offset >> internal_file->io_handle->level1_index_bit_shift;
+		level1_table_index = internal_file->current_offset >> internal_file->level1_index_bit_shift;
 
 #if defined( HAVE_DEBUG_OUTPUT )
 		if( libcnotify_verbose != 0 )
@@ -1614,7 +1982,7 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 			 level2_table_file_offset );
 		}
 #endif
-		level2_table_file_offset &= internal_file->io_handle->offset_bit_mask;
+		level2_table_file_offset &= internal_file->offset_bit_mask;
 
 		if( level2_table_file_offset > 0 )
 		{
@@ -1638,8 +2006,8 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 
 				return( -1 );
 			}
-			level2_table_index = ( internal_file->current_offset >> internal_file->io_handle->number_of_cluster_block_bits )
-			                   & internal_file->io_handle->level2_index_bit_mask;
+			level2_table_index = ( internal_file->current_offset >> internal_file->file_header->number_of_cluster_block_bits )
+			                   & internal_file->level2_index_bit_mask;
 
 #if defined( HAVE_DEBUG_OUTPUT )
 			if( libcnotify_verbose != 0 )
@@ -1693,7 +2061,7 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 			 cluster_block_file_offset );
 		}
 #endif
-		if( ( cluster_block_file_offset & internal_file->io_handle->compression_flag_bit_mask ) != 0 )
+		if( ( cluster_block_file_offset & internal_file->compression_flag_bit_mask ) != 0 )
 		{
 			if( internal_file->encryption_method != LIBQCOW_ENCRYPTION_METHOD_NONE )
 			{
@@ -1712,14 +2080,14 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 		{
 			cluster_block_is_compressed = 0;
 		}
-		cluster_block_file_offset &= internal_file->io_handle->offset_bit_mask;
-		cluster_block_offset       = internal_file->current_offset & internal_file->io_handle->cluster_block_bit_mask;
+		cluster_block_file_offset &= internal_file->offset_bit_mask;
+		cluster_block_offset       = internal_file->current_offset & internal_file->cluster_block_bit_mask;
 
-		read_size = internal_file->io_handle->cluster_block_size - (size_t) cluster_block_offset;
+		read_size = internal_file->cluster_block_size - (size_t) cluster_block_offset;
 
-		if( ( (size64_t) internal_file->current_offset + read_size ) > internal_file->io_handle->media_size )
+		if( ( (size64_t) internal_file->current_offset + read_size ) > internal_file->file_header->media_size )
 		{
-			read_size = (size_t) ( internal_file->io_handle->media_size - internal_file->current_offset );
+			read_size = (size_t) ( internal_file->file_header->media_size - internal_file->current_offset );
 		}
 		if( ( buffer_offset + read_size ) > buffer_size )
 		{
@@ -1748,11 +2116,11 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 		{
 			/* Handle compressed cluster block
 			 */
-			compressed_cluster_block_size   = (size_t) ( cluster_block_file_offset >> internal_file->io_handle->compression_bit_shift );
-			compressed_cluster_block_offset = cluster_block_file_offset & internal_file->io_handle->compression_bit_mask;
+			compressed_cluster_block_size   = (size_t) ( cluster_block_file_offset >> internal_file->compression_bit_shift );
+			compressed_cluster_block_offset = cluster_block_file_offset & internal_file->compression_bit_mask;
 
-			if( ( internal_file->io_handle->format_version == 2 )
-			 || ( internal_file->io_handle->format_version == 3 ) )
+			if( ( internal_file->file_header->format_version == 2 )
+			 || ( internal_file->file_header->format_version == 3 ) )
 			{
 				compressed_cluster_block_size += 1;
 				compressed_cluster_block_size *= 512;
@@ -1760,14 +2128,14 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 				/* Make sure the compressed block size stays within the bounds
 				 * of the cluster block size and the size of the file
 				 */
-				compressed_cluster_block_end_offset = compressed_cluster_block_offset / internal_file->io_handle->cluster_block_size;
+				compressed_cluster_block_end_offset = compressed_cluster_block_offset / internal_file->cluster_block_size;
 
-				if( ( compressed_cluster_block_offset % internal_file->io_handle->cluster_block_size ) != 0 )
+				if( ( compressed_cluster_block_offset % internal_file->cluster_block_size ) != 0 )
 				{
 					compressed_cluster_block_end_offset += 1;
 				}
 				compressed_cluster_block_end_offset += 1;
-				compressed_cluster_block_end_offset *= internal_file->io_handle->cluster_block_size;
+				compressed_cluster_block_end_offset *= internal_file->cluster_block_size;
 
 				if( compressed_cluster_block_end_offset > internal_file->size )
 				{
@@ -1778,7 +2146,7 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 					compressed_cluster_block_size = (size_t) ( compressed_cluster_block_end_offset - compressed_cluster_block_offset );
 				}
 			}
-			cache_entry_index = ( compressed_cluster_block_offset & internal_file->io_handle->cluster_block_bit_mask )
+			cache_entry_index = ( compressed_cluster_block_offset & internal_file->cluster_block_bit_mask )
 			                  % LIBQCOW_MAXIMUM_CACHE_ENTRIES_CLUSTER_BLOCKS;
 
 #if defined( HAVE_DEBUG_OUTPUT )
@@ -1859,7 +2227,7 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 					return( -1 );
 				}
 				cluster_block->compressed_data = cluster_block->data;
-				cluster_block->data_size       = internal_file->io_handle->cluster_block_size;
+				cluster_block->data_size       = internal_file->cluster_block_size;
 
 				cluster_block->data = (uint8_t *) memory_allocate(
 								   sizeof( uint8_t ) * cluster_block->data_size );
@@ -1929,9 +2297,9 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 			/* For version 2 make sure the sure the last cluster block size
 			 * stays within the bounds of the size of the file
 			 */
-			if( ( ( internal_file->io_handle->format_version == 2 )
-			  ||  ( internal_file->io_handle->format_version == 3 ) )
-			 && ( ( cluster_block_file_offset + internal_file->io_handle->cluster_block_size ) > internal_file->size ) )
+			if( ( ( internal_file->file_header->format_version == 2 )
+			  ||  ( internal_file->file_header->format_version == 3 ) )
+			 && ( ( cluster_block_file_offset + internal_file->cluster_block_size ) > internal_file->size ) )
 			{
 				compressed_cluster_block_size = (size_t) ( internal_file->size - cluster_block_file_offset );
 
@@ -2126,7 +2494,7 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 			 "\n" );
 		}
 #endif
-		if( (size64_t) internal_file->current_offset >= internal_file->io_handle->media_size )
+		if( (size64_t) internal_file->current_offset >= internal_file->file_header->media_size )
 		{
 			break;
 		}
@@ -2334,231 +2702,6 @@ on_error:
 	return( -1 );
 }
 
-#ifdef TODO_WRITE_SUPPORT
-
-/* Writes (media) data at the current offset from a buffer using a Basic File IO (bfio) handle
- * the necessary settings of the write values must have been made
- * Will initialize write if necessary
- * This function is not multi-thread safe acquire write lock before call
- * Returns the number of input bytes written, 0 when no longer bytes can be written or -1 on error
- */
-ssize_t libqcow_internal_file_write_buffer_to_file_io_handle(
-         libqcow_internal_file_t *internal_file,
-         libbfio_handle_t *file_io_handle,
-         void *buffer,
-         size_t buffer_size,
-         libcerror_error_t **error )
-{
-/* TODO implement */
-	return( -1 );
-}
-
-/* Writes (media) data at the current offset
- * the necessary settings of the write values must have been made
- * Will initialize write if necessary
- * Returns the number of input bytes written, 0 when no longer bytes can be written or -1 on error
- */
-ssize_t libqcow_file_write_buffer(
-         libqcow_file_t *file,
-         const void *buffer,
-         size_t buffer_size,
-         libcerror_error_t **error )
-{
-	libqcow_internal_file_t *internal_file = NULL;
-	static char *function                  = "libqcow_file_write_buffer";
-	ssize_t write_count                    = 0;
-
-	if( file == NULL )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid file.",
-		 function );
-
-		return( -1 );
-	}
-	internal_file = (libqcow_internal_file_t *) file;
-
-	if( internal_file->file_io_handle == NULL )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
-		 "%s: invalid file - missing file IO handle.",
-		 function );
-
-		return( -1 );
-	}
-#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
-	if( libcthreads_read_write_lock_grab_for_write(
-	     internal_file->read_write_lock,
-	     error ) != 1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
-		 "%s: unable to grab read/write lock for writing.",
-		 function );
-
-		return( -1 );
-	}
-#endif
-	write_count = libqcow_internal_file_write_buffer_to_file_io_handle(
-	               internal_file,
-	               internal_file->file_io_handle,
-	               buffer,
-	               buffer_size,
-	               error );
-
-	if( write_count == -1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_IO,
-		 LIBCERROR_IO_ERROR_READ_FAILED,
-		 "%s: unable to write buffer.",
-		 function );
-
-		write_count = -1;
-	}
-#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
-	if( libcthreads_read_write_lock_release_for_write(
-	     internal_file->read_write_lock,
-	     error ) != 1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
-		 "%s: unable to release read/write lock for writing.",
-		 function );
-
-		return( -1 );
-	}
-#endif
-	return( write_count );
-}
-
-/* Writes (media) data at a specific offset,
- * the necessary settings of the write values must have been made
- * Will initialize write if necessary
- * Returns the number of input bytes written, 0 when no longer bytes can be written or -1 on error
- */
-ssize_t libqcow_file_write_buffer_at_offset(
-         libqcow_file_t *file,
-         const void *buffer,
-         size_t buffer_size,
-         off64_t offset,
-         libcerror_error_t **error )
-{
-	libqcow_internal_file_t *internal_file = NULL;
-	static char *function                  = "libqcow_file_write_buffer_at_offset";
-	ssize_t write_count                    = 0;
-
-	if( file == NULL )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid file.",
-		 function );
-
-		return( -1 );
-	}
-	internal_file = (libqcow_internal_file_t *) file;
-
-	if( internal_file->file_io_handle == NULL )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
-		 "%s: invalid file - missing file IO handle.",
-		 function );
-
-		return( -1 );
-	}
-#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
-	if( libcthreads_read_write_lock_grab_for_write(
-	     internal_file->read_write_lock,
-	     error ) != 1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
-		 "%s: unable to grab read/write lock for writing.",
-		 function );
-
-		return( -1 );
-	}
-#endif
-	if( libqcow_internal_file_seek_offset(
-	     internal_file,
-	     offset,
-	     SEEK_SET,
-	     error ) == -1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_IO,
-		 LIBCERROR_IO_ERROR_SEEK_FAILED,
-		 "%s: unable to seek offset.",
-		 function );
-
-		goto on_error;
-	}
-	write_count = libqcow_internal_file_write_buffer_to_file_io_handle(
-	               internal_file,
-	               internal_file->file_io_handle,
-	               buffer,
-	               buffer_size,
-	               error );
-
-	if( write_count == -1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_IO,
-		 LIBCERROR_IO_ERROR_READ_FAILED,
-		 "%s: unable to write buffer.",
-		 function );
-
-		goto on_error;
-	}
-#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
-	if( libcthreads_read_write_lock_release_for_write(
-	     internal_file->read_write_lock,
-	     error ) != 1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
-		 "%s: unable to release read/write lock for writing.",
-		 function );
-
-		return( -1 );
-	}
-#endif
-	return( write_count );
-
-on_error:
-#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
-	libcthreads_read_write_lock_release_for_write(
-	 internal_file->read_write_lock,
-	 NULL );
-#endif
-	return( -1 );
-}
-
-#endif /* TODO_WRITE_SUPPORT */
-
 /* Seeks a certain offset of the (media) data
  * This function is not multi-thread safe acquire write lock before call
  * Returns the offset if seek is successful or -1 on error
@@ -2582,13 +2725,13 @@ off64_t libqcow_internal_file_seek_offset(
 
 		return( -1 );
 	}
-	if( internal_file->io_handle == NULL )
+	if( internal_file->file_header == NULL )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
-		 "%s: invalid file - missing IO handle.",
+		 "%s: invalid file - missing file header.",
 		 function );
 
 		return( -1 );
@@ -2612,7 +2755,7 @@ off64_t libqcow_internal_file_seek_offset(
 	}
 	else if( whence == SEEK_END )
 	{
-		offset += (off64_t) internal_file->io_handle->media_size;
+		offset += (off64_t) internal_file->file_header->media_size;
 	}
 	if( offset < 0 )
 	{
@@ -3174,24 +3317,13 @@ int libqcow_file_get_media_size(
 	}
 	internal_file = (libqcow_internal_file_t *) file;
 
-	if( internal_file->io_handle == NULL )
+	if( internal_file->file_header == NULL )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
-		 "%s: invalid file - missing IO handle.",
-		 function );
-
-		return( -1 );
-	}
-	if( internal_file->file_io_handle == NULL )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
-		 "%s: invalid file - missing file IO handle.",
+		 "%s: invalid file - missing file header.",
 		 function );
 
 		return( -1 );
@@ -3222,7 +3354,7 @@ int libqcow_file_get_media_size(
 		return( -1 );
 	}
 #endif
-	*media_size = internal_file->io_handle->media_size;
+	*media_size = internal_file->file_header->media_size;
 
 #if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_read(
@@ -3266,24 +3398,13 @@ int libqcow_file_get_format_version(
 	}
 	internal_file = (libqcow_internal_file_t *) file;
 
-	if( internal_file->io_handle == NULL )
+	if( internal_file->file_header == NULL )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
-		 "%s: invalid file - missing IO handle.",
-		 function );
-
-		return( -1 );
-	}
-	if( internal_file->file_io_handle == NULL )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
-		 "%s: invalid file - missing file IO handle.",
+		 "%s: invalid file - missing file header.",
 		 function );
 
 		return( -1 );
@@ -3314,7 +3435,7 @@ int libqcow_file_get_format_version(
 		return( -1 );
 	}
 #endif
-	*format_version = internal_file->io_handle->format_version;
+	*format_version = internal_file->file_header->format_version;
 
 #if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_read(

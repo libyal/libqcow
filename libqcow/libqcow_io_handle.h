@@ -39,73 +39,9 @@ typedef struct libqcow_io_handle libqcow_io_handle_t;
 
 struct libqcow_io_handle
 {
-	/* The (storage) media size
+	/* Value to indicate if abort was signalled
 	 */
-	size64_t media_size;
-
-	/* The format version
-	 */
-	uint32_t format_version;
-
-	/* The level 1 table offset
- 	 */
-	off64_t level1_table_offset;
-
-	/* The level 1 table size
- 	 */
-	uint32_t level1_table_size;
-
-	/* The number of cluster block bits
- 	 */
-	uint32_t number_of_cluster_block_bits;
-
-	/* The number of level 2 table bits
- 	 */
-	uint32_t number_of_level2_table_bits;
-
-	/* The level 1 index bit shift
- 	 */
-	uint32_t level1_index_bit_shift;
-
-	/* The level 2 index bit mask
- 	 */
-	uint64_t level2_index_bit_mask;
-
-	/* The cluster block bit mask
- 	 */
-	uint64_t cluster_block_bit_mask;
-
-	/* The offset bit mask
- 	 */
-	uint64_t offset_bit_mask;
-
-	/* The compression flag bit mask
- 	 */
-	uint64_t compression_flag_bit_mask;
-
-	/* The compression (offset) bit mask
- 	 */
-	uint64_t compression_bit_mask;
-
-	/* The compression (size) bit shift
- 	 */
-	uint64_t compression_bit_shift;
-
-	/* The level 2 table size
- 	 */
-	size_t level2_table_size;
-
-	/* The cluster block size
- 	 */
-	size_t cluster_block_size;
-
-	/* The backing filename
-	 */
-	uint8_t *backing_filename;
-
-	/* The backing filename size
-	 */
-	size_t backing_filename_size;
+	int abort;
 };
 
 int libqcow_io_handle_initialize(
@@ -118,12 +54,6 @@ int libqcow_io_handle_free(
 
 int libqcow_io_handle_clear(
      libqcow_io_handle_t *io_handle,
-     libcerror_error_t **error );
-
-int libqcow_io_handle_read_file_header(
-     libqcow_io_handle_t *io_handle,
-     libbfio_handle_t *file_io_handle,
-     uint32_t *encryption_method,
      libcerror_error_t **error );
 
 int libqcow_io_handle_read_level2_table(

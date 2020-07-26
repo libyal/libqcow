@@ -28,6 +28,7 @@
 #include "libqcow_cluster_table.h"
 #include "libqcow_encryption.h"
 #include "libqcow_extern.h"
+#include "libqcow_file_header.h"
 #include "libqcow_io_handle.h"
 #include "libqcow_libbfio.h"
 #include "libqcow_libcerror.h"
@@ -67,6 +68,18 @@ struct libqcow_internal_file
 	 */
 	size64_t size;
 
+	/* The file header
+	 */
+	libqcow_file_header_t *file_header;
+
+	/* The backing filename
+	 */
+	uint8_t *backing_filename;
+
+	/* The backing filename size
+	 */
+	size_t backing_filename_size;
+
 	/* The encryption method
 	 */
 	uint32_t encryption_method;
@@ -83,9 +96,17 @@ struct libqcow_internal_file
 	 */
 	uint8_t key_data_is_set;
 
+	/* The level 1 index bit shift
+ 	 */
+	uint32_t level1_index_bit_shift;
+
 	/* The level 1 table
 	 */
 	libqcow_cluster_table_t *level1_table;
+
+	/* The level 2 index bit mask
+ 	 */
+	uint64_t level2_index_bit_mask;
 
 	/* The level 2 table vector
 	 */
@@ -94,6 +115,30 @@ struct libqcow_internal_file
 	/* The level2 table cache
 	 */
 	libfcache_cache_t *level2_table_cache;
+
+	/* The cluster block size
+ 	 */
+	size_t cluster_block_size;
+
+	/* The cluster block bit mask
+ 	 */
+	uint64_t cluster_block_bit_mask;
+
+	/* The offset bit mask
+ 	 */
+	uint64_t offset_bit_mask;
+
+	/* The compression flag bit mask
+ 	 */
+	uint64_t compression_flag_bit_mask;
+
+	/* The compression (offset) bit mask
+ 	 */
+	uint64_t compression_bit_mask;
+
+	/* The compression (size) bit shift
+ 	 */
+	uint64_t compression_bit_shift;
 
 	/* The cluster block vector
 	 */
@@ -106,10 +151,6 @@ struct libqcow_internal_file
 	/* The compressed cluster block cache
 	 */
 	libfcache_cache_t *compressed_cluster_block_cache;
-
-	/* Value to indicate if abort was signalled
-	 */
-	int abort;
 
 	/* Value to indicate if the file is locked
 	 */
@@ -172,6 +213,13 @@ int libqcow_internal_file_open_read(
      libbfio_handle_t *file_io_handle,
      libcerror_error_t **error );
 
+int libqcow_internal_file_open_read_backing_filename(
+     libqcow_internal_file_t *internal_file,
+     libbfio_handle_t *file_io_handle,
+     off64_t backing_filename_offset,
+     uint32_t backing_filename_size,
+     libcerror_error_t **error );
+
 LIBQCOW_EXTERN \
 int libqcow_file_is_locked(
      libqcow_file_t *file,
@@ -198,32 +246,6 @@ ssize_t libqcow_file_read_buffer_at_offset(
          size_t buffer_size,
          off64_t offset,
          libcerror_error_t **error );
-
-#ifdef TODO_WRITE_SUPPORT
-
-ssize_t libqcow_internal_file_write_buffer_to_file_io_handle(
-         libqcow_internal_file_t *internal_file,
-         libbfio_handle_t *file_io_handle,
-         void *buffer,
-         size_t buffer_size,
-         libcerror_error_t **error );
-
-LIBQCOW_EXTERN \
-ssize_t libqcow_file_write_buffer(
-         libqcow_file_t *file,
-         const void *buffer,
-         size_t buffer_size,
-         libcerror_error_t **error );
-
-LIBQCOW_EXTERN \
-ssize_t libqcow_file_write_buffer_at_offset(
-         libqcow_file_t *file,
-         const void *buffer,
-         size_t buffer_size,
-         off64_t offset,
-         libcerror_error_t **error );
-
-#endif /* TODO_WRITE_SUPPORT */
 
 off64_t libqcow_internal_file_seek_offset(
          libqcow_internal_file_t *internal_file,

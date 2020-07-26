@@ -35,6 +35,7 @@ libqcow_la_SOURCES = \
 	libqcow_error.c libqcow_error.h \
 	libqcow_extern.h \
 	libqcow_file.c libqcow_file.h \
+	libqcow_file_header.c libqcow_file_header.h \
 	libqcow_i18n.c libqcow_i18n.h \
 	libqcow_io_handle.c libqcow_io_handle.h \
 	libqcow_libbfio.h \
