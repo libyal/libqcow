@@ -28,6 +28,7 @@
 #endif
 
 #include "pyqcow_error.h"
+#include "pyqcow_file.h"
 #include "pyqcow_file_object_io_handle.h"
 #include "pyqcow_integer.h"
 #include "pyqcow_libbfio.h"
@@ -36,7 +37,6 @@
 #include "pyqcow_libqcow.h"
 #include "pyqcow_python.h"
 #include "pyqcow_unused.h"
-#include "pyqcow_file.h"
 
 #if !defined( LIBQCOW_HAVE_BFIO )
 
@@ -670,6 +670,36 @@ PyObject *pyqcow_file_open_file_object(
 		 "%s: unsupported mode: %s.",
 		 function,
 		 mode );
+
+		return( NULL );
+	}
+	PyErr_Clear();
+
+	result = PyObject_HasAttrString(
+	          file_object,
+	          "read" );
+
+	if( result != 1 )
+	{
+		PyErr_Format(
+		 PyExc_TypeError,
+		 "%s: unsupported file object - missing read attribute.",
+		 function );
+
+		return( NULL );
+	}
+	PyErr_Clear();
+
+	result = PyObject_HasAttrString(
+	          file_object,
+	          "seek" );
+
+	if( result != 1 )
+	{
+		PyErr_Format(
+		 PyExc_TypeError,
+		 "%s: unsupported file object - missing seek attribute.",
+		 function );
 
 		return( NULL );
 	}

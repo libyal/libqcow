@@ -50,8 +50,8 @@ int libqcow_decompress_data(
      size_t *uncompressed_data_size,
      libcerror_error_t **error )
 {
-	static char *function              = "libqcow_decompress_data";
-	int result                         = 0;
+	static char *function = "libqcow_decompress_data";
+	int result            = 0;
 
 #if ( defined( HAVE_ZLIB ) && defined( HAVE_ZLIB_INFLATE ) ) || defined( ZLIB_DLL )
 	z_stream zlib_stream;

@@ -3150,7 +3150,7 @@ on_error:
 	return( -1 );
 }
 
-/* Retrieves the number of media size
+/* Retrieves the media size
  * Returns 1 if successful or -1 on error
  */
 int libqcow_file_get_media_size(

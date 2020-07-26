@@ -113,6 +113,8 @@ int qcow_test_cluster_table_initialize(
 	          &cluster_table,
 	          &error );
 
+	cluster_table = NULL;
+
 	QCOW_TEST_ASSERT_EQUAL_INT(
 	 "result",
 	 result,
@@ -124,8 +126,6 @@ int qcow_test_cluster_table_initialize(
 
 	libcerror_error_free(
 	 &error );
-
-	cluster_table = NULL;
 
 #if defined( HAVE_QCOW_TEST_MEMORY )
 
@@ -279,7 +279,6 @@ int qcow_test_cluster_table_get_number_of_references(
 	libcerror_error_t *error               = NULL;
 	libqcow_cluster_table_t *cluster_table = NULL;
 	int number_of_references               = 0;
-	int number_of_references_is_set        = 0;
 	int result                             = 0;
 
 	/* Initialize test
@@ -308,16 +307,14 @@ int qcow_test_cluster_table_get_number_of_references(
 	          &number_of_references,
 	          &error );
 
-	QCOW_TEST_ASSERT_NOT_EQUAL_INT(
+	QCOW_TEST_ASSERT_EQUAL_INT(
 	 "result",
 	 result,
-	 -1 );
+	 1 );
 
 	QCOW_TEST_ASSERT_IS_NULL(
 	 "error",
 	 error );
-
-	number_of_references_is_set = result;
 
 	/* Test error cases
 	 */
@@ -338,25 +335,179 @@ int qcow_test_cluster_table_get_number_of_references(
 	libcerror_error_free(
 	 &error );
 
-	if( number_of_references_is_set != 0 )
+	result = libqcow_cluster_table_get_number_of_references(
+	          cluster_table,
+	          NULL,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	/* Clean up
+	 */
+	result = libqcow_cluster_table_free(
+	          &cluster_table,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 1 );
+
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "cluster_table",
+	 cluster_table );
+
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
+
+	return( 1 );
+
+on_error:
+	if( error != NULL )
 	{
-		result = libqcow_cluster_table_get_number_of_references(
+		libcerror_error_free(
+		 &error );
+	}
+	if( cluster_table != NULL )
+	{
+		libqcow_cluster_table_free(
+		 &cluster_table,
+		 NULL );
+	}
+	return( 0 );
+}
+
+/* Tests the libqcow_cluster_table_get_reference_by_index function
+ * Returns 1 if successful or 0 if not
+ */
+int qcow_test_cluster_table_get_reference_by_index(
+     void )
+{
+	libcerror_error_t *error               = NULL;
+	libqcow_cluster_table_t *cluster_table = NULL;
+	uint64_t reference                     = 0;
+	int number_of_references               = 0;
+	int result                             = 0;
+
+	/* Initialize test
+	 */
+	result = libqcow_cluster_table_initialize(
+	          &cluster_table,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "cluster_table",
+	 cluster_table );
+
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
+
+	result = libqcow_cluster_table_get_number_of_references(
+	          cluster_table,
+	          &number_of_references,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 1 );
+
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
+
+	/* Test regular cases
+	 */
+	if( number_of_references > 0 )
+	{
+		result = libqcow_cluster_table_get_reference_by_index(
 		          cluster_table,
-		          NULL,
+		          0,
+		          &reference,
 		          &error );
 
 		QCOW_TEST_ASSERT_EQUAL_INT(
 		 "result",
 		 result,
-		 -1 );
+		 1 );
 
-		QCOW_TEST_ASSERT_IS_NOT_NULL(
+		QCOW_TEST_ASSERT_IS_NULL(
 		 "error",
 		 error );
-
-		libcerror_error_free(
-		 &error );
 	}
+	/* Test error cases
+	 */
+	result = libqcow_cluster_table_get_reference_by_index(
+	          NULL,
+	          0,
+	          &reference,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	result = libqcow_cluster_table_get_reference_by_index(
+	          cluster_table,
+	          -1,
+	          &reference,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	result = libqcow_cluster_table_get_reference_by_index(
+	          cluster_table,
+	          0,
+	          NULL,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
 	/* Clean up
 	 */
 	result = libqcow_cluster_table_free(
@@ -462,6 +613,25 @@ int qcow_test_cluster_table_read(
 	libcerror_error_free(
 	 &error );
 
+	result = libqcow_cluster_table_read(
+	          cluster_table,
+	          NULL,
+	          -1,
+	          0,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
 	/* Clean up
 	 */
 	result = libqcow_cluster_table_free(
@@ -529,7 +699,9 @@ int main(
 	 "libqcow_cluster_table_get_number_of_references",
 	 qcow_test_cluster_table_get_number_of_references );
 
-	/* TODO: add tests for libqcow_cluster_table_get_reference_by_index */
+	QCOW_TEST_RUN(
+	 "libqcow_cluster_table_get_reference_by_index",
+	 qcow_test_cluster_table_get_reference_by_index );
 
 	QCOW_TEST_RUN(
 	 "libqcow_cluster_table_read",

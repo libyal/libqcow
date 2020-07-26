@@ -32,6 +32,7 @@
 #include "pyqcow_error.h"
 #include "pyqcow_file.h"
 #include "pyqcow_file_object_io_handle.h"
+#include "pyqcow_libbfio.h"
 #include "pyqcow_libcerror.h"
 #include "pyqcow_libqcow.h"
 #include "pyqcow_python.h"
@@ -129,12 +130,12 @@ PyObject *pyqcow_check_file_signature(
            PyObject *arguments,
            PyObject *keywords )
 {
-	PyObject *string_object      = NULL;
-	libcerror_error_t *error     = NULL;
-	static char *function        = "pyqcow_check_file_signature";
-	static char *keyword_list[]  = { "filename", NULL };
-	const char *filename_narrow  = NULL;
-	int result                   = 0;
+	PyObject *string_object     = NULL;
+	libcerror_error_t *error    = NULL;
+	const char *filename_narrow = NULL;
+	static char *function       = "pyqcow_check_file_signature";
+	static char *keyword_list[] = { "filename", NULL };
+	int result                  = 0;
 
 #if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 	const wchar_t *filename_wide = NULL;
@@ -167,7 +168,7 @@ PyObject *pyqcow_check_file_signature(
 	if( result == -1 )
 	{
 		pyqcow_error_fetch_and_raise(
-	         PyExc_RuntimeError,
+		 PyExc_RuntimeError,
 		 "%s: unable to determine if string object is of type Unicode.",
 		 function );
 
@@ -202,10 +203,10 @@ PyObject *pyqcow_check_file_signature(
 		}
 #if PY_MAJOR_VERSION >= 3
 		filename_narrow = PyBytes_AsString(
-				   utf8_string_object );
+		                   utf8_string_object );
 #else
 		filename_narrow = PyString_AsString(
-				   utf8_string_object );
+		                   utf8_string_object );
 #endif
 		Py_BEGIN_ALLOW_THREADS
 
@@ -249,17 +250,17 @@ PyObject *pyqcow_check_file_signature(
 
 #if PY_MAJOR_VERSION >= 3
 	result = PyObject_IsInstance(
-		  string_object,
-		  (PyObject *) &PyBytes_Type );
+	          string_object,
+	          (PyObject *) &PyBytes_Type );
 #else
 	result = PyObject_IsInstance(
-		  string_object,
-		  (PyObject *) &PyString_Type );
+	          string_object,
+	          (PyObject *) &PyString_Type );
 #endif
 	if( result == -1 )
 	{
 		pyqcow_error_fetch_and_raise(
-	         PyExc_RuntimeError,
+		 PyExc_RuntimeError,
 		 "%s: unable to determine if string object is of type string.",
 		 function );
 
@@ -271,10 +272,10 @@ PyObject *pyqcow_check_file_signature(
 
 #if PY_MAJOR_VERSION >= 3
 		filename_narrow = PyBytes_AsString(
-				   string_object );
+		                   string_object );
 #else
 		filename_narrow = PyString_AsString(
-				   string_object );
+		                   string_object );
 #endif
 		Py_BEGIN_ALLOW_THREADS
 
@@ -325,9 +326,9 @@ PyObject *pyqcow_check_file_signature_file_object(
            PyObject *arguments,
            PyObject *keywords )
 {
-	libcerror_error_t *error         = NULL;
-	libbfio_handle_t *file_io_handle = NULL;
 	PyObject *file_object            = NULL;
+	libbfio_handle_t *file_io_handle = NULL;
+	libcerror_error_t *error         = NULL;
 	static char *function            = "pyqcow_check_file_signature_file_object";
 	static char *keyword_list[]      = { "file_object", NULL };
 	int result                       = 0;
@@ -425,19 +426,47 @@ PyObject *pyqcow_open_new_file(
            PyObject *arguments,
            PyObject *keywords )
 {
-	PyObject *pyqcow_file = NULL;
+	pyqcow_file_t *pyqcow_file = NULL;
+	static char *function      = "pyqcow_open_new_file";
 
 	PYQCOW_UNREFERENCED_PARAMETER( self )
 
-	pyqcow_file_init(
-	 (pyqcow_file_t *) pyqcow_file );
+	/* PyObject_New does not invoke tp_init
+	 */
+	pyqcow_file = PyObject_New(
+	               struct pyqcow_file,
+	               &pyqcow_file_type_object );
 
-	pyqcow_file_open(
-	 (pyqcow_file_t *) pyqcow_file,
-	 arguments,
-	 keywords );
+	if( pyqcow_file == NULL )
+	{
+		PyErr_Format(
+		 PyExc_MemoryError,
+		 "%s: unable to create file.",
+		 function );
 
-	return( pyqcow_file );
+		goto on_error;
+	}
+	if( pyqcow_file_init(
+	     pyqcow_file ) != 0 )
+	{
+		goto on_error;
+	}
+	if( pyqcow_file_open(
+	     pyqcow_file,
+	     arguments,
+	     keywords ) == NULL )
+	{
+		goto on_error;
+	}
+	return( (PyObject *) pyqcow_file );
+
+on_error:
+	if( pyqcow_file != NULL )
+	{
+		Py_DecRef(
+		 (PyObject *) pyqcow_file );
+	}
+	return( NULL );
 }
 
 /* Creates a new file object and opens it using a file-like object
@@ -448,19 +477,47 @@ PyObject *pyqcow_open_new_file_with_file_object(
            PyObject *arguments,
            PyObject *keywords )
 {
-	PyObject *pyqcow_file = NULL;
+	pyqcow_file_t *pyqcow_file = NULL;
+	static char *function      = "pyqcow_open_new_file_with_file_object";
 
 	PYQCOW_UNREFERENCED_PARAMETER( self )
 
-	pyqcow_file_init(
-	 (pyqcow_file_t *) pyqcow_file );
+	/* PyObject_New does not invoke tp_init
+	 */
+	pyqcow_file = PyObject_New(
+	               struct pyqcow_file,
+	               &pyqcow_file_type_object );
 
-	pyqcow_file_open_file_object(
-	 (pyqcow_file_t *) pyqcow_file,
-	 arguments,
-	 keywords );
+	if( pyqcow_file == NULL )
+	{
+		PyErr_Format(
+		 PyExc_MemoryError,
+		 "%s: unable to create file.",
+		 function );
 
-	return( pyqcow_file );
+		goto on_error;
+	}
+	if( pyqcow_file_init(
+	     pyqcow_file ) != 0 )
+	{
+		goto on_error;
+	}
+	if( pyqcow_file_open_file_object(
+	     pyqcow_file,
+	     arguments,
+	     keywords ) == NULL )
+	{
+		goto on_error;
+	}
+	return( (PyObject *) pyqcow_file );
+
+on_error:
+	if( pyqcow_file != NULL )
+	{
+		Py_DecRef(
+		 (PyObject *) pyqcow_file );
+	}
+	return( NULL );
 }
 
 #if PY_MAJOR_VERSION >= 3
@@ -540,6 +597,11 @@ PyMODINIT_FUNC initpyqcow(
 	 */
 	pyqcow_encryption_types_type_object.tp_new = PyType_GenericNew;
 
+	if( pyqcow_encryption_types_init_type(
+	     &pyqcow_encryption_types_type_object ) != 1 )
+	{
+		goto on_error;
+	}
 	if( PyType_Ready(
 	     &pyqcow_encryption_types_type_object ) < 0 )
 	{
@@ -553,11 +615,6 @@ PyMODINIT_FUNC initpyqcow(
 	 "encryption_types",
 	 (PyObject *) &pyqcow_encryption_types_type_object );
 
-	if( pyqcow_encryption_types_init_type(
-	     &pyqcow_encryption_types_type_object ) != 1 )
-	{
-		goto on_error;
-	}
 	/* Setup the file type object
 	 */
 	pyqcow_file_type_object.tp_new = PyType_GenericNew;

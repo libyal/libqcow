@@ -902,13 +902,13 @@ int qcow_test_file_open_file_io_handle(
 	 result,
 	 1 );
 
-        QCOW_TEST_ASSERT_IS_NOT_NULL(
-         "file_io_handle",
-         file_io_handle );
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "file_io_handle",
+	 file_io_handle );
 
-        QCOW_TEST_ASSERT_IS_NULL(
-         "error",
-         error );
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
 
 	string_length = system_string_length(
 	                 source );
@@ -931,9 +931,9 @@ int qcow_test_file_open_file_io_handle(
 	 result,
 	 1 );
 
-        QCOW_TEST_ASSERT_IS_NULL(
-         "error",
-         error );
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
 
 	result = libqcow_file_initialize(
 	          &file,
@@ -1101,12 +1101,12 @@ int qcow_test_file_open_file_io_handle(
 	 1 );
 
 	QCOW_TEST_ASSERT_IS_NULL(
-         "file_io_handle",
-         file_io_handle );
+	 "file_io_handle",
+	 file_io_handle );
 
-        QCOW_TEST_ASSERT_IS_NULL(
-         "error",
-         error );
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
 
 	return( 1 );
 
@@ -1366,6 +1366,59 @@ int qcow_test_file_signal_abort(
 	/* Test error cases
 	 */
 	result = libqcow_file_signal_abort(
+	          NULL,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	return( 1 );
+
+on_error:
+	if( error != NULL )
+	{
+		libcerror_error_free(
+		 &error );
+	}
+	return( 0 );
+}
+
+/* Tests the libqcow_file_is_locked function
+ * Returns 1 if successful or 0 if not
+ */
+int qcow_test_file_is_locked(
+     libqcow_file_t *file )
+{
+	libcerror_error_t *error = NULL;
+	int result               = 0;
+
+	/* Test regular cases
+	 */
+	result = libqcow_file_is_locked(
+	          file,
+	          &error );
+
+	QCOW_TEST_ASSERT_NOT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
+
+	/* Test error cases
+	 */
+	result = libqcow_file_is_locked(
 	          NULL,
 	          &error );
 
@@ -2949,10 +3002,10 @@ int qcow_test_file_get_format_version(
 	          &format_version,
 	          &error );
 
-	QCOW_TEST_ASSERT_NOT_EQUAL_INT(
+	QCOW_TEST_ASSERT_EQUAL_INT(
 	 "result",
 	 result,
-	 -1 );
+	 1 );
 
 	QCOW_TEST_ASSERT_IS_NULL(
 	 "error",
@@ -3022,10 +3075,10 @@ int qcow_test_file_get_encryption_method(
 	          &encryption_method,
 	          &error );
 
-	QCOW_TEST_ASSERT_NOT_EQUAL_INT(
+	QCOW_TEST_ASSERT_EQUAL_INT(
 	 "result",
 	 result,
-	 -1 );
+	 1 );
 
 	QCOW_TEST_ASSERT_IS_NULL(
 	 "error",
@@ -3265,7 +3318,10 @@ int main(
 
 #endif /* defined( __GNUC__ ) && !defined( LIBQCOW_DLL_IMPORT ) */
 
-		/* TODO: add tests for libqcow_file_is_locked */
+		QCOW_TEST_RUN_WITH_ARGS(
+		 "libqcow_file_is_locked",
+		 qcow_test_file_is_locked,
+		 file );
 
 #if defined( __GNUC__ ) && !defined( LIBQCOW_DLL_IMPORT )
 

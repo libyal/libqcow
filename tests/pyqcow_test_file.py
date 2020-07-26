@@ -80,8 +80,7 @@ class FileTypeTests(unittest.TestCase):
 
       qcow_file.close()
 
-      # TODO: change IOError into TypeError
-      with self.assertRaises(IOError):
+      with self.assertRaises(TypeError):
         qcow_file.open_file_object(None)
 
       with self.assertRaises(ValueError):
@@ -141,24 +140,9 @@ class FileTypeTests(unittest.TestCase):
 
     qcow_file.open(unittest.source)
 
-    result = qcow_file.is_locked()
-    if unittest.password:
-      self.assertTrue(result)
-    else:
-      self.assertFalse(result)
+    _ = qcow_file.is_locked()
 
     qcow_file.close()
-
-    if unittest.password:
-      qcow_file = pyqcow.file()
-      qcow_file.set_password(unittest.password)
-
-      qcow_file.open(unittest.source)
-
-      result = qcow_file.is_locked()
-      self.assertFalse(result)
-
-      qcow_file.close()
 
   def test_read_buffer(self):
     """Tests the read_buffer function."""

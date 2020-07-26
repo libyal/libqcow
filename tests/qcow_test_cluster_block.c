@@ -292,6 +292,132 @@ on_error:
 	return( 0 );
 }
 
+/* Tests the libqcow_cluster_block_read function
+ * Returns 1 if successful or 0 if not
+ */
+int qcow_test_cluster_block_read(
+     void )
+{
+	libcerror_error_t *error               = NULL;
+	libqcow_cluster_block_t *cluster_block = NULL;
+	int result                             = 0;
+
+	/* Initialize test
+	 */
+	result = libqcow_cluster_block_initialize(
+	          &cluster_block,
+	          4096,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "cluster_block",
+	 cluster_block );
+
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
+
+	/* Test regular cases
+	 */
+/* TODO implement */
+
+	/* Test error cases
+	 */
+	result = libqcow_cluster_block_read(
+	          NULL,
+	          NULL,
+	          0,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	result = libqcow_cluster_block_read(
+	          cluster_block,
+	          NULL,
+	          0,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	result = libqcow_cluster_block_read(
+	          cluster_block,
+	          NULL,
+	          -1,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
+
+	QCOW_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
+
+	libcerror_error_free(
+	 &error );
+
+	/* Clean up
+	 */
+	result = libqcow_cluster_block_free(
+	          &cluster_block,
+	          &error );
+
+	QCOW_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 1 );
+
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "cluster_block",
+	 cluster_block );
+
+	QCOW_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
+
+	return( 1 );
+
+on_error:
+	if( error != NULL )
+	{
+		libcerror_error_free(
+		 &error );
+	}
+	if( cluster_block != NULL )
+	{
+		libqcow_cluster_block_free(
+		 &cluster_block,
+		 NULL );
+	}
+	return( 0 );
+}
+
 #endif /* defined( __GNUC__ ) && !defined( LIBQCOW_DLL_IMPORT ) */
 
 /* The main program
@@ -319,7 +445,9 @@ int main(
 	 "libqcow_cluster_block_free",
 	 qcow_test_cluster_block_free );
 
-	/* TODO: add tests for libqcow_cluster_block_read */
+	QCOW_TEST_RUN(
+	 "libqcow_cluster_block_read",
+	 qcow_test_cluster_block_read );
 
 #endif /* defined( __GNUC__ ) && !defined( LIBQCOW_DLL_IMPORT ) */
 

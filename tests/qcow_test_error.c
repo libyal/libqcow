@@ -27,7 +27,6 @@
 #include <stdlib.h>
 #endif
 
-#include "qcow_test_libcerror.h"
 #include "qcow_test_libqcow.h"
 #include "qcow_test_macros.h"
 #include "qcow_test_unused.h"
