@@ -1256,7 +1256,29 @@ int libqcow_internal_file_open_read(
 
 	if( internal_file->file_header->format_version == 1 )
 	{
-		number_of_level2_table_bits       = internal_file->file_header->number_of_level2_table_bits;
+		if( internal_file->file_header->number_of_cluster_block_bits > 63 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+			 "%s: invalid number of cluster block bits value out of bounds.",
+			 function );
+
+			goto on_error;
+		}
+		if( internal_file->file_header->number_of_level2_table_bits > 63 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+			 "%s: invalid number of cluster block bits value out of bounds.",
+			 function );
+
+			goto on_error;
+		}
+		number_of_level2_table_bits = internal_file->file_header->number_of_level2_table_bits;
 
 		internal_file->offset_bit_mask           = 0x7fffffffffffffffULL;
 		internal_file->compression_flag_bit_mask = (uint64_t) 1 << 63;
@@ -1265,7 +1287,8 @@ int libqcow_internal_file_open_read(
 	else if( ( internal_file->file_header->format_version == 2 )
 	      || ( internal_file->file_header->format_version == 3 ) )
 	{
-		if( internal_file->file_header->number_of_cluster_block_bits <= 8 )
+		if( ( internal_file->file_header->number_of_cluster_block_bits <= 8 )
+		 || ( internal_file->file_header->number_of_cluster_block_bits > 63 ) )
 		{
 			libcerror_error_set(
 			 error,
@@ -1283,58 +1306,102 @@ int libqcow_internal_file_open_read(
 		internal_file->compression_bit_shift     = 62 - ( internal_file->file_header->number_of_cluster_block_bits - 8 );
 	}
 	internal_file->level1_index_bit_shift = internal_file->file_header->number_of_cluster_block_bits + number_of_level2_table_bits;
+
+	if( internal_file->level1_index_bit_shift > 63 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid level1 index bit shift value out of bounds.",
+		 function );
+
+		goto on_error;
+	}
 	internal_file->level2_index_bit_mask  = ~( (uint64_t) -1 << number_of_level2_table_bits );
 	internal_file->cluster_block_bit_mask = ~( (uint64_t) -1 << internal_file->file_header->number_of_cluster_block_bits );
 	internal_file->compression_bit_mask   = ~( (uint64_t) -1 << internal_file->compression_bit_shift );
-	internal_file->cluster_block_size     = (size_t) 1 << internal_file->file_header->number_of_cluster_block_bits;
+	internal_file->cluster_block_size     = (size64_t) 1 << internal_file->file_header->number_of_cluster_block_bits;
 
 	level2_table_size = (size_t) 1 << number_of_level2_table_bits;
 
 	if( internal_file->file_header->format_version == 1 )
 	{
-		level1_table_size = (uint32_t) ( internal_file->cluster_block_size * level2_table_size );
-
-		if( level1_table_size == 0 )
+		if( internal_file->cluster_block_size > ( (size64_t) MEMORY_MAXIMUM_ALLOCATION_SIZE / level2_table_size ) )
 		{
 			libcerror_error_set(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 			 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
-			 "%s: invalid level1 table size value out of bounds.",
+			 "%s: invalid cluster block size value out of bounds.",
 			 function );
 
 			goto on_error;
 		}
+		level1_table_size = (size_t) ( internal_file->cluster_block_size * level2_table_size );
+
+		if( ( internal_file->file_header->media_size / level1_table_size ) > ( (size64_t) UINT32_MAX - 1 ) )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+			 "%s: invalid level1 table size value out of bounds: %zd.",
+			 function, level1_table_size );
+
+			goto on_error;
+		}
+		number_of_level1_table_references = (uint32_t) ( internal_file->file_header->media_size / level1_table_size );
+
 		if( ( internal_file->file_header->media_size % level1_table_size ) != 0 )
 		{
-			level1_table_size = (uint32_t) ( ( internal_file->file_header->media_size / level1_table_size ) + 1 );
+			number_of_level1_table_references += 1;
 		}
-		else
-		{
-			level1_table_size = (uint32_t) ( internal_file->file_header->media_size / level1_table_size );
-		}
+		level1_table_size = (size_t) number_of_level1_table_references;
 	}
 	else if( ( internal_file->file_header->format_version == 2 )
 	      || ( internal_file->file_header->format_version == 3 ) )
 	{
-		level1_table_size = number_of_level1_table_references;
-	}
-	level1_table_size *= 8;
-	level2_table_size *= 8;
+		if( internal_file->cluster_block_size > (size64_t) MEMORY_MAXIMUM_ALLOCATION_SIZE )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+			 "%s: invalid cluster block size value out of bounds.",
+			 function );
 
-#if UINT32_MAX > SSIZE_MAX
-	if( level1_table_size > (uint32_t) SSIZE_MAX )
+			goto on_error;
+		}
+		level1_table_size = (size_t) number_of_level1_table_references;
+	}
+	if( ( level1_table_size == 0 )
+	 || ( level1_table_size > ( (size_t) MEMORY_MAXIMUM_ALLOCATION_SIZE / 8 ) ) )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_VALUE_EXCEEDS_MAXIMUM,
-		 "%s: invalid level 1 table size value exceeds maximum.",
+		 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid level1 table size value out of bounds.",
 		 function );
 
 		goto on_error;
 	}
-#endif
+	if( ( level2_table_size == 0 )
+	 || ( level2_table_size > ( (size_t) MEMORY_MAXIMUM_ALLOCATION_SIZE / 8 ) ) )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid level2 table size value out of bounds.",
+		 function );
+
+		goto on_error;
+	}
+	level1_table_size *= 8;
+	level2_table_size *= 8;
+
 #if defined( HAVE_DEBUG_OUTPUT )
 	if( libcnotify_verbose != 0 )
 	{
@@ -1349,7 +1416,7 @@ int libqcow_internal_file_open_read(
 		 level2_table_size );
 
 		libcnotify_printf(
-		 "%s: cluster block size\t\t\t: %" PRIzd "\n",
+		 "%s: cluster block size\t\t\t: %" PRIu64 "\n",
 		 function,
 		 internal_file->cluster_block_size );
 	}
@@ -1510,7 +1577,7 @@ int libqcow_internal_file_open_read(
 /* TODO clone function ? */
 	if( libfdata_vector_initialize(
 	     &( internal_file->cluster_block_vector ),
-	     (size64_t) internal_file->cluster_block_size,
+	     internal_file->cluster_block_size,
 	     (intptr_t *) internal_file->io_handle,
 	     NULL,
 	     NULL,

@@ -118,7 +118,7 @@ struct libqcow_internal_file
 
 	/* The cluster block size
  	 */
-	size_t cluster_block_size;
+	size64_t cluster_block_size;
 
 	/* The cluster block bit mask
  	 */
