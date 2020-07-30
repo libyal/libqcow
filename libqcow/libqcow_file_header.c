@@ -144,12 +144,13 @@ int libqcow_file_header_read_data(
      size_t data_size,
      libcerror_error_t **error )
 {
-	static char *function = "libqcow_file_header_read_data";
+	static char *function             = "libqcow_file_header_read_data";
+	uint64_t safe_level1_table_offset = 0;
 
 #if defined( HAVE_DEBUG_OUTPUT )
-	uint64_t value_64bit  = 0;
-	uint32_t value_32bit  = 0;
-	uint16_t value_16bit  = 0;
+	uint64_t value_64bit              = 0;
+	uint32_t value_32bit              = 0;
+	uint16_t value_16bit              = 0;
 #endif
 
 	if( file_header == NULL )
@@ -282,7 +283,7 @@ int libqcow_file_header_read_data(
 
 		byte_stream_copy_to_uint64_big_endian(
 		 ( (qcow_file_header_v2_t *) data )->level1_table_offset,
-		 file_header->level1_table_offset );
+		 safe_level1_table_offset );
 
 #if defined( HAVE_DEBUG_OUTPUT )
 		if( libcnotify_verbose != 0 )
@@ -326,7 +327,7 @@ int libqcow_file_header_read_data(
 			libcnotify_printf(
 			 "%s: level 1 table offset\t\t\t: 0x%08" PRIx64 "\n",
 			 function,
-			 file_header->level1_table_offset );
+			 safe_level1_table_offset );
 		}
 #endif /* defined( HAVE_DEBUG_OUTPUT ) */
 	}
@@ -343,7 +344,7 @@ int libqcow_file_header_read_data(
 
 		byte_stream_copy_to_uint64_big_endian(
 		 ( (qcow_file_header_v2_t *) data )->level1_table_offset,
-		 file_header->level1_table_offset );
+		 safe_level1_table_offset );
 
 		byte_stream_copy_to_uint64_big_endian(
 		 ( (qcow_file_header_v2_t *) data )->media_size,
@@ -379,7 +380,7 @@ int libqcow_file_header_read_data(
 			libcnotify_printf(
 			 "%s: level 1 table offset\t\t\t: 0x%08" PRIx64 "\n",
 			 function,
-			 file_header->level1_table_offset );
+			 safe_level1_table_offset );
 
 			byte_stream_copy_to_uint64_big_endian(
 			 ( (qcow_file_header_v2_t *) data )->reference_count_table_offset,
@@ -422,6 +423,19 @@ int libqcow_file_header_read_data(
 		 "\n" );
 	}
 #endif
+	if( safe_level1_table_offset > (uint64_t) INT64_MAX )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid level1 table offset value out of bounds.",
+		 function );
+
+		return( -1 );
+	}
+	file_header->level1_table_offset = (off64_t) safe_level1_table_offset;
+
 	return( 1 );
 }
 
