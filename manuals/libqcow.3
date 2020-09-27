@@ -1,4 +1,4 @@
-.Dd November  8, 2019
+.Dd September 27, 2020
 .Dt libqcow 3
 .Os libqcow
 .Sh NAME
@@ -70,10 +70,6 @@ File functions
 .Fn libqcow_file_read_buffer "libqcow_file_t *file" "void *buffer" "size_t buffer_size" "libqcow_error_t **error"
 .Ft ssize_t
 .Fn libqcow_file_read_buffer_at_offset "libqcow_file_t *file" "void *buffer" "size_t buffer_size" "off64_t offset" "libqcow_error_t **error"
-.Ft ssize_t
-.Fn libqcow_file_write_buffer "libqcow_file_t *file" "const void *buffer" "size_t buffer_size" "libqcow_error_t **error"
-.Ft ssize_t
-.Fn libqcow_file_write_buffer_at_offset "libqcow_file_t *file" "const void *buffer" "size_t buffer_size" "off64_t offset" "libqcow_error_t **error"
 .Ft off64_t
 .Fn libqcow_file_seek_offset "libqcow_file_t *file" "off64_t offset" "int whence" "libqcow_error_t **error"
 .Ft int

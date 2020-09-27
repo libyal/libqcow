@@ -228,7 +228,7 @@ on_error:
 	return( NULL );
 }
 
-/* Intializes an encryption types object
+/* Initializes an encryption types object
  * Returns 0 if successful or -1 on error
  */
 int pyqcow_encryption_types_init(

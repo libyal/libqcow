@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>libqcow</id>
+    <version>20200927</version>
+    <authors>Joachim Metz</authors>
+    <owners>joachimmetz</owners>
+    <licenseUrl>https://raw.githubusercontent.com/libyal/libqcow/master/COPYING.LESSER</licenseUrl>
+    <projectUrl>https://github.com/libyal/libqcow</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <title>libqcow</title>
+    <description>Library to access the QEMU Copy-On-Write (QCOW) image file format</description>
+    <releaseNotes>Release of libqcow 20200927</releaseNotes>
+    <copyright>Copyright (C) 2010-2020</copyright>
+    <tags>native</tags>
+  </metadata>
+  <files>
+    <file src="include\*.h" target="lib\native\include\" />
+    <file src="include\libqcow\*.h" target="lib\native\include\libqcow\" />
+    <file src="msvscpp\Release\Win32\libqcow.dll" target="lib\native\lib\Win32\" />
+    <file src="msvscpp\Release\Win32\libqcow.lib" target="lib\native\lib\Win32\" />
+    <file src="msvscpp\Release\Win32\libqcow.pdb" target="lib\native\lib\Win32\" />
+    <file src="msvscpp\Release\x64\libqcow.dll" target="lib\native\lib\x64\" />
+    <file src="msvscpp\Release\x64\libqcow.lib" target="lib\native\lib\x64\" />
+    <file src="msvscpp\Release\x64\libqcow.pdb" target="lib\native\lib\x64\" />
+  </files>
+</package>
