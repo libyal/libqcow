@@ -30,7 +30,11 @@
 
 #include <libqcow/extern.h>
 
+#if defined( __CYGWIN__ )
+#define LIBQCOW_EXTERN_VARIABLE	extern
+#else
 #define LIBQCOW_EXTERN_VARIABLE	LIBQCOW_EXTERN
+#endif
 
 #else
 #define LIBQCOW_EXTERN		/* extern */
