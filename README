@@ -9,21 +9,22 @@ Read-only supported QCOW formats:
 
 * version 1
 * version 2
-* version 3 (as of version 20141201)
+* version 3
 
 Supported QCOW format features:
 
-* compression
-* encryption
+* zlib (DEFLATE) compression
+* AES-CBC 128-bit encryption
+* backing file (differential image)
 
 Unsupported QCOW format features:
 
-* backing file-based snapshots
+* LUKS encryption
+* data file
 * in-image snapshots
 
 Work in progress:
 
-* Dokan library support
 * Thread-safety in file API functions
 
 For more information see:

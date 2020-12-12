@@ -1072,8 +1072,6 @@ int libqcow_internal_file_open_read(
 	static char *function                      = "libqcow_internal_file_open_read";
 	size_t level1_table_size                   = 0;
 	size_t level2_table_size                   = 0;
-	uint64_t backing_filename_offset           = 0;
-	uint32_t backing_filename_size             = 0;
 	uint32_t number_of_level1_table_references = 0;
 	uint32_t number_of_level2_table_bits       = 0;
 	int entry_index                            = 0;
@@ -1250,8 +1248,6 @@ int libqcow_internal_file_open_read(
 
 	internal_file->encryption_method  = internal_file->file_header->encryption_method;
 
-	backing_filename_offset           = internal_file->file_header->backing_filename_offset;
-	backing_filename_size             = internal_file->file_header->backing_filename_size;
 	number_of_level1_table_references = internal_file->file_header->number_of_level1_table_references;
 
 	if( internal_file->file_header->format_version == 1 )
@@ -1281,7 +1277,7 @@ int libqcow_internal_file_open_read(
 		number_of_level2_table_bits = internal_file->file_header->number_of_level2_table_bits;
 
 		internal_file->offset_bit_mask           = 0x7fffffffffffffffULL;
-		internal_file->compression_flag_bit_mask = (uint64_t) 1 << 63;
+		internal_file->compression_flag_bit_mask = (uint64_t) 1UL << 63;
 		internal_file->compression_bit_shift     = 63 - internal_file->file_header->number_of_cluster_block_bits;
 	}
 	else if( ( internal_file->file_header->format_version == 2 )
@@ -1302,7 +1298,7 @@ int libqcow_internal_file_open_read(
 		number_of_level2_table_bits = internal_file->file_header->number_of_cluster_block_bits - 3;
 
 		internal_file->offset_bit_mask           = 0x3fffffffffffffffULL;
-		internal_file->compression_flag_bit_mask = (uint64_t) 1 << 62;
+		internal_file->compression_flag_bit_mask = (uint64_t) 1UL << 62;
 		internal_file->compression_bit_shift     = 62 - ( internal_file->file_header->number_of_cluster_block_bits - 8 );
 	}
 	internal_file->level1_index_bit_shift = internal_file->file_header->number_of_cluster_block_bits + number_of_level2_table_bits;
@@ -1419,16 +1415,20 @@ int libqcow_internal_file_open_read(
 		 "%s: cluster block size\t\t\t: %" PRIu64 "\n",
 		 function,
 		 internal_file->cluster_block_size );
+
+		libcnotify_printf(
+		 "\n" );
 	}
-#endif
-	if( ( backing_filename_offset > 0 )
-	 && ( backing_filename_size > 0 ) )
+#endif /* defined( HAVE_DEBUG_OUTPUT ) */
+
+	if( ( internal_file->file_header->backing_filename_offset > 0 )
+	 && ( internal_file->file_header->backing_filename_size > 0 ) )
 	{
 		if( libqcow_internal_file_open_read_backing_filename(
 		     internal_file,
 		     file_io_handle,
-		     backing_filename_offset,
-		     backing_filename_size,
+		     internal_file->file_header->backing_filename_offset,
+		     internal_file->file_header->backing_filename_size,
 		     error ) != 1 )
 		{
 			libcerror_error_set(
@@ -1879,6 +1879,612 @@ int libqcow_file_is_locked(
 	return( is_locked );
 }
 
+/* Retrieves the cluster block offset for a specific offset
+ * Returns 1 if successful or -1 on error
+ */
+int libqcow_internal_file_get_cluster_block_offset(
+     libqcow_internal_file_t *internal_file,
+     libbfio_handle_t *file_io_handle,
+     off64_t offset,
+     uint64_t *cluster_block_offset,
+     uint64_t *cluster_block_data_offset,
+     uint8_t *cluster_block_is_compressed,
+     libcerror_error_t **error )
+{
+	libqcow_cluster_table_t *level2_table = NULL;
+	static char *function                 = "libqcow_internal_file_get_cluster_block_offset";
+	off64_t element_data_offset           = 0;
+	uint64_t level1_table_index           = 0;
+	uint64_t level2_table_index           = 0;
+	uint64_t level2_table_offset          = 0;
+	uint64_t safe_cluster_block_offset    = 0;
+	uint8_t is_compressed                 = 0;
+
+	if( internal_file == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file.",
+		 function );
+
+		return( -1 );
+	}
+	if( internal_file->file_header == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid file - missing file header.",
+		 function );
+
+		return( -1 );
+	}
+	if( offset < 0 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid offset value out of bounds.",
+		 function );
+
+		return( -1 );
+	}
+	if( cluster_block_offset == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid cluster block offset.",
+		 function );
+
+		return( -1 );
+	}
+	if( cluster_block_data_offset == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid cluster block data offset.",
+		 function );
+
+		return( -1 );
+	}
+	if( cluster_block_is_compressed == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid cluster block is compressed.",
+		 function );
+
+		return( -1 );
+	}
+	level1_table_index = offset >> internal_file->level1_index_bit_shift;
+
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
+	{
+		libcnotify_printf(
+		 "%s: level 1 table index\t: %" PRIu64 "\n",
+		 function,
+		 level1_table_index );
+	}
+#endif
+	if( level1_table_index > (uint64_t) INT_MAX )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid level 1 table index value out of bounds.",
+		 function );
+
+		return( -1 );
+	}
+	if( libqcow_cluster_table_get_reference_by_index(
+	     internal_file->level1_table,
+	     (int) level1_table_index,
+	     &level2_table_offset,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve level 2 table offset: %" PRIi64 " from level 1 table.",
+		 function,
+		 level1_table_index );
+
+		return( -1 );
+	}
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
+	{
+		libcnotify_printf(
+		 "%s: level 2 table offset\t: 0x%08" PRIx64 "\n",
+		 function,
+		 level2_table_offset );
+
+		libcnotify_printf(
+		 "\n" );
+	}
+#endif
+	level2_table_offset &= internal_file->offset_bit_mask;
+
+	/* If level2_table_offset is 0 the level 2 table is sparse
+	 */
+	if( level2_table_offset > 0 )
+	{
+		if( libfdata_vector_get_element_value_at_offset(
+		     internal_file->level2_table_vector,
+		     (intptr_t *) file_io_handle,
+		     (libfdata_cache_t *) internal_file->level2_table_cache,
+		     (off64_t) level2_table_offset,
+		     &element_data_offset,
+		     (intptr_t **) &level2_table,
+		     0,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve level2 table at offset: 0x%08" PRIx64 ".",
+			 function,
+			 level2_table_offset );
+
+			return( -1 );
+		}
+		level2_table_index = ( internal_file->current_offset >> internal_file->file_header->number_of_cluster_block_bits ) & internal_file->level2_index_bit_mask;
+
+#if defined( HAVE_DEBUG_OUTPUT )
+		if( libcnotify_verbose != 0 )
+		{
+			libcnotify_printf(
+			 "%s: level 2 table index\t: %" PRIu64 "\n",
+			 function,
+			 level2_table_index );
+		}
+#endif
+		if( level2_table_index > (uint64_t) INT_MAX )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+			 "%s: invalid level 2 table index value out of bounds.",
+			 function );
+
+			return( -1 );
+		}
+		if( libqcow_cluster_table_get_reference_by_index(
+		     level2_table,
+		     (int) level2_table_index,
+		     &safe_cluster_block_offset,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve level 2 table entry: %" PRIu64 ".",
+			 function,
+			 level2_table_index );
+
+			return( -1 );
+		}
+	}
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
+	{
+		libcnotify_printf(
+		 "%s: table2 entry: %" PRIu64 "\t\t: 0x%08" PRIx64 "\n",
+		 function,
+		 level2_table_index,
+		 safe_cluster_block_offset );
+
+		libcnotify_printf(
+		 "%s: cluster block offset\t: %" PRIi64 " (0x%08" PRIx64 ")\n",
+		 function,
+		 safe_cluster_block_offset & internal_file->offset_bit_mask,
+		 safe_cluster_block_offset & internal_file->offset_bit_mask );
+	}
+#endif
+	if( ( safe_cluster_block_offset & internal_file->compression_flag_bit_mask ) != 0 )
+	{
+		if( internal_file->encryption_method != LIBQCOW_ENCRYPTION_METHOD_NONE )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+			 LIBCERROR_ARGUMENT_ERROR_UNSUPPORTED_VALUE,
+			 "%s: simultaneous encryption and compression not supported.",
+			 function );
+
+			return( -1 );
+		}
+#if defined( HAVE_DEBUG_OUTPUT )
+		if( libcnotify_verbose != 0 )
+		{
+			libcnotify_printf(
+			 "%s: is compressed\n",
+			 function );
+		}
+#endif
+		is_compressed = 1;
+	}
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
+	{
+		libcnotify_printf(
+		 "\n" );
+	}
+#endif
+	*cluster_block_offset        = safe_cluster_block_offset & internal_file->offset_bit_mask;
+	*cluster_block_data_offset   = offset & internal_file->cluster_block_bit_mask;
+	*cluster_block_is_compressed = is_compressed;
+
+	return( 1 );
+}
+
+/* Reads a cluster block
+ * Returns 1 if successful or -1 on error
+ */
+int libqcow_internal_file_read_cluster_block(
+     libqcow_internal_file_t *internal_file,
+     libbfio_handle_t *file_io_handle,
+     uint64_t cluster_block_offset,
+     uint64_t cluster_block_data_offset,
+     uint8_t cluster_block_is_compressed,
+     libqcow_cluster_block_t **cluster_block,
+     libcerror_error_t **error )
+{
+	libfcache_cache_t *cluster_block_cache       = NULL;
+	libqcow_cluster_block_t *safe_cluster_block  = NULL;
+	static char *function                        = "libqcow_internal_file_read_cluster_block";
+	size_t cluster_block_size                    = 0;
+	size_t safe_cluster_block_data_size          = 0;
+	off64_t element_data_offset                  = 0;
+	uint64_t block_key                           = 0;
+	uint64_t compressed_cluster_block_end_offset = 0;
+	int cache_entry_index                        = 0;
+
+	if( internal_file == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file.",
+		 function );
+
+		return( -1 );
+	}
+	if( internal_file->file_header == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid file - missing file header.",
+		 function );
+
+		return( -1 );
+	}
+	if( internal_file->cluster_block_size == 0 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid file - cluster block size value out of bounds.",
+		 function );
+
+		return( -1 );
+	}
+	if( cluster_block == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid cluster block.",
+		 function );
+
+		return( -1 );
+	}
+	if( cluster_block_is_compressed != 0 )
+	{
+		/* Handle compressed cluster block
+		 */
+		cluster_block_size    = (size_t) ( cluster_block_offset >> internal_file->compression_bit_shift );
+		cluster_block_offset &= internal_file->compression_bit_mask;
+
+		if( ( internal_file->file_header->format_version == 2 )
+		 || ( internal_file->file_header->format_version == 3 ) )
+		{
+			cluster_block_size += 1;
+			cluster_block_size *= 512;
+
+			/* Make sure the compressed block size stays within the bounds
+			 * of the cluster block size and the size of the file
+			 */
+			compressed_cluster_block_end_offset = cluster_block_offset / internal_file->cluster_block_size;
+
+			if( ( cluster_block_offset % internal_file->cluster_block_size ) != 0 )
+			{
+				compressed_cluster_block_end_offset += 1;
+			}
+			compressed_cluster_block_end_offset += 1;
+			compressed_cluster_block_end_offset *= internal_file->cluster_block_size;
+
+			if( compressed_cluster_block_end_offset > internal_file->size )
+			{
+				compressed_cluster_block_end_offset = internal_file->size;
+			}
+			if( ( cluster_block_offset + cluster_block_size ) > compressed_cluster_block_end_offset )
+			{
+				cluster_block_size = (size_t) ( compressed_cluster_block_end_offset - cluster_block_offset );
+			}
+		}
+#if defined( HAVE_DEBUG_OUTPUT )
+		if( libcnotify_verbose != 0 )
+		{
+			libcnotify_printf(
+			 "%s: compressed cluster block offset\t\t: 0x%08" PRIx64 "\n",
+			 function,
+			 cluster_block_offset );
+
+			libcnotify_printf(
+			 "%s: compressed cluster block size\t\t: %" PRIzd "\n",
+			 function,
+			 cluster_block_size );
+		}
+#endif
+		cluster_block_cache = internal_file->compressed_cluster_block_cache;
+	}
+	else
+	{
+		/* For version 2 and 3 make sure the sure the last cluster block size
+		 * stays within the bounds of the size of the file
+		 */
+		if( ( ( internal_file->file_header->format_version == 2 )
+		  ||  ( internal_file->file_header->format_version == 3 ) )
+		 && ( ( cluster_block_offset + internal_file->cluster_block_size ) > internal_file->size ) )
+		{
+			cluster_block_size = (size_t) ( internal_file->size - cluster_block_offset );
+
+#if defined( HAVE_DEBUG_OUTPUT )
+			if( libcnotify_verbose != 0 )
+			{
+				libcnotify_printf(
+				 "%s: last cluster block offset\t\t: 0x%08" PRIx64 "\n",
+				 function,
+				 cluster_block_offset );
+
+				libcnotify_printf(
+				 "%s: last cluster block size\t\t\t: %" PRIzd "\n",
+				 function,
+				 cluster_block_size );
+			}
+#endif
+		}
+		cluster_block_cache = internal_file->cluster_block_cache;
+	}
+	if( cluster_block_size != 0 )
+	{
+/* TODO check cache  */
+		if( libqcow_cluster_block_initialize(
+		     &safe_cluster_block,
+		     cluster_block_size,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+			 "%s: unable to create cluster block.",
+			 function );
+
+			goto on_error;
+		}
+		if( libqcow_cluster_block_read(
+		     safe_cluster_block,
+		     file_io_handle,
+		     cluster_block_offset,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_IO,
+			 LIBCERROR_IO_ERROR_READ_FAILED,
+			 "%s: unable to read cluster block at offset: %" PRIi64 " (0x%08" PRIx64 ").",
+			 function,
+			 cluster_block_offset,
+			 cluster_block_offset );
+
+			goto on_error;
+		}
+	}
+	else
+	{
+		if( libfdata_vector_get_element_value_at_offset(
+		     internal_file->cluster_block_vector,
+		     (intptr_t *) file_io_handle,
+		     (libfdata_cache_t *) cluster_block_cache,
+		     (off64_t) cluster_block_offset,
+		     &element_data_offset,
+		     (intptr_t **) cluster_block,
+		     0,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve cluster block at offset: %" PRIi64 " (0x%08" PRIx64 ").",
+			 function,
+			 cluster_block_offset,
+			 cluster_block_offset );
+
+			goto on_error;
+		}
+	}
+	if( cluster_block_is_compressed != 0 )
+	{
+		safe_cluster_block->compressed_data = safe_cluster_block->data;
+
+		safe_cluster_block->data = (uint8_t *) memory_allocate(
+		                                        sizeof( uint8_t ) * internal_file->cluster_block_size );
+
+		if( safe_cluster_block->data == NULL )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_MEMORY,
+			 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
+			 "%s: unable to create cluster block data.",
+			 function );
+
+			goto on_error;
+		}
+		safe_cluster_block->data_size = internal_file->cluster_block_size;
+
+		safe_cluster_block_data_size = safe_cluster_block->data_size;
+
+		if( libqcow_decompress_data(
+		     safe_cluster_block->compressed_data,
+		     cluster_block_size,
+		     LIBQCOW_COMPRESSION_METHOD_DEFLATE,
+		     safe_cluster_block->data,
+		     &safe_cluster_block_data_size,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_ENCRYPTION,
+			 LIBCERROR_ENCRYPTION_ERROR_GENERIC,
+			 "%s: unable to decompress cluster block data at offset: %" PRIi64 " (0x%08" PRIx64 ").",
+			 function,
+			 cluster_block_offset,
+			 cluster_block_offset );
+
+			goto on_error;
+		}
+/* TODO check safe_cluster_block_data_size
+		if( safe_cluster_block_data_size != safe_cluster_block->data_size )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+			 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
+			 "%s: invalid cluster block size value out of bounds.",
+			 function );
+
+			goto on_error;
+		}
+*/
+	}
+	if( safe_cluster_block != NULL )
+	{
+		cache_entry_index = ( cluster_block_offset & internal_file->cluster_block_bit_mask ) % LIBQCOW_MAXIMUM_CACHE_ENTRIES_CLUSTER_BLOCKS;
+
+		if( libfcache_cache_set_value_by_index(
+		     cluster_block_cache,
+		     cache_entry_index,
+		     0,
+		     cluster_block_offset,
+		     0,
+		     (intptr_t *) safe_cluster_block,
+		     (int (*)(intptr_t **, libcerror_error_t **)) &libqcow_cluster_block_free,
+		     LIBFCACHE_CACHE_VALUE_FLAG_MANAGED,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+			 "%s: unable to set value in cache entry: %d.",
+			 function,
+			 cache_entry_index );
+
+			goto on_error;
+		}
+		*cluster_block = safe_cluster_block;
+	}
+	if( internal_file->encryption_method != LIBQCOW_ENCRYPTION_METHOD_NONE )
+	{
+		if( *cluster_block == NULL )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+			 "%s: missing cluster block.",
+			 function );
+
+			goto on_error;
+		}
+		if( ( *cluster_block )->encrypted_data == NULL )
+		{
+			( *cluster_block )->encrypted_data = ( *cluster_block )->data;
+
+			( *cluster_block )->data = (uint8_t *) memory_allocate(
+			                                        sizeof( uint8_t ) * ( *cluster_block )->data_size );
+
+			if( ( *cluster_block )->data == NULL )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_MEMORY,
+				 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
+				 "%s: unable to create cluster block data.",
+				 function );
+
+				goto on_error;
+			}
+			block_key = (uint64_t) ( internal_file->current_offset - cluster_block_data_offset ) / 512;
+
+			if( libqcow_encryption_crypt(
+			     internal_file->encryption_context,
+			     LIBQCOW_ENCYPTION_CRYPT_MODE_DECRYPT,
+			     ( *cluster_block )->encrypted_data,
+			     ( *cluster_block )->data_size,
+			     ( *cluster_block )->data,
+			     ( *cluster_block )->data_size,
+			     block_key,
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_ENCRYPTION,
+				 LIBCERROR_ENCRYPTION_ERROR_GENERIC,
+				 "%s: unable to decrypt cluster block data.",
+				 function );
+
+				goto on_error;
+			}
+		}
+	}
+	return( 1 );
+
+on_error:
+	if( safe_cluster_block != NULL )
+	{
+		libqcow_cluster_block_free(
+		 &safe_cluster_block,
+		 NULL );
+	}
+	return( -1 );
+}
+
 /* Reads (media) data from the current offset into a buffer using a Basic File IO (bfio) handle
  * This function is not multi-thread safe acquire write lock before call
  * Returns the number of bytes read or -1 on error
@@ -1890,23 +2496,14 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
          size_t buffer_size,
          libcerror_error_t **error )
 {
-	libqcow_cluster_block_t *cluster_block       = NULL;
-	libqcow_cluster_table_t *level2_table        = NULL;
-	static char *function                        = "libqcow_internal_file_read_buffer_from_file_io_handle";
-	off64_t element_data_offset                  = 0;
-	size_t buffer_offset                         = 0;
-	size_t cluster_block_data_size               = 0;
-	size_t compressed_cluster_block_size         = 0;
-	size_t read_size                             = 0;
-	uint64_t cluster_block_file_offset           = 0;
-	uint64_t compressed_cluster_block_offset     = 0;
-	uint64_t compressed_cluster_block_end_offset = 0;
-	uint64_t cluster_block_offset                = 0;
-	uint64_t level1_table_index                  = 0;
-	uint64_t level2_table_file_offset            = 0;
-	uint64_t level2_table_index                  = 0;
-	int cache_entry_index                        = 0;
-	int cluster_block_is_compressed              = 0;
+	libqcow_cluster_block_t *cluster_block = NULL;
+	static char *function                  = "libqcow_internal_file_read_buffer_from_file_io_handle";
+	size_t buffer_offset                   = 0;
+	size_t read_size                       = 0;
+	ssize_t read_count                     = 0;
+	uint64_t cluster_block_data_offset     = 0;
+	uint64_t cluster_block_file_offset     = 0;
+	uint8_t cluster_block_is_compressed    = 0;
 
 	if( internal_file == NULL )
 	{
@@ -1952,6 +2549,20 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 
 		return( -1 );
 	}
+	if( internal_file->backing_filename != NULL )
+	{
+		if( internal_file->parent_file == NULL )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+			 "%s: invalid file - missing parent file.",
+			 function );
+
+			return( -1 );
+		}
+	}
 	if( buffer == NULL )
 	{
 		libcerror_error_set(
@@ -1984,160 +2595,33 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 		if( libcnotify_verbose != 0 )
 		{
 			libcnotify_printf(
-			 "%s: current offset\t\t\t\t: 0x%08" PRIx64 "\n",
+			 "%s: current offset\t: %" PRIi64 " (0x%08" PRIx64 ")\n",
 			 function,
+			 internal_file->current_offset,
 			 internal_file->current_offset );
 		}
 #endif
-		level1_table_index = internal_file->current_offset >> internal_file->level1_index_bit_shift;
-
-#if defined( HAVE_DEBUG_OUTPUT )
-		if( libcnotify_verbose != 0 )
-		{
-			libcnotify_printf(
-			 "%s: level 1 table index\t\t\t: %" PRIu64 "\n",
-			 function,
-			 level1_table_index );
-		}
-#endif
-		if( level1_table_index > (uint64_t) INT_MAX )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
-			 "%s: invalid level 1 table index value out of bounds.",
-			 function );
-
-			return( -1 );
-		}
-		if( libqcow_cluster_table_get_reference_by_index(
-		     internal_file->level1_table,
-		     (int) level1_table_index,
-		     &level2_table_file_offset,
+		if( libqcow_internal_file_get_cluster_block_offset(
+		     internal_file,
+		     file_io_handle,
+		     internal_file->current_offset,
+		     &cluster_block_file_offset,
+		     &cluster_block_data_offset,
+		     &cluster_block_is_compressed,
 		     error ) != 1 )
 		{
 			libcerror_error_set(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve level 2 table offset: %" PRIi64 " from level 1 table.",
+			 "%s: unable to retrieve cluster block offset for offset: %" PRIi64 " (0x%08" PRIx64 ").",
 			 function,
-			 level1_table_index );
+			 internal_file->current_offset,
+			 internal_file->current_offset );
 
 			return( -1 );
 		}
-#if defined( HAVE_DEBUG_OUTPUT )
-		if( libcnotify_verbose != 0 )
-		{
-			libcnotify_printf(
-			 "%s: level 2 table file offset\t\t: 0x%08" PRIx64 "\n",
-			 function,
-			 level2_table_file_offset );
-		}
-#endif
-		level2_table_file_offset &= internal_file->offset_bit_mask;
-
-		if( level2_table_file_offset > 0 )
-		{
-			if( libfdata_vector_get_element_value_at_offset(
-			     internal_file->level2_table_vector,
-			     (intptr_t *) file_io_handle,
-			     (libfdata_cache_t *) internal_file->level2_table_cache,
-			     (off64_t) level2_table_file_offset,
-			     &element_data_offset,
-			     (intptr_t **) &level2_table,
-			     0,
-			     error ) != 1 )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-				 "%s: unable to retrieve level2 table at offset: 0x%08" PRIx64 ".",
-				 function,
-				 level2_table_file_offset );
-
-				return( -1 );
-			}
-			level2_table_index = ( internal_file->current_offset >> internal_file->file_header->number_of_cluster_block_bits )
-			                   & internal_file->level2_index_bit_mask;
-
-#if defined( HAVE_DEBUG_OUTPUT )
-			if( libcnotify_verbose != 0 )
-			{
-				libcnotify_printf(
-				 "%s: level 2 table index\t\t\t: %" PRIu64 "\n",
-				 function,
-				 level2_table_index );
-			}
-#endif
-			if( level2_table_index > (uint64_t) INT_MAX )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
-				 "%s: invalid level 2 table index value out of bounds.",
-				 function );
-
-				return( -1 );
-			}
-			if( libqcow_cluster_table_get_reference_by_index(
-			     level2_table,
-			     (int) level2_table_index,
-			     &cluster_block_file_offset,
-			     error ) != 1 )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-				 "%s: unable to retrieve cluster block offset: 0x%08" PRIx64 " from level 2 table.",
-				 function,
-				 level2_table_index );
-
-				return( -1 );
-			}
-		}
-		else
-		{
-			/* Handle sparse level 2 table
-			 */
-			cluster_block_file_offset = 0;
-		}
-#if defined( HAVE_DEBUG_OUTPUT )
-		if( libcnotify_verbose != 0 )
-		{
-			libcnotify_printf(
-			 "%s: cluster block file offset\t\t: 0x%08" PRIx64 "\n",
-			 function,
-			 cluster_block_file_offset );
-		}
-#endif
-		if( ( cluster_block_file_offset & internal_file->compression_flag_bit_mask ) != 0 )
-		{
-			if( internal_file->encryption_method != LIBQCOW_ENCRYPTION_METHOD_NONE )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-				 LIBCERROR_ARGUMENT_ERROR_UNSUPPORTED_VALUE,
-				 "%s: simultaneous encryption and compression not supported.",
-				 function );
-
-				return( -1 );
-			}
-			cluster_block_is_compressed = 1;
-		}
-		else
-		{
-			cluster_block_is_compressed = 0;
-		}
-		cluster_block_file_offset &= internal_file->offset_bit_mask;
-		cluster_block_offset       = internal_file->current_offset & internal_file->cluster_block_bit_mask;
-
-		read_size = internal_file->cluster_block_size - (size_t) cluster_block_offset;
+		read_size = internal_file->cluster_block_size - (size_t) cluster_block_data_offset;
 
 		if( ( (size64_t) internal_file->current_offset + read_size ) > internal_file->file_header->media_size )
 		{
@@ -2147,318 +2631,25 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 		{
 			read_size = buffer_size - buffer_offset;
 		}
-		if( cluster_block_file_offset == 0 )
+		if( cluster_block_file_offset > 0 )
 		{
-			/* Handle sparse cluster block
-			 */
-			if( memory_set(
-			     &( ( (uint8_t *) buffer )[ buffer_offset ] ),
-			     0,
-			     read_size ) == NULL )
+			if( libqcow_internal_file_read_cluster_block(
+			     internal_file,
+			     file_io_handle,
+			     cluster_block_file_offset,
+			     cluster_block_data_offset,
+			     cluster_block_is_compressed,
+			     &cluster_block,
+			     error ) != 1 )
 			{
 				libcerror_error_set(
 				 error,
-				 LIBCERROR_ERROR_DOMAIN_MEMORY,
-				 LIBCERROR_MEMORY_ERROR_SET_FAILED,
-				 "%s: unable to set sparse data in buffer.",
+				 LIBCERROR_ERROR_DOMAIN_IO,
+				 LIBCERROR_IO_ERROR_READ_FAILED,
+				 "%s: unable to read cluster block.",
 				 function );
 
 				return( -1 );
-			}
-		}
-		else if( cluster_block_is_compressed != 0 )
-		{
-			/* Handle compressed cluster block
-			 */
-			compressed_cluster_block_size   = (size_t) ( cluster_block_file_offset >> internal_file->compression_bit_shift );
-			compressed_cluster_block_offset = cluster_block_file_offset & internal_file->compression_bit_mask;
-
-			if( ( internal_file->file_header->format_version == 2 )
-			 || ( internal_file->file_header->format_version == 3 ) )
-			{
-				compressed_cluster_block_size += 1;
-				compressed_cluster_block_size *= 512;
-
-				/* Make sure the compressed block size stays within the bounds
-				 * of the cluster block size and the size of the file
-				 */
-				compressed_cluster_block_end_offset = compressed_cluster_block_offset / internal_file->cluster_block_size;
-
-				if( ( compressed_cluster_block_offset % internal_file->cluster_block_size ) != 0 )
-				{
-					compressed_cluster_block_end_offset += 1;
-				}
-				compressed_cluster_block_end_offset += 1;
-				compressed_cluster_block_end_offset *= internal_file->cluster_block_size;
-
-				if( compressed_cluster_block_end_offset > internal_file->size )
-				{
-					compressed_cluster_block_end_offset = internal_file->size;
-				}
-				if( ( compressed_cluster_block_offset + compressed_cluster_block_size ) > compressed_cluster_block_end_offset )
-				{
-					compressed_cluster_block_size = (size_t) ( compressed_cluster_block_end_offset - compressed_cluster_block_offset );
-				}
-			}
-			cache_entry_index = ( compressed_cluster_block_offset & internal_file->cluster_block_bit_mask )
-			                  % LIBQCOW_MAXIMUM_CACHE_ENTRIES_CLUSTER_BLOCKS;
-
-#if defined( HAVE_DEBUG_OUTPUT )
-			if( libcnotify_verbose != 0 )
-			{
-				libcnotify_printf(
-				 "%s: compressed cluster block offset\t\t: 0x%08" PRIx64 "\n",
-				 function,
-				 compressed_cluster_block_offset );
-
-				libcnotify_printf(
-				 "%s: compressed cluster block size\t\t: %" PRIzd "\n",
-				 function,
-				 compressed_cluster_block_size );
-			}
-#endif
-/* TODO check cache */
-			{
-				cluster_block = NULL;
-
-				if( libqcow_cluster_block_initialize(
-				     &cluster_block,
-				     compressed_cluster_block_size,
-				     error ) != 1 )
-				{
-					libcerror_error_set(
-					 error,
-					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-					 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-					 "%s: unable to create cluster block.",
-					 function );
-
-					return( -1 );
-				}
-				if( libqcow_cluster_block_read(
-				     cluster_block,
-				     file_io_handle,
-				     compressed_cluster_block_offset,
-				     error ) != 1 )
-				{
-					libcerror_error_set(
-					 error,
-					 LIBCERROR_ERROR_DOMAIN_IO,
-					 LIBCERROR_IO_ERROR_READ_FAILED,
-					 "%s: unable to read compressed cluster block at offset: 0x%08" PRIx64".",
-					 function,
-					 compressed_cluster_block_offset );
-
-					libqcow_cluster_block_free(
-					 &cluster_block,
-					 NULL );
-
-					return( -1 );
-				}
-				if( libfcache_cache_set_value_by_index(
-				     internal_file->compressed_cluster_block_cache,
-				     cache_entry_index,
-				     0,
-				     compressed_cluster_block_offset,
-				     0,
-				     (intptr_t *) cluster_block,
-				     (int (*)(intptr_t **, libcerror_error_t **)) &libqcow_cluster_block_free,
-				     LIBFCACHE_CACHE_VALUE_FLAG_MANAGED,
-				     error ) != 1 )
-				{
-					libcerror_error_set(
-					 error,
-					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-					 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
-					 "%s: unable to set value in cache entry: %d.",
-					 function,
-					 cache_entry_index );
-
-					libqcow_cluster_block_free(
-					 &cluster_block,
-					 NULL );
-
-					return( -1 );
-				}
-				cluster_block->compressed_data = cluster_block->data;
-				cluster_block->data_size       = internal_file->cluster_block_size;
-
-				cluster_block->data = (uint8_t *) memory_allocate(
-								   sizeof( uint8_t ) * cluster_block->data_size );
-
-				if( cluster_block->data == NULL )
-				{
-					libcerror_error_set(
-					 error,
-					 LIBCERROR_ERROR_DOMAIN_MEMORY,
-					 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
-					 "%s: unable to create cluster block data.",
-					 function );
-
-					return( -1 );
-				}
-				cluster_block_data_size = cluster_block->data_size;
-
-				if( libqcow_decompress_data(
-				     cluster_block->compressed_data,
-				     compressed_cluster_block_size,
-				     LIBQCOW_COMPRESSION_METHOD_DEFLATE,
-				     cluster_block->data,
-				     &cluster_block_data_size,
-				     error ) != 1 )
-				{
-					libcerror_error_set(
-					 error,
-					 LIBCERROR_ERROR_DOMAIN_ENCRYPTION,
-					 LIBCERROR_ENCRYPTION_ERROR_GENERIC,
-					 "%s: unable to decompress cluster block data at offset: 0x%08" PRIx64".",
-					 function,
-					 compressed_cluster_block_offset );
-
-					return( -1 );
-				}
-/* TODO check cluster_block_data_size
-				if( cluster_block_data_size != cluster_block->data_size )
-				{
-					libcerror_error_set(
-					 error,
-					 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-					 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
-					 "%s: invalid cluster block size value out of bounds.",
-					 function );
-
-					return( -1 );
-				}
-*/
-			}
-			if( memory_copy(
-			     &( ( (uint8_t *) buffer )[ buffer_offset ] ),
-			     &( cluster_block->data[ cluster_block_offset ] ),
-			     read_size ) == NULL )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_MEMORY,
-				 LIBCERROR_MEMORY_ERROR_COPY_FAILED,
-				 "%s: unable to copy cluster block data to buffer.",
-				 function );
-
-				return( -1 );
-			}
-		}
-		else if( cluster_block_file_offset > 0 )
-		{
-			/* For version 2 make sure the sure the last cluster block size
-			 * stays within the bounds of the size of the file
-			 */
-			if( ( ( internal_file->file_header->format_version == 2 )
-			  ||  ( internal_file->file_header->format_version == 3 ) )
-			 && ( ( cluster_block_file_offset + internal_file->cluster_block_size ) > internal_file->size ) )
-			{
-				compressed_cluster_block_size = (size_t) ( internal_file->size - cluster_block_file_offset );
-
-#if defined( HAVE_DEBUG_OUTPUT )
-				if( libcnotify_verbose != 0 )
-				{
-					libcnotify_printf(
-					 "%s: last cluster block offset\t\t: 0x%08" PRIx64 "\n",
-					 function,
-					 cluster_block_file_offset );
-
-					libcnotify_printf(
-					 "%s: last cluster block size\t\t\t: %" PRIzd "\n",
-					 function,
-					 compressed_cluster_block_size );
-				}
-#endif
-				cache_entry_index = cluster_block_file_offset % LIBQCOW_MAXIMUM_CACHE_ENTRIES_CLUSTER_BLOCKS;
-
-/* TODO check cache */
-				{
-					cluster_block = NULL;
-
-					if( libqcow_cluster_block_initialize(
-					     &cluster_block,
-					     compressed_cluster_block_size,
-					     error ) != 1 )
-					{
-						libcerror_error_set(
-						 error,
-						 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-						 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-						 "%s: unable to create cluster block.",
-						 function );
-
-						return( -1 );
-					}
-					if( libqcow_cluster_block_read(
-					     cluster_block,
-					     file_io_handle,
-					     cluster_block_file_offset,
-					     error ) != 1 )
-					{
-						libcerror_error_set(
-						 error,
-						 LIBCERROR_ERROR_DOMAIN_IO,
-						 LIBCERROR_IO_ERROR_READ_FAILED,
-						 "%s: unable to read compressed cluster block.",
-						 function );
-
-						libqcow_cluster_block_free(
-						 &cluster_block,
-						 NULL );
-
-						return( -1 );
-					}
-					if( libfcache_cache_set_value_by_index(
-					     internal_file->compressed_cluster_block_cache,
-					     cache_entry_index,
-					     0,
-					     cluster_block_file_offset,
-					     0,
-					     (intptr_t *) cluster_block,
-					     (int (*)(intptr_t **, libcerror_error_t **)) &libqcow_cluster_block_free,
-					     LIBFCACHE_CACHE_VALUE_FLAG_MANAGED,
-					     error ) != 1 )
-					{
-						libcerror_error_set(
-						 error,
-						 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-						 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
-						 "%s: unable to set value in cache entry: %d.",
-						 function,
-						 cache_entry_index );
-
-						libqcow_cluster_block_free(
-						 &cluster_block,
-						 NULL );
-
-						return( -1 );
-					}
-				}
-			}
-			else
-			{
-				if( libfdata_vector_get_element_value_at_offset(
-				     internal_file->cluster_block_vector,
-				     (intptr_t *) file_io_handle,
-				     (libfdata_cache_t *) internal_file->cluster_block_cache,
-				     (off64_t) cluster_block_file_offset,
-				     &element_data_offset,
-				     (intptr_t **) &cluster_block,
-				     0,
-				     error ) != 1 )
-				{
-					libcerror_error_set(
-					 error,
-					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-					 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-					 "%s: unable to retrieve cluster block at offset: 0x%08" PRIx64 ".",
-					 function,
-					 cluster_block_file_offset );
-
-					return( -1 );
-				}
 			}
 			if( cluster_block == NULL )
 			{
@@ -2482,50 +2673,9 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 
 				return( -1 );
 			}
-			if( internal_file->encryption_method != LIBQCOW_ENCRYPTION_METHOD_NONE )
-			{
-				if( cluster_block->encrypted_data == NULL )
-				{
-					cluster_block->encrypted_data = cluster_block->data;
-
-					cluster_block->data = (uint8_t *) memory_allocate(
-									   sizeof( uint8_t ) * cluster_block->data_size );
-
-					if( cluster_block->data == NULL )
-					{
-						libcerror_error_set(
-						 error,
-						 LIBCERROR_ERROR_DOMAIN_MEMORY,
-						 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
-						 "%s: unable to create cluster block data.",
-						 function );
-
-						return( -1 );
-					}
-					if( libqcow_encryption_crypt(
-					     internal_file->encryption_context,
-					     LIBQCOW_ENCYPTION_CRYPT_MODE_DECRYPT,
-					     cluster_block->encrypted_data,
-					     cluster_block->data_size,
-					     cluster_block->data,
-					     cluster_block->data_size,
-					     (uint64_t) ( internal_file->current_offset - cluster_block_offset ) / 512,
-					     error ) != 1 )
-					{
-						libcerror_error_set(
-						 error,
-						 LIBCERROR_ERROR_DOMAIN_ENCRYPTION,
-						 LIBCERROR_ENCRYPTION_ERROR_GENERIC,
-						 "%s: unable to decrypt cluster block data.",
-						 function );
-
-						return( -1 );
-					}
-				}
-			}
 			if( memory_copy(
 			     &( ( (uint8_t *) buffer )[ buffer_offset ] ),
-			     &( cluster_block->data[ cluster_block_offset ] ),
+			     &( cluster_block->data[ cluster_block_data_offset ] ),
 			     read_size ) == NULL )
 			{
 				libcerror_error_set(
@@ -2533,6 +2683,47 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 				 LIBCERROR_ERROR_DOMAIN_MEMORY,
 				 LIBCERROR_MEMORY_ERROR_COPY_FAILED,
 				 "%s: unable to copy cluster block data to buffer.",
+				 function );
+
+				return( -1 );
+			}
+		}
+		else if( internal_file->parent_file != NULL )
+		{
+			read_count = libqcow_file_read_buffer_at_offset(
+				      internal_file->parent_file,
+				      &( ( (uint8_t *) buffer )[ buffer_offset ] ),
+				      buffer_size - buffer_offset,
+				      internal_file->current_offset,
+				      error );
+
+			if( read_count == -1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_IO,
+				 LIBCERROR_IO_ERROR_READ_FAILED,
+				 "%s: unable to read buffer from parent file.",
+				 function );
+
+				return( -1 );
+			}
+			read_size = (size_t) read_count;
+		}
+		else
+		{
+			/* Handle sparse cluster block
+			 */
+			if( memory_set(
+			     &( ( (uint8_t *) buffer )[ buffer_offset ] ),
+			     0,
+			     read_size ) == NULL )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_MEMORY,
+				 LIBCERROR_MEMORY_ERROR_SET_FAILED,
+				 "%s: unable to set sparse data in buffer.",
 				 function );
 
 				return( -1 );
@@ -2785,6 +2976,20 @@ off64_t libqcow_internal_file_seek_offset(
 
 		return( -1 );
 	}
+	if( internal_file->backing_filename != NULL )
+	{
+		if( internal_file->parent_file == NULL )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+			 "%s: invalid file - missing parent file.",
+			 function );
+
+			return( -1 );
+		}
+	}
 	if( ( whence != SEEK_CUR )
 	 && ( whence != SEEK_END )
 	 && ( whence != SEEK_SET ) )
@@ -2981,6 +3186,87 @@ int libqcow_file_get_offset(
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
 		 "%s: unable to release read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	return( 1 );
+}
+
+/* Sets the parent (backing) file of a differential image
+ * Returns 1 if successful or -1 on error
+ */
+int libqcow_file_set_parent_file(
+     libqcow_file_t *file,
+     libqcow_file_t *parent_file,
+     libcerror_error_t **error )
+{
+	libqcow_internal_file_t *internal_file = NULL;
+	static char *function                  = "libqcow_file_set_parent_file";
+
+	if( file == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file.",
+		 function );
+
+		return( -1 );
+	}
+	internal_file = (libqcow_internal_file_t *) file;
+
+	if( internal_file->backing_filename == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid file - missing backing filename.",
+		 function );
+
+		return( -1 );
+	}
+	if( internal_file->parent_file != NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
+		 "%s: invalid file - parent file already set.",
+		 function );
+
+		return( -1 );
+	}
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_write(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for writing.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	internal_file->parent_file = parent_file;
+
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_write(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for writing.",
 		 function );
 
 		return( -1 );
@@ -3566,6 +3852,452 @@ int libqcow_file_get_encryption_method(
 	}
 #endif
 	*encryption_method = internal_file->encryption_method;
+
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_read(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	return( 1 );
+}
+
+/* Retrieves the size of the UTF-8 encoded backing filename
+ * The returned size includes the end of string character
+ * Returns 1 if successful, 0 if not available or -1 on error
+ */
+int libqcow_file_get_utf8_backing_filename_size(
+     libqcow_file_t *file,
+     size_t *utf8_string_size,
+     libcerror_error_t **error )
+{
+	libqcow_internal_file_t *internal_file = NULL;
+	static char *function                  = "libqcow_file_get_utf8_backing_filename_size";
+	int result                             = 0;
+
+	if( file == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file.",
+		 function );
+
+		return( -1 );
+	}
+	internal_file = (libqcow_internal_file_t *) file;
+
+	if( internal_file->file_io_handle == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid file - missing file IO handle.",
+		 function );
+
+		return( -1 );
+	}
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_read(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	if( internal_file->backing_filename != NULL )
+	{
+		result = libuna_utf8_string_size_from_utf8_stream(
+		          internal_file->backing_filename,
+		          internal_file->backing_filename_size,
+		          utf8_string_size,
+		          error );
+
+		if( result != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve UTF-8 string size of backing filename.",
+			 function );
+
+			result = -1;
+		}
+	}
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_read(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	return( result );
+}
+
+/* Retrieves the UTF-8 encoded backing filename
+ * The size should include the end of string character
+ * Returns 1 if successful, 0 if not available or -1 on error
+ */
+int libqcow_file_get_utf8_backing_filename(
+     libqcow_file_t *file,
+     uint8_t *utf8_string,
+     size_t utf8_string_size,
+     libcerror_error_t **error )
+{
+	libqcow_internal_file_t *internal_file = NULL;
+	static char *function                  = "libqcow_file_get_utf8_backing_filename";
+	int result                             = 0;
+
+	if( file == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file.",
+		 function );
+
+		return( -1 );
+	}
+	internal_file = (libqcow_internal_file_t *) file;
+
+	if( internal_file->file_io_handle == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid file - missing file IO handle.",
+		 function );
+
+		return( -1 );
+	}
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_read(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	if( internal_file->backing_filename != NULL )
+	{
+		result = libuna_utf8_string_copy_from_utf8_stream(
+		          utf8_string,
+		          utf8_string_size,
+		          internal_file->backing_filename,
+		          internal_file->backing_filename_size,
+		          error );
+
+		if( result != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve UTF-8 string of backing filename.",
+			 function );
+
+			result = -1;
+		}
+	}
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_read(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	return( result );
+}
+
+/* Retrieves the size of the UTF-16 encoded backing filename
+ * The returned size includes the end of string character
+ * Returns 1 if successful, 0 if not available or -1 on error
+ */
+int libqcow_file_get_utf16_backing_filename_size(
+     libqcow_file_t *file,
+     size_t *utf16_string_size,
+     libcerror_error_t **error )
+{
+	libqcow_internal_file_t *internal_file = NULL;
+	static char *function                  = "libqcow_file_get_utf16_backing_filename_size";
+	int result                             = 0;
+
+	if( file == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file.",
+		 function );
+
+		return( -1 );
+	}
+	internal_file = (libqcow_internal_file_t *) file;
+
+	if( internal_file->file_io_handle == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid file - missing file IO handle.",
+		 function );
+
+		return( -1 );
+	}
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_read(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	if( internal_file->backing_filename != NULL )
+	{
+		result = libuna_utf16_string_size_from_utf8_stream(
+		          internal_file->backing_filename,
+		          internal_file->backing_filename_size,
+		          utf16_string_size,
+		          error );
+
+		if( result != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve UTF-16 string size of backing filename.",
+			 function );
+
+			result = -1;
+		}
+	}
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_read(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	return( result );
+}
+
+/* Retrieves the UTF-16 encoded backing filename
+ * The size should include the end of string character
+ * Returns 1 if successful, 0 if not available or -1 on error
+ */
+int libqcow_file_get_utf16_backing_filename(
+     libqcow_file_t *file,
+     uint16_t *utf16_string,
+     size_t utf16_string_size,
+     libcerror_error_t **error )
+{
+	libqcow_internal_file_t *internal_file = NULL;
+	static char *function                  = "libqcow_file_get_utf16_backing_filename";
+	int result                             = 0;
+
+	if( file == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file.",
+		 function );
+
+		return( -1 );
+	}
+	internal_file = (libqcow_internal_file_t *) file;
+
+	if( internal_file->file_io_handle == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid file - missing file IO handle.",
+		 function );
+
+		return( -1 );
+	}
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_read(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	if( internal_file->backing_filename != NULL )
+	{
+		result = libuna_utf16_string_copy_from_utf8_stream(
+		          utf16_string,
+		          utf16_string_size,
+		          internal_file->backing_filename,
+		          internal_file->backing_filename_size,
+		          error );
+
+		if( result != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve UTF-16 string of backing filename.",
+			 function );
+
+			result = -1;
+		}
+	}
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_read(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	return( result );
+}
+
+/* Retrieves the number of snapshots
+ * Returns 1 if successful or -1 on error
+ */
+int libqcow_file_get_number_of_snapshots(
+     libqcow_file_t *file,
+     int *number_of_snapshots,
+     libcerror_error_t **error )
+{
+	libqcow_internal_file_t *internal_file = NULL;
+	static char *function                  = "libqcow_file_get_number_of_snapshots";
+
+	if( file == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file.",
+		 function );
+
+		return( -1 );
+	}
+	internal_file = (libqcow_internal_file_t *) file;
+
+	if( internal_file->file_header == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid file - missing file header.",
+		 function );
+
+		return( -1 );
+	}
+	if( number_of_snapshots == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid number of snapshots.",
+		 function );
+
+		return( -1 );
+	}
+#if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_read(
+	     internal_file->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	/* TODO retrieve number of snapshots from array */
+	*number_of_snapshots = (int) internal_file->file_header->number_of_snapshots;
 
 #if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_read(

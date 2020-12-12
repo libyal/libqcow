@@ -9,11 +9,11 @@ Analysis of the QCOW image format
 == Summary
 
 The QEMU Copy-On-Write (QCOW) image file format is used by the QEMU Open Source
-Process Emulator to store disk images.
+Process Emulator to store disk images. This specification is based on available
+documentation and was enhanced by analyzing test data.
 
-This document is intended as a working document for the QCOW specification.
-Which should allow existing Open Source forensic tooling to be able to process
-this file type.
+This document is intended as a working document of the data format specification
+for the libqcow project.
 
 [preface]
 == Document information
@@ -54,6 +54,7 @@ May 2013 | Additional information regarding QCOW version 1, compression and encr
 | 0.0.6 | J.B. Metz | October 2014 | Switched to asccidoc format.
 | 0.0.7 | J.B. Metz | December 2014 | Additional information regarding QCOW version 3.
 | 0.0.8 | J.B. Metz | July 2020 | Formatting changes.
+| 0.0.9 | J.B. Metz | December 2020 | Additional information regarding QCOW version 3.
 |===
 
 :numbered:
@@ -65,6 +66,7 @@ Process Emulator to store disk images (storage media).
 The QCOW image file consists of:
 
 * the file header
+** optional file header extensions
 * the level 1 table (cluster aligned)
 * the reference count table (cluster aligned)
 * reference count blocks
@@ -103,6 +105,7 @@ The QCOW image format can encrypted the media data stored in the image format.
 Currently supported encryption methods are:
 
 * AES-CBC 128-bit
+* Linux Unified Key Setup (LUKS)
 
 If no encryption is used the encryption method in the file header is set to
 none (0).
@@ -129,6 +132,10 @@ bits of the 128 bit initialization vector. The remaining initialization vector
 data is set to 0-byte values. The first sector number is 0 and the bytes per
 sector are 512.
 
+=== Linux Unified Key Setup (LUKS)
+
+TODO: add text
+
 == File header
 
 === File header – version 1
@@ -154,16 +161,19 @@ Contains a POSIX timestamp
 |===
 
 The cluster block size is calculated as:
+
 ....
 cluster block size = 1 << number of cluster block bits
 ....
 
 The level table 2 size is calculated as:
+
 ....
 level table 2 size = ( 1 << number of level 2 table bits ) * 8
 ....
 
 The level 1 table size is calculated as:
+
 ....
 level 1 table size = cluster block size
                    * ( 1 << number of level 2 table bits )
@@ -184,7 +194,7 @@ after the file header.
 
 === File header – version 2 or 3
 
-The version 2 file header is 72 bytes of size and consist of:
+The version 2 file header is 72 or 112 bytes of size and consist of:
 
 [cols="1,1,1,5",options="header"]
 |===
@@ -203,24 +213,39 @@ The version 2 file header is 72 bytes of size and consist of:
 | 56 | 4 | | Reference count table clusters
 | 60 | 4 | | Number of snapshots
 | 64 | 8 | | Snapshots offset
+4+| _Introduced in version 3_
+| 72 | 8 | | Incompatible feature flags
+| 80 | 8 | | Compatible feature flags
+| 88 | 8 | | Auto-clear feature flags
+| 96 | 4 | | Reference count order
+| 100 | 4 | 104 +
+112 | File header size +
+Contains the size of the file header, this value does not include the size of the file header extensions
+4+| _If file header size > 104_
+| 104 | 1 | | Compression type
+| 105 | 7 | | [yellow-background]*Unknown (padding)*
 |===
 
 The cluster block size is calculated as:
+
 ....
 cluster block size = 1 << number of cluster block bits
 ....
 
 The number of level 2 table bits is calculated as:
+
 ....
 number of level 2 table bits = number of cluster block bits - 3
 ....
 
 The level table 2 size is calculated as:
+
 ....
 level table 2 size = ( 1 << number of level 2 table bits ) * 8
 ....
 
 The level 1 table size is calculated as:
+
 ....
 level 1 table size = number of level 1 table references * 8
 ....
@@ -235,7 +260,119 @@ after the file header.
 | Value | Identifier | Description
 | 0 | QCOW_CRYPT_NONE | No encryption
 | 1 | QCOW_CRYPT_AES | AES-CBC 128-bits encryption
+| 2 | QCOW_CRYPT_LUKS | Linux Unified Key Setup (LUKS) encryption
 |===
+
+=== Incompatible feature flags
+
+[cols="1,1,5",options="header"]
+|===
+| Value | Identifier | Description
+| 0x00000001 | QCOW2_INCOMPAT_DIRTY |
+| 0x00000002 | QCOW2_INCOMPAT_CORRUPT |
+| 0x00000004 | QCOW2_INCOMPAT_DATA_FILE |
+| 0x00000008 | QCOW2_INCOMPAT_COMPRESSION |
+| 0x00000010 | QCOW2_INCOMPAT_EXTL2 |
+|===
+
+=== Compatible feature flags
+
+[cols="1,1,5",options="header"]
+|===
+| Value | Identifier | Description
+| 0x00000001 | QCOW2_COMPAT_LAZY_REFCOUNTS |
+|===
+
+=== Auto-clear feature flags
+
+[cols="1,1,5",options="header"]
+|===
+| Value | Identifier | Description
+| 0x00000001 | QCOW2_AUTOCLEAR_BITMAPS |
+| 0x00000002 | QCOW2_AUTOCLEAR_DATA_FILE_RAW |
+|===
+
+=== Compression types
+
+[cols="1,1,5",options="header"]
+|===
+| Value | Identifier | Description
+| 0 | | ZLIB compression
+|===
+
+=== File header extensions
+
+A file header extension consist of:
+
+* file header extension header
+* file header extension data
+
+==== File header extension header
+
+The file header extension header is 8 bytes of size and consist of:
+
+[cols="1,1,1,5",options="header"]
+|===
+| Offset | Size | Value | Description
+| 0 | 4 | | The extension type (signature)
+| 4 | 4 | | The extension data size
+|===
+
+==== File header extension types
+
+[cols="1,1,5",options="header"]
+|===
+| Value | Identifier | Description
+| 0x0537be77 | QCOW2_EXT_MAGIC_CRYPTO_HEADER | Crypto header
+| 0x23852875 | QCOW2_EXT_MAGIC_BITMAPS | Bitmaps
+| 0x44415441 +
+"DATA" | QCOW2_EXT_MAGIC_DATA_FILE | Data-file
+| 0x6803f857 | QCOW2_EXT_MAGIC_FEATURE_TABLE | Feature table
+| 0xe2792aca | QCOW2_EXT_MAGIC_BACKING_FORMAT | Backing format
+|===
+
+==== Backing format file header extension
+
+The backing format file header extension header is variable of size and consist
+of:
+
+[cols="1,1,1,5",options="header"]
+|===
+| Offset | Size | Value | Description
+| 0 | ... | | Backing format identifier +
+Contains an UTF-8 formatted string without end-of-string character
+|===
+
+==== Bitmaps file header extension
+
+TODO: add text
+
+==== Crypto header file header extension
+
+The crypto header file header extension header is 16 bytes of size and consist
+of:
+
+[cols="1,1,1,5",options="header"]
+|===
+| Offset | Size | Value | Description
+| 0 | 8 | | The crypto data offset
+| 8 | 8 | | The crypto data size
+|===
+
+==== Data-file file header extension
+
+The data-file file header extension header is variable of size and consist of:
+
+[cols="1,1,1,5",options="header"]
+|===
+| Offset | Size | Value | Description
+| 0 | ... | | Data-file filename +
+Contains an UTF-8 formatted string without end-of-string character
+|===
+
+==== Feature table file header extension
+
+TODO: add text
 
 == Cluster blocks
 
@@ -282,6 +419,7 @@ level 2 table is exactly one.
 The level 2 table contains cluster block references.
 
 The level 2 table size is calculated as:
+
 ....
 level 2 table size = ( 1 << number of level 2 table bits ) * 8
 ....
@@ -335,18 +473,21 @@ contains the number of blocks (or reference count table clusters).
 To retrieve a cluster data block corresponding a certain storage media offset:
 
 Determine the level 1 table index from the offset:
+
 ....
 level 1 table index bit shift =  number of cluster block bits
                               + number of level 2 table bits
 ....
 
 Version 1
+
 ....
 level 1 table index = ( offset & 0x7fffffffffffffffULL )
                     >> level 1 table index bit shift
 ....
 
 Version 2
+
 ....
 level 1 table index = ( offset & 0x3fffffffffffffffULL )
                     >> level 1 table index bit shift
@@ -359,6 +500,7 @@ in the backing file otherwise the cluster block is considered sparse.
 Read the corresponding level 2 table.
 
 Determine the level 2 table index from the offset:
+
 ....
 level 2 table index bit mask = ~( 0xffffffffffffffffULL
                              <<  number of level 2 table bits )
@@ -376,6 +518,7 @@ in the backing file otherwise the cluster block is considered sparse.
 ==== Uncompressed chunk data block
 
 If the is compressed flag (QCOW_OFLAG_COMPRESSED) is not set:
+
 ....
 cluster block bit mask = ~( 0xffffffffffffffffULL
                        <<  number of cluster block bits )

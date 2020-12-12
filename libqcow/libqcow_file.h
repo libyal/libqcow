@@ -156,6 +156,10 @@ struct libqcow_internal_file
 	 */
 	uint8_t is_locked;
 
+	/* The parent (backing) file
+	 */
+	libqcow_file_t *parent_file;
+
 #if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	/* The read/write lock
 	 */
@@ -267,6 +271,12 @@ int libqcow_file_get_offset(
      libcerror_error_t **error );
 
 LIBQCOW_EXTERN \
+int libqcow_file_set_parent_file(
+     libqcow_file_t *file,
+     libqcow_file_t *parent_file,
+     libcerror_error_t **error );
+
+LIBQCOW_EXTERN \
 int libqcow_file_set_keys(
      libqcow_file_t *file,
      const uint8_t *key,
@@ -304,6 +314,40 @@ int libqcow_file_get_encryption_method(
      libqcow_file_t *file,
      uint32_t *encryption_method,
      libcerror_error_t **error );
+
+LIBQCOW_EXTERN \
+int libqcow_file_get_utf8_backing_filename_size(
+     libqcow_file_t *file,
+     size_t *utf8_string_size,
+     libcerror_error_t **error );
+
+LIBQCOW_EXTERN \
+int libqcow_file_get_utf8_backing_filename(
+     libqcow_file_t *file,
+     uint8_t *utf8_string,
+     size_t utf8_string_size,
+     libcerror_error_t **error );
+
+LIBQCOW_EXTERN \
+int libqcow_file_get_utf16_backing_filename_size(
+     libqcow_file_t *file,
+     size_t *utf16_string_size,
+     libcerror_error_t **error );
+
+LIBQCOW_EXTERN \
+int libqcow_file_get_utf16_backing_filename(
+     libqcow_file_t *file,
+     uint16_t *utf16_string,
+     size_t utf16_string_size,
+     libcerror_error_t **error );
+
+LIBQCOW_EXTERN \
+int libqcow_file_get_number_of_snapshots(
+     libqcow_file_t *file,
+     int *number_of_snapshots,
+     libcerror_error_t **error );
+
+/* TODO add libqcow_file_get_snapshot_by_index */
 
 #if defined( __cplusplus )
 }

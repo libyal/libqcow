@@ -71,6 +71,14 @@ struct libqcow_file_header
 	/* The level 1 table offset
  	 */
 	off64_t level1_table_offset;
+
+	/* The number of snapshots
+ 	 */
+	uint32_t number_of_snapshots;
+
+	/* The snapshots offset
+ 	 */
+	off64_t snapshots_offset;
 };
 
 int libqcow_file_header_initialize(

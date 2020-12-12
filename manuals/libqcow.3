@@ -1,4 +1,4 @@
-.Dd September 27, 2020
+.Dd December 12, 2020
 .Dt libqcow 3
 .Os libqcow
 .Sh NAME
@@ -75,6 +75,8 @@ File functions
 .Ft int
 .Fn libqcow_file_get_offset "libqcow_file_t *file" "off64_t *offset" "libqcow_error_t **error"
 .Ft int
+.Fn libqcow_file_set_parent_file "libqcow_file_t *file" "libqcow_file_t *parent_file" "libqcow_error_t **error"
+.Ft int
 .Fn libqcow_file_get_format_version "libqcow_file_t *file" "uint32_t *format_version" "libqcow_error_t **error"
 .Ft int
 .Fn libqcow_file_get_encryption_method "libqcow_file_t *file" "uint32_t *encryption_method" "libqcow_error_t **error"
@@ -86,6 +88,16 @@ File functions
 .Fn libqcow_file_set_utf16_password "libqcow_file_t *file" "const uint16_t *utf16_string" "size_t utf16_string_length" "libqcow_error_t **error"
 .Ft int
 .Fn libqcow_file_get_media_size "libqcow_file_t *file" "size64_t *media_size" "libqcow_error_t **error"
+.Ft int
+.Fn libqcow_file_get_utf8_backing_filename_size "libqcow_file_t *file" "size_t *utf8_string_size" "libqcow_error_t **error"
+.Ft int
+.Fn libqcow_file_get_utf8_backing_filename "libqcow_file_t *file" "uint8_t *utf8_string" "size_t utf8_string_size" "libqcow_error_t **error"
+.Ft int
+.Fn libqcow_file_get_utf16_backing_filename_size "libqcow_file_t *file" "size_t *utf16_string_size" "libqcow_error_t **error"
+.Ft int
+.Fn libqcow_file_get_utf16_backing_filename "libqcow_file_t *file" "uint16_t *utf16_string" "size_t utf16_string_size" "libqcow_error_t **error"
+.Ft int
+.Fn libqcow_file_get_number_of_snapshots "libqcow_file_t *file" "int *number_of_snapshots" "libqcow_error_t **error"
 .Pp
 Available when compiled with wide character string support:
 .Ft int

@@ -43,6 +43,7 @@
 #include "qcow_test_getopt.h"
 #include "qcow_test_libbfio.h"
 #include "qcow_test_libcerror.h"
+#include "qcow_test_libcpath.h"
 #include "qcow_test_libqcow.h"
 #include "qcow_test_macros.h"
 #include "qcow_test_memory.h"
@@ -179,6 +180,272 @@ on_error:
 		libqcow_file_free(
 		 file,
 		 NULL );
+	}
+	return( -1 );
+}
+
+/* Opens the parent input file
+ * Returns 1 if successful, 0 if no parent file or -1 on error
+ */
+int qcow_test_file_open_parent_file(
+     libqcow_file_t **parent_file,
+     const system_character_t *source,
+     libqcow_file_t *file,
+     libcerror_error_t **error )
+{
+	system_character_t *backing_file_path = NULL;
+	system_character_t *backing_filename  = NULL;
+	system_character_t *basename_end      = NULL;
+	static char *function                 = "qcow_test_file_open_parent_file";
+	size_t backing_basename_length        = 0;
+	size_t backing_file_path_size         = 0;
+	size_t backing_filename_size          = 0;
+	size_t basename_length                = 0;
+	size_t source_length                  = 0;
+	int result                            = 0;
+
+	if( parent_file == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid parent file.",
+		 function );
+
+		return( -1 );
+	}
+	if( source == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid source.",
+		 function );
+
+		return( -1 );
+	}
+	source_length = system_string_length(
+	                 source );
+
+	basename_end = system_string_search_character_reverse(
+	                source,
+	                (system_character_t) LIBCPATH_SEPARATOR,
+	                source_length + 1 );
+
+	if( basename_end != NULL )
+	{
+		basename_length = (size_t) ( basename_end - source );
+	}
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
+	result = libqcow_file_get_utf16_backing_filename_size(
+		  file,
+		  &backing_filename_size,
+		  error );
+#else
+	result = libqcow_file_get_utf8_backing_filename_size(
+		  file,
+		  &backing_filename_size,
+		  error );
+#endif
+	if( result == -1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve backing filename size.",
+		 function );
+
+		goto on_error;
+	}
+	else if( result == 0 )
+	{
+		return( 0 );
+	}
+	if( backing_filename_size == 0 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: missing backing filename.",
+		 function );
+
+		goto on_error;
+	}
+	if( backing_filename_size > (size_t) ( SSIZE_MAX / sizeof( system_character_t ) ) )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_EXCEEDS_MAXIMUM,
+		 "%s: invalid backing filename size value exceeds maximum.",
+		 function );
+
+		goto on_error;
+	}
+	backing_filename = system_string_allocate(
+	                    backing_filename_size );
+
+	if( backing_filename == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_MEMORY,
+		 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
+		 "%s: unable to create backing filename string.",
+		 function );
+
+		goto on_error;
+	}
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
+	result = libqcow_file_get_utf16_backing_filename(
+		  file,
+		  (uint16_t *) backing_filename,
+		  backing_filename_size,
+		  error );
+#else
+	result = libqcow_file_get_utf8_backing_filename(
+		  file,
+		  (uint8_t *) backing_filename,
+		  backing_filename_size,
+		  error );
+#endif
+	if( result != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve backing filename.",
+		 function );
+
+		goto on_error;
+	}
+	if( basename_length == 0 )
+	{
+		backing_file_path      = &( backing_filename[ backing_basename_length ] );
+		backing_file_path_size = backing_filename_size - ( backing_basename_length + 1 );
+	}
+	else
+	{
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
+		if( libcpath_path_join_wide(
+		     &backing_file_path,
+		     &backing_file_path_size,
+		     source,
+		     basename_length,
+		     &( backing_filename[ backing_basename_length ] ),
+		     backing_filename_size - ( backing_basename_length + 1 ),
+		     error ) != 1 )
+#else
+		if( libcpath_path_join(
+		     &backing_file_path,
+		     &backing_file_path_size,
+		     source,
+		     basename_length,
+		     &( backing_filename[ backing_basename_length ] ),
+		     backing_filename_size - ( backing_basename_length + 1 ),
+		     error ) != 1 )
+#endif
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+			 "%s: unable to create backing file path.",
+			 function );
+
+			goto on_error;
+		}
+	}
+	if( libqcow_file_initialize(
+	     parent_file,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+		 "%s: unable to initialize parent input file.",
+		 function );
+
+		goto on_error;
+	}
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
+	if( libqcow_file_open_wide(
+	     *parent_file,
+	     backing_file_path,
+	     LIBQCOW_OPEN_READ,
+	     error ) != 1 )
+#else
+	if( libqcow_file_open(
+	     *parent_file,
+	     backing_file_path,
+	     LIBQCOW_OPEN_READ,
+	     error ) != 1 )
+#endif
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_IO,
+		 LIBCERROR_IO_ERROR_OPEN_FAILED,
+		 "%s: unable to open parent input file: %" PRIs_SYSTEM ".",
+		 function,
+		 backing_file_path );
+
+		goto on_error;
+	}
+	if( libqcow_file_set_parent_file(
+	     file,
+	     *parent_file,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to set parent input file.",
+		 function );
+
+		goto on_error;
+	}
+	if( ( basename_length != 0 )
+	 && ( backing_file_path != NULL ) )
+	{
+		memory_free(
+		 backing_file_path );
+
+		backing_file_path = NULL;
+	}
+	if( backing_filename != NULL )
+	{
+		memory_free(
+		 backing_filename );
+
+		backing_filename = NULL;
+	}
+	return( 1 );
+
+on_error:
+	if( *parent_file != NULL )
+	{
+		libqcow_file_free(
+		 parent_file,
+		 NULL );
+	}
+	if( ( basename_length != 0 )
+	 && ( backing_file_path != NULL ) )
+	{
+		memory_free(
+		 backing_file_path );
+	}
+	if( backing_filename != NULL )
+	{
+		memory_free(
+		 backing_filename );
 	}
 	return( -1 );
 }
@@ -3145,6 +3412,7 @@ int main(
 {
 	libbfio_handle_t *file_io_handle    = NULL;
 	libcerror_error_t *error            = NULL;
+	libqcow_file_t *parent_file        = NULL;
 	libqcow_file_t *file                = NULL;
 	system_character_t *option_password = NULL;
 	system_character_t *source          = NULL;
@@ -3307,6 +3575,21 @@ int main(
 		 "error",
 		 error );
 
+		result = qcow_test_file_open_parent_file(
+		          &parent_file,
+		          source,
+		          file,
+		          &error );
+
+		QCOW_TEST_ASSERT_NOT_EQUAL_INT(
+		 "result",
+		 result,
+		 -1 );
+
+	        QCOW_TEST_ASSERT_IS_NULL(
+	         "error",
+	         error );
+
 		QCOW_TEST_RUN_WITH_ARGS(
 		 "libqcow_file_signal_abort",
 		 qcow_test_file_signal_abort,
@@ -3407,6 +3690,22 @@ int main(
 		QCOW_TEST_ASSERT_IS_NULL(
 		 "error",
 		 error );
+
+		if( parent_file != NULL )
+		{
+			result = qcow_test_file_close_source(
+			          &parent_file,
+			          &error );
+
+			QCOW_TEST_ASSERT_EQUAL_INT(
+			 "result",
+			 result,
+			 0 );
+
+		        QCOW_TEST_ASSERT_IS_NULL(
+		         "error",
+		         error );
+		}
 	}
 	if( file_io_handle != NULL )
 	{
@@ -3447,6 +3746,12 @@ on_error:
 	{
 		libbfio_handle_free(
 		 &file_io_handle,
+		 NULL );
+	}
+	if( parent_file != NULL )
+	{
+		qcow_test_file_close_source(
+		 &parent_file,
 		 NULL );
 	}
 	return( EXIT_FAILURE );

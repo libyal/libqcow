@@ -144,13 +144,18 @@ int libqcow_file_header_read_data(
      size_t data_size,
      libcerror_error_t **error )
 {
-	static char *function             = "libqcow_file_header_read_data";
-	uint64_t safe_level1_table_offset = 0;
+	static char *function               = "libqcow_file_header_read_data";
+	size_t file_header_data_size        = 0;
+	uint64_t compatible_feature_flags   = 0;
+	uint64_t incompatible_feature_flags = 0;
+	uint64_t safe_level1_table_offset   = 0;
+	uint64_t supported_feature_flags    = 0;
+	uint32_t file_header_size           = 0;
 
 #if defined( HAVE_DEBUG_OUTPUT )
-	uint64_t value_64bit              = 0;
-	uint32_t value_32bit              = 0;
-	uint16_t value_16bit              = 0;
+	uint64_t value_64bit                = 0;
+	uint32_t value_32bit                = 0;
+	uint16_t value_16bit                = 0;
 #endif
 
 	if( file_header == NULL )
@@ -175,7 +180,7 @@ int libqcow_file_header_read_data(
 
 		return( -1 );
 	}
-	if( ( data_size < sizeof( qcow_file_header_v1_t ) )
+	if( ( data_size < 8 )
 	 || ( data_size > (size_t) SSIZE_MAX ) )
 	{
 		libcerror_error_set(
@@ -187,18 +192,6 @@ int libqcow_file_header_read_data(
 
 		return( -1 );
 	}
-#if defined( HAVE_DEBUG_OUTPUT )
-	if( libcnotify_verbose != 0 )
-	{
-		libcnotify_printf(
-		 "%s: file header data:\n",
-		 function );
-		libcnotify_print_data(
-		 data,
-		 sizeof( qcow_file_header_v1_t ),
-		 0 );
-	}
-#endif
 	if( memory_compare(
 	     ( (qcow_file_header_v1_t *) data )->signature,
 	     qcow_file_signature,
@@ -217,6 +210,53 @@ int libqcow_file_header_read_data(
 	 ( (qcow_file_header_v1_t *) data )->format_version,
 	 file_header->format_version );
 
+	if( file_header->format_version == 1 )
+	{
+		file_header_data_size = sizeof( qcow_file_header_v1_t );
+	}
+	else if( file_header->format_version == 2 )
+	{
+		file_header_data_size = sizeof( qcow_file_header_v2_t );
+	}
+	else if( file_header->format_version == 3 )
+	{
+		file_header_data_size = sizeof( qcow_file_header_v3_t );
+	}
+	else
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_UNSUPPORTED_VALUE,
+		 "%s: unsupported format version: %" PRIu32 ".",
+		 function,
+		 file_header->format_version );
+
+		return( -1 );
+	}
+	if( data_size < file_header_data_size )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid data size value out of bounds.",
+		 function );
+
+		return( -1 );
+	}
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
+	{
+		libcnotify_printf(
+		 "%s: file header data:\n",
+		 function );
+		libcnotify_print_data(
+		 data,
+		 file_header_data_size,
+		 0 );
+	}
+#endif
 	byte_stream_copy_to_uint64_big_endian(
 	 ( (qcow_file_header_v1_t *) data )->backing_filename_offset,
 	 file_header->backing_filename_offset );
@@ -253,19 +293,19 @@ int libqcow_file_header_read_data(
 	}
 #endif /* defined( HAVE_DEBUG_OUTPUT ) */
 
-	if( ( file_header->format_version != 1 )
-	 && ( file_header->format_version != 2 )
-	 && ( file_header->format_version != 3 ) )
+	if( file_header->format_version == 3 )
 	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_UNSUPPORTED_VALUE,
-		 "%s: unsupported format version: %" PRIu32 ".",
-		 function,
-		 file_header->format_version );
+		if( data_size < sizeof( qcow_file_header_v3_t ) )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+			 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
+			 "%s: invalid data size value out of bounds.",
+			 function );
 
-		return( -1 );
+			return( -1 );
+		}
 	}
 	if( file_header->format_version == 1 )
 	{
@@ -354,6 +394,14 @@ int libqcow_file_header_read_data(
 		 ( (qcow_file_header_v2_t *) data )->encryption_method,
 		 file_header->encryption_method );
 
+		byte_stream_copy_to_uint32_big_endian(
+		 ( (qcow_file_header_v2_t *) data )->number_of_snapshots,
+		 file_header->number_of_snapshots );
+
+		byte_stream_copy_to_uint64_big_endian(
+		 ( (qcow_file_header_v2_t *) data )->snapshots_offset,
+		 file_header->snapshots_offset );
+
 #if defined( HAVE_DEBUG_OUTPUT )
 		if( libcnotify_verbose != 0 )
 		{
@@ -398,42 +446,148 @@ int libqcow_file_header_read_data(
 			 function,
 			 value_32bit );
 
-			byte_stream_copy_to_uint32_big_endian(
-			 ( (qcow_file_header_v2_t *) data )->number_of_snapshots,
-			 value_32bit );
 			libcnotify_printf(
 			 "%s: number of snapshots\t\t\t: %" PRIu32 "\n",
 			 function,
-			 value_32bit );
+			 file_header->number_of_snapshots );
 
-			byte_stream_copy_to_uint64_big_endian(
-			 ( (qcow_file_header_v2_t *) data )->snapshots_offset,
-			 value_64bit );
 			libcnotify_printf(
 			 "%s: snapshots offset\t\t\t\t: 0x%08" PRIx64 "\n",
 			 function,
-			 value_64bit );
+			 file_header->snapshots_offset );
 		}
 #endif /* defined( HAVE_DEBUG_OUTPUT ) */
 	}
-#if defined( HAVE_DEBUG_OUTPUT )
-	if( libcnotify_verbose != 0 )
-	{
-		libcnotify_printf(
-		 "\n" );
-	}
-#endif
 	if( safe_level1_table_offset > (uint64_t) INT64_MAX )
 	{
 		libcerror_error_set(
 		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
 		 "%s: invalid level1 table offset value out of bounds.",
 		 function );
 
 		return( -1 );
 	}
+	if( file_header->format_version == 3 )
+	{
+		byte_stream_copy_to_uint64_big_endian(
+		 ( (qcow_file_header_v3_t *) data )->incompatible_feature_flags,
+		 incompatible_feature_flags );
+
+		byte_stream_copy_to_uint64_big_endian(
+		 ( (qcow_file_header_v3_t *) data )->compatible_feature_flags,
+		 compatible_feature_flags );
+
+		byte_stream_copy_to_uint32_big_endian(
+		 ( (qcow_file_header_v3_t *) data )->header_size,
+		 file_header_size );
+
+#if defined( HAVE_DEBUG_OUTPUT )
+		if( libcnotify_verbose != 0 )
+		{
+			libcnotify_printf(
+			 "%s: incompatible feature flags\t\t: 0x%08" PRIx64 "\n",
+			 function,
+			 incompatible_feature_flags );
+
+			libcnotify_printf(
+			 "%s: compatible feature flags\t\t\t: 0x%08" PRIx64 "\n",
+			 function,
+			 compatible_feature_flags );
+
+			byte_stream_copy_to_uint64_big_endian(
+			 ( (qcow_file_header_v3_t *) data )->auto_clear_feature_flags,
+			 value_64bit );
+			libcnotify_printf(
+			 "%s: auto-clear feature flags\t\t\t: 0x%08" PRIx64 "\n",
+			 function,
+			 value_64bit );
+
+			byte_stream_copy_to_uint32_big_endian(
+			 ( (qcow_file_header_v3_t *) data )->reference_count_order,
+			 value_32bit );
+			libcnotify_printf(
+			 "%s: reference count order\t\t\t: %" PRIu32 "\n",
+			 function,
+			 value_32bit );
+
+			libcnotify_printf(
+			 "%s: file header size\t\t\t\t: %" PRIu32 "\n",
+			 function,
+			 file_header_size );
+
+			if( file_header_size >= 104 )
+			{
+				libcnotify_printf(
+				 "%s: compression type\t\t\t\t: %" PRIu8 "\n",
+				 function,
+				 ( (qcow_file_header_v3_t *) data )->compression_type );
+
+				libcnotify_printf(
+				 "%s: unknown1:\n",
+				 function );
+				libcnotify_print_data(
+				 ( (qcow_file_header_v3_t *) data )->unknown1,
+				 7,
+				 0 );
+			}
+		}
+#endif /* defined( HAVE_DEBUG_OUTPUT ) */
+
+		supported_feature_flags = 0x00000001UL;
+
+		if( ( incompatible_feature_flags & ~( supported_feature_flags ) ) != 0 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_UNSUPPORTED_VALUE,
+			 "%s: unsupported incompatible features flags: 0x%08" PRIx64 ".",
+			 function,
+			 incompatible_feature_flags );
+
+			return( -1 );
+		}
+		supported_feature_flags = 0x00000001UL;
+
+		if( ( compatible_feature_flags & ~( supported_feature_flags ) ) != 0 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_UNSUPPORTED_VALUE,
+			 "%s: unsupported compatible features flags: 0x%08" PRIx64 ".",
+			 function,
+			 compatible_feature_flags );
+
+			return( -1 );
+		}
+		if( ( file_header_size != 104 )
+		 && ( file_header_size != 112 ) )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_UNSUPPORTED_VALUE,
+			 "%s: unsupported file header size: %d.",
+			 function,
+			 file_header_size );
+
+			return( -1 );
+		}
+	}
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
+	{
+		if( ( file_header->format_version != 3 )
+		 || ( file_header_size <= 104 ) )
+		{
+			libcnotify_printf(
+			 "\n" );
+		}
+	}
+#endif
 	file_header->level1_table_offset = (off64_t) safe_level1_table_offset;
 
 	return( 1 );
@@ -447,7 +601,7 @@ int libqcow_file_header_read_file_io_handle(
      libbfio_handle_t *file_io_handle,
      libcerror_error_t **error )
 {
-	uint8_t file_header_data[ sizeof( qcow_file_header_v2_t ) ];
+	uint8_t file_header_data[ 512 ];
 
 	static char *function = "libqcow_file_header_read_file_io_handle";
 	ssize_t read_count    = 0;
@@ -474,11 +628,11 @@ int libqcow_file_header_read_file_io_handle(
 	read_count = libbfio_handle_read_buffer_at_offset(
 	              file_io_handle,
 	              file_header_data,
-	              sizeof( qcow_file_header_v2_t ),
+	              512,
 	              0,
 	              error );
 
-	if( read_count != (ssize_t) sizeof( qcow_file_header_v2_t ) )
+	if( read_count != (ssize_t) 512 )
 	{
 		libcerror_error_set(
 		 error,
@@ -492,7 +646,7 @@ int libqcow_file_header_read_file_io_handle(
 	if( libqcow_file_header_read_data(
 	     file_header,
 	     file_header_data,
-	     sizeof( qcow_file_header_v2_t ),
+	     512,
 	     error ) != 1 )
 	{
 		libcerror_error_set(

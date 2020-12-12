@@ -112,6 +112,7 @@ qcow_test_file_SOURCES = \
 	qcow_test_libcerror.h \
 	qcow_test_libclocale.h \
 	qcow_test_libcnotify.h \
+	qcow_test_libcpath.h \
 	qcow_test_libqcow.h \
 	qcow_test_libuna.h \
 	qcow_test_macros.h \

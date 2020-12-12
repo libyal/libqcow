@@ -320,6 +320,15 @@ int libqcow_file_get_offset(
      off64_t *offset,
      libqcow_error_t **error );
 
+/* Sets the parent (backing) file of a differential image
+ * Returns 1 if successful or -1 on error
+ */
+LIBQCOW_EXTERN \
+int libqcow_file_set_parent_file(
+     libqcow_file_t *file,
+     libqcow_file_t *parent_file,
+     libqcow_error_t **error );
+
 /* Retrieves the format version
  * Returns 1 if successful or -1 on error
  */
@@ -378,6 +387,57 @@ LIBQCOW_EXTERN \
 int libqcow_file_get_media_size(
      libqcow_file_t *file,
      size64_t *media_size,
+     libqcow_error_t **error );
+
+/* Retrieves the size of the UTF-8 encoded backing filename
+ * The returned size includes the end of string character
+ * Returns 1 if successful, 0 if not available or -1 on error
+ */
+LIBQCOW_EXTERN \
+int libqcow_file_get_utf8_backing_filename_size(
+     libqcow_file_t *file,
+     size_t *utf8_string_size,
+     libqcow_error_t **error );
+
+/* Retrieves the UTF-8 encoded backing filename
+ * The size should include the end of string character
+ * Returns 1 if successful, 0 if not available or -1 on error
+ */
+LIBQCOW_EXTERN \
+int libqcow_file_get_utf8_backing_filename(
+     libqcow_file_t *file,
+     uint8_t *utf8_string,
+     size_t utf8_string_size,
+     libqcow_error_t **error );
+
+/* Retrieves the size of the UTF-16 encoded backing filename
+ * The returned size includes the end of string character
+ * Returns 1 if successful, 0 if not available or -1 on error
+ */
+LIBQCOW_EXTERN \
+int libqcow_file_get_utf16_backing_filename_size(
+     libqcow_file_t *file,
+     size_t *utf16_string_size,
+     libqcow_error_t **error );
+
+/* Retrieves the UTF-16 encoded backing filename
+ * The size should include the end of string character
+ * Returns 1 if successful, 0 if not available or -1 on error
+ */
+LIBQCOW_EXTERN \
+int libqcow_file_get_utf16_backing_filename(
+     libqcow_file_t *file,
+     uint16_t *utf16_string,
+     size_t utf16_string_size,
+     libqcow_error_t **error );
+
+/* Retrieves the number of snapshots
+ * Returns 1 if successful or -1 on error
+ */
+LIBQCOW_EXTERN \
+int libqcow_file_get_number_of_snapshots(
+     libqcow_file_t *file,
+     int *number_of_snapshots,
      libqcow_error_t **error );
 
 #if defined( __cplusplus )

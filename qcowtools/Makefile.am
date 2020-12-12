@@ -22,6 +22,7 @@ bin_PROGRAMS = \
 	qcowmount
 
 qcowinfo_SOURCES = \
+	byte_size_string.c byte_size_string.h \
 	info_handle.c info_handle.h \
 	qcowinfo.c \
 	qcowtools_getopt.c qcowtools_getopt.h \
@@ -67,6 +68,7 @@ qcowmount_SOURCES = \
 
 qcowmount_LDADD = \
 	@LIBFUSE_LIBADD@ \
+	@LIBCPATH_LIBADD@ \
 	@LIBUNA_LIBADD@ \
 	@LIBCNOTIFY_LIBADD@ \
 	@LIBCLOCALE_LIBADD@ \

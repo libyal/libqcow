@@ -226,6 +226,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\tests\qcow_test_libcpath.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\tests\qcow_test_libqcow.h"
 				>
 			</File>

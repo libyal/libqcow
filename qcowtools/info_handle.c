@@ -22,8 +22,12 @@
 #include <common.h>
 #include <byte_stream.h>
 #include <memory.h>
+#include <narrow_string.h>
+#include <system_string.h>
 #include <types.h>
+#include <wide_string.h>
 
+#include "byte_size_string.h"
 #include "info_handle.h"
 #include "qcowtools_libcerror.h"
 #include "qcowtools_libcnotify.h"
@@ -308,10 +312,16 @@ int info_handle_file_fprint(
      info_handle_t *info_handle,
      libcerror_error_t **error )
 {
-	static char *function      = "qcowinfo_file_info_fprint";
-	size64_t media_size        = 0;
-	uint32_t encryption_method = 0;
-	uint32_t format_version    = 0;
+	system_character_t byte_size_string[ 16 ];
+
+	system_character_t *value_string = NULL;
+	static char *function            = "qcowinfo_file_info_fprint";
+	size64_t media_size              = 0;
+	size_t value_string_size         = 0;
+	uint32_t encryption_method       = 0;
+	uint32_t format_version          = 0;
+	int number_of_snapshots          = 0;
+	int result                       = 0;
 
 	if( info_handle == NULL )
 	{
@@ -340,11 +350,11 @@ int info_handle_file_fprint(
 		 "%s: unable to retrieve format version.",
 		 function );
 
-		return( -1 );
+		goto on_error;
 	}
 	fprintf(
 	 info_handle->notify_stream,
-	 "\tFormat:\t\t\t%" PRIu32 "\n",
+	 "\tFormat version\t\t: %" PRIu32 "\n",
 	 format_version );
 
 	if( libqcow_file_get_media_size(
@@ -359,12 +369,37 @@ int info_handle_file_fprint(
 		 "%s: unable to retrieve media size.",
 		 function );
 
-		return( -1 );
+		goto on_error;
 	}
 	fprintf(
 	 info_handle->notify_stream,
-	 "\tMedia size:\t\t%" PRIu64 " bytes\n",
-	 media_size );
+	 "\tMedia size\t\t:" );
+
+	result = byte_size_string_create(
+	          byte_size_string,
+	          16,
+	          media_size,
+	          BYTE_SIZE_STRING_UNIT_MEBIBYTE,
+	          NULL );
+
+	if( result == 1 )
+	{
+		fprintf(
+		 info_handle->notify_stream,
+		 " %" PRIs_SYSTEM " (%" PRIu64 " bytes)",
+		 byte_size_string,
+		 media_size );
+	}
+	else
+	{
+		fprintf(
+		 info_handle->notify_stream,
+		 " %" PRIu64 " bytes",
+		 media_size );
+	}
+	fprintf(
+	 info_handle->notify_stream,
+	 "\n" );
 
 	if( libqcow_file_get_encryption_method(
 	     info_handle->input_file,
@@ -378,32 +413,39 @@ int info_handle_file_fprint(
 		 "%s: unable to retrieve encryption method.",
 		 function );
 
-		return( -1 );
+		goto on_error;
 	}
 	fprintf(
 	 info_handle->notify_stream,
-	 "\tEncryption method:\t" );
+	 "\tEncryption method\t:" );
 
 	switch( encryption_method )
 	{
 		case LIBQCOW_ENCRYPTION_METHOD_NONE:
 			fprintf(
 			 info_handle->notify_stream,
-			 "None" );
+			 " None" );
 
 			break;
 
 		case LIBQCOW_ENCRYPTION_METHOD_AES_128_CBC:
 			fprintf(
 			 info_handle->notify_stream,
-			 "AES 128-bit" );
+			 " AES-CBC 128-bit" );
+
+			break;
+
+		case LIBQCOW_ENCRYPTION_METHOD_LUKS:
+			fprintf(
+			 info_handle->notify_stream,
+			 " Linux Unified Key Setup (LUKS)" );
 
 			break;
 
 		default:
 			fprintf(
 			 info_handle->notify_stream,
-			 "Unknown (0x%08" PRIx32 ")",
+			 " Unknown (0x%08" PRIx32 ")",
 			 encryption_method );
 
 			break;
@@ -412,12 +454,128 @@ int info_handle_file_fprint(
 	 info_handle->notify_stream,
 	 "\n" );
 
-/* TODO add more info */
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
+	result = libqcow_file_get_utf16_backing_filename_size(
+		  info_handle->input_file,
+		  &value_string_size,
+		  error );
+#else
+	result = libqcow_file_get_utf8_backing_filename_size(
+		  info_handle->input_file,
+		  &value_string_size,
+		  error );
+#endif
+	if( result == -1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve backing filename string size.",
+		 function );
 
+		goto on_error;
+	}
+	else if( result != 0 )
+	{
+		if( value_string_size > (size_t) ( SSIZE_MAX / sizeof( system_character_t ) ) )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_VALUE_EXCEEDS_MAXIMUM,
+			 "%s: invalid backing filename size value exceeds maximum.",
+			 function );
+
+			goto on_error;
+		}
+		value_string = system_string_allocate(
+				value_string_size );
+
+		if( value_string == NULL )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_MEMORY,
+			 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
+			 "%s: unable to create backing filename string.",
+			 function );
+
+			goto on_error;
+		}
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
+		result = libqcow_file_get_utf16_backing_filename(
+			  info_handle->input_file,
+			  (uint16_t *) value_string,
+			  value_string_size,
+			  error );
+#else
+		result = libqcow_file_get_utf8_backing_filename(
+			  info_handle->input_file,
+			  (uint8_t *) value_string,
+			  value_string_size,
+			  error );
+#endif
+		if( result != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve backing filename.",
+			 function );
+
+			goto on_error;
+		}
+		fprintf(
+		 info_handle->notify_stream,
+		 "\tBacking filename\t: %s\n",
+		 value_string );
+
+		memory_free(
+		 value_string );
+
+		value_string = NULL;
+	}
+	if( libqcow_file_get_number_of_snapshots(
+	     info_handle->input_file,
+	     &number_of_snapshots,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve number of snapshots.",
+		 function );
+
+		goto on_error;
+	}
+	fprintf(
+	 info_handle->notify_stream,
+	 "\tNumber of snapshots\t: %d\n",
+	 number_of_snapshots );
+
+	if( number_of_snapshots > 0 )
+	{
+		fprintf(
+		 info_handle->notify_stream,
+		 "\n" );
+
+/* TODO print snapshot information */
+	}
 	fprintf(
 	 info_handle->notify_stream,
 	 "\n" );
 
 	return( 1 );
+
+on_error:
+	if( value_string != NULL )
+	{
+		memory_free(
+		 value_string );
+	}
+	return( -1 );
 }
 

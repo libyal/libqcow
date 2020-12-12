@@ -1,10 +1,8 @@
 TODO
 * pyqcow
   - add function to set the keys
-* add write support ?
-* add snapshot support
-  - backing filename
-  - in-image snapshots
+* add backing file support
+* add in-image snapshots support
 
 File format:
 * reference count support

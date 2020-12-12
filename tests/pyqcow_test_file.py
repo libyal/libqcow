@@ -155,6 +155,16 @@ class FileTypeTests(unittest.TestCase):
 
     qcow_file.open(unittest.source)
 
+    qcow_parent_file = None
+    if qcow_file.backing_filename:
+      qcow_parent_file = pyqcow.file()
+
+      parent_filename = os.path.join(
+        os.path.dirname(unittest.source), qcow_file.backing_filename)
+      qcow_parent_file.open(parent_filename, "r")
+
+      qcow_file.set_parent(qcow_parent_file)
+
     media_size = qcow_file.get_media_size()
 
     if media_size < 4096:
@@ -220,6 +230,9 @@ class FileTypeTests(unittest.TestCase):
 
     qcow_file.close()
 
+    if qcow_parent_file:
+      qcow_parent_file.close()
+
     # Test the read without open.
     with self.assertRaises(IOError):
       qcow_file.read_buffer(size=4096)
@@ -239,6 +252,16 @@ class FileTypeTests(unittest.TestCase):
     with open(unittest.source, "rb") as file_object:
       qcow_file.open_file_object(file_object)
 
+      qcow_parent_file = None
+      if qcow_file.backing_filename:
+        qcow_parent_file = pyqcow.file()
+
+        parent_filename = os.path.join(
+          os.path.dirname(unittest.source), qcow_file.backing_filename)
+        qcow_parent_file.open(parent_filename, "r")
+
+        qcow_file.set_parent(qcow_parent_file)
+
       media_size = qcow_file.get_media_size()
 
       # Test normal read.
@@ -248,6 +271,9 @@ class FileTypeTests(unittest.TestCase):
       self.assertEqual(len(data), min(media_size, 4096))
 
       qcow_file.close()
+
+      if qcow_parent_file:
+        qcow_parent_file.close()
 
   def test_read_buffer_at_offset(self):
     """Tests the read_buffer_at_offset function."""
@@ -259,6 +285,16 @@ class FileTypeTests(unittest.TestCase):
       qcow_file.set_password(unittest.password)
 
     qcow_file.open(unittest.source)
+
+    qcow_parent_file = None
+    if qcow_file.backing_filename:
+      qcow_parent_file = pyqcow.file()
+
+      parent_filename = os.path.join(
+        os.path.dirname(unittest.source), qcow_file.backing_filename)
+      qcow_parent_file.open(parent_filename, "r")
+
+      qcow_file.set_parent(qcow_parent_file)
 
     media_size = qcow_file.get_media_size()
 
@@ -314,6 +350,9 @@ class FileTypeTests(unittest.TestCase):
 
     qcow_file.close()
 
+    if qcow_parent_file:
+      qcow_parent_file.close()
+
     # Test the read without open.
     with self.assertRaises(IOError):
       qcow_file.read_buffer_at_offset(4096, 0)
@@ -328,6 +367,16 @@ class FileTypeTests(unittest.TestCase):
       qcow_file.set_password(unittest.password)
 
     qcow_file.open(unittest.source)
+
+    qcow_parent_file = None
+    if qcow_file.backing_filename:
+      qcow_parent_file = pyqcow.file()
+
+      parent_filename = os.path.join(
+        os.path.dirname(unittest.source), qcow_file.backing_filename)
+      qcow_parent_file.open(parent_filename, "r")
+
+      qcow_file.set_parent(qcow_parent_file)
 
     media_size = qcow_file.get_media_size()
 
@@ -375,6 +424,9 @@ class FileTypeTests(unittest.TestCase):
 
     qcow_file.close()
 
+    if qcow_parent_file:
+      qcow_parent_file.close()
+
     # Test the seek without open.
     with self.assertRaises(IOError):
       qcow_file.seek_offset(16, os.SEEK_SET)
@@ -410,6 +462,21 @@ class FileTypeTests(unittest.TestCase):
     self.assertIsNotNone(media_size)
 
     self.assertIsNotNone(qcow_file.media_size)
+
+    qcow_file.close()
+
+  def test_get_backing_filename(self):
+    """Tests the get_backing_filename function and backing_filename property."""
+    if not unittest.source:
+      raise unittest.SkipTest("missing source")
+
+    qcow_file = pyqcow.file()
+
+    qcow_file.open(unittest.source)
+
+    _ = qcow_file.get_backing_filename()
+
+    _ = qcow_file.backing_filename
 
     qcow_file.close()
 

@@ -141,6 +141,13 @@ PyMethodDef pyqcow_file_object_methods[] = {
 
 	/* Functions to access the file values */
 
+	{ "set_parent",
+	  (PyCFunction) pyqcow_file_set_parent,
+	  METH_VARARGS | METH_KEYWORDS,
+	  "set_parent(parent_file) -> None\n"
+	  "\n"
+	  "Sets the parent file." },
+
 	{ "set_password",
 	  (PyCFunction) pyqcow_file_set_password,
 	  METH_VARARGS | METH_KEYWORDS,
@@ -155,6 +162,13 @@ PyMethodDef pyqcow_file_object_methods[] = {
 	  "\n"
 	  "Retrieves the media size of the data." },
 
+	{ "get_backing_filename",
+	  (PyCFunction) pyqcow_file_get_backing_filename,
+	  METH_NOARGS,
+	  "get_backing_filename() -> Unicode string or None\n"
+	  "\n"
+	  "Retrieves the backing filename." },
+
 	/* Sentinel */
 	{ NULL, NULL, 0, NULL }
 };
@@ -165,6 +179,12 @@ PyGetSetDef pyqcow_file_object_get_set_definitions[] = {
 	  (getter) pyqcow_file_get_media_size,
 	  (setter) 0,
 	  "The media size.",
+	  NULL },
+
+	{ "backing_filename",
+	  (getter) pyqcow_file_get_backing_filename,
+	  (setter) 0,
+	  "The backing filename.",
 	  NULL },
 
 	/* Sentinel */
@@ -1446,6 +1466,67 @@ PyObject *pyqcow_file_get_offset(
 	return( integer_object );
 }
 
+/* Sets the parent file
+ * Returns a Python object if successful or NULL on error
+ */
+PyObject *pyqcow_file_set_parent(
+           pyqcow_file_t *pyqcow_file,
+           PyObject *arguments,
+           PyObject *keywords )
+{
+	libcerror_error_t *error    = NULL;
+	pyqcow_file_t *parent_file  = NULL;
+	static char *function       = "pyqcow_file_set_parent";
+	static char *keyword_list[] = { "parent_file", NULL };
+	int result                  = 0;
+
+	if( pyqcow_file == NULL )
+	{
+		PyErr_Format(
+		 PyExc_ValueError,
+		 "%s: invalid file.",
+		 function );
+
+		return( NULL );
+	}
+	if( PyArg_ParseTupleAndKeywords(
+	     arguments,
+	     keywords,
+	     "O!",
+	     keyword_list,
+	     &pyqcow_file_type_object,
+	     &parent_file ) == 0)
+	{
+		return( NULL );
+	}
+	Py_BEGIN_ALLOW_THREADS
+
+	result = libqcow_file_set_parent_file(
+	          pyqcow_file->file,
+	          parent_file->file,
+	          &error );
+
+	Py_END_ALLOW_THREADS
+
+	if( result != 1 )
+	{
+		pyqcow_error_raise(
+		 error,
+		 PyExc_IOError,
+		 "%s: unable to set parent file.",
+		 function );
+
+		libcerror_error_free(
+		 &error );
+
+		return( NULL );
+	}
+	Py_IncRef(
+	 Py_None );
+
+	return( Py_None );
+}
+
 /* Sets the password
  * Returns a Python object if successful or NULL on error
  */
@@ -1570,5 +1651,127 @@ PyObject *pyqcow_file_get_media_size(
 	                  (uint64_t) media_size );
 
 	return( integer_object );
+}
+
+/* Retrieves the backing filename
+ * Returns a Python object if successful or NULL on error
+ */
+PyObject *pyqcow_file_get_backing_filename(
+           pyqcow_file_t *pyqcow_file,
+           PyObject *arguments PYQCOW_ATTRIBUTE_UNUSED )
+{
+	PyObject *string_object  = NULL;
+	libcerror_error_t *error = NULL;
+	const char *errors       = NULL;
+	static char *function    = "pyqcow_file_get_backing_filename";
+	char *utf8_string        = NULL;
+	size_t utf8_string_size  = 0;
+	int result               = 0;
+
+	PYQCOW_UNREFERENCED_PARAMETER( arguments )
+
+	if( pyqcow_file == NULL )
+	{
+		PyErr_Format(
+		 PyExc_ValueError,
+		 "%s: invalid file.",
+		 function );
+
+		return( NULL );
+	}
+	Py_BEGIN_ALLOW_THREADS
+
+	result = libqcow_file_get_utf8_backing_filename_size(
+	          pyqcow_file->file,
+	          &utf8_string_size,
+	          &error );
+
+	Py_END_ALLOW_THREADS
+
+	if( result == -1 )
+	{
+		pyqcow_error_raise(
+		 error,
+		 PyExc_IOError,
+		 "%s: unable to determine size of backing filename as UTF-8 string.",
+		 function );
+
+		libcerror_error_free(
+		 &error );
+
+		goto on_error;
+	}
+	else if( ( result == 0 )
+	      || ( utf8_string_size == 0 ) )
+	{
+		Py_IncRef(
+		 Py_None );
+
+		return( Py_None );
+	}
+	utf8_string = (char *) PyMem_Malloc(
+	                        sizeof( char ) * utf8_string_size );
+
+	if( utf8_string == NULL )
+	{
+		PyErr_Format(
+		 PyExc_MemoryError,
+		 "%s: unable to create UTF-8 string.",
+		 function );
+
+		goto on_error;
+	}
+	Py_BEGIN_ALLOW_THREADS
+
+	result = libqcow_file_get_utf8_backing_filename(
+	          pyqcow_file->file,
+	          (uint8_t *) utf8_string,
+	          utf8_string_size,
+	          &error );
+
+	Py_END_ALLOW_THREADS
+
+	if( result != 1 )
+	{
+		pyqcow_error_raise(
+		 error,
+		 PyExc_IOError,
+		 "%s: unable to retrieve backing filename as UTF-8 string.",
+		 function );
+
+		libcerror_error_free(
+		 &error );
+
+		goto on_error;
+	}
+	/* Pass the string length to PyUnicode_DecodeUTF8 otherwise it makes
+	 * the end of string character is part of the string
+	 */
+	string_object = PyUnicode_DecodeUTF8(
+	                 utf8_string,
+	                 (Py_ssize_t) utf8_string_size - 1,
+	                 errors );
+
+	if( string_object == NULL )
+	{
+		PyErr_Format(
+		 PyExc_IOError,
+		 "%s: unable to convert UTF-8 string into Unicode object.",
+		 function );
+
+		goto on_error;
+	}
+	PyMem_Free(
+	 utf8_string );
+
+	return( string_object );
+
+on_error:
+	if( utf8_string != NULL )
+	{
+		PyMem_Free(
+		 utf8_string );
+	}
+	return( NULL );
 }
 

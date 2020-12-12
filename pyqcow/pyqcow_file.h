@@ -100,12 +100,21 @@ PyObject *pyqcow_file_get_offset(
            pyqcow_file_t *pyqcow_file,
            PyObject *arguments );
 
+PyObject *pyqcow_file_set_parent(
+           pyqcow_file_t *pyqcow_file,
+           PyObject *arguments,
+           PyObject *keywords );
+
 PyObject *pyqcow_file_set_password(
            pyqcow_file_t *pyqcow_file,
            PyObject *arguments,
            PyObject *keywords );
 
 PyObject *pyqcow_file_get_media_size(
+           pyqcow_file_t *pyqcow_file,
+           PyObject *arguments );
+
+PyObject *pyqcow_file_get_backing_filename(
            pyqcow_file_t *pyqcow_file,
            PyObject *arguments );
 
