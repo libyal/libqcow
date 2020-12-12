@@ -241,27 +241,11 @@ int libqcow_cluster_block_read(
 		 cluster_block_offset );
 	}
 #endif
-	if( libbfio_handle_seek_offset(
-	     file_io_handle,
-	     cluster_block_offset,
-	     SEEK_SET,
-	     error ) == -1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_IO,
-		 LIBCERROR_IO_ERROR_SEEK_FAILED,
-		 "%s: unable to seek cluster block offset: %" PRIi64 " (0x%08" PRIx64 ").",
-		 function,
-		 cluster_block_offset,
-		 cluster_block_offset );
-
-		return( -1 );
-	}
-	read_count = libbfio_handle_read_buffer(
+	read_count = libbfio_handle_read_buffer_at_offset(
 		      file_io_handle,
 		      cluster_block->data,
 		      cluster_block->data_size,
+		      cluster_block_offset,
 		      error );
 
 	if( read_count != (ssize_t) cluster_block->data_size )
@@ -270,8 +254,10 @@ int libqcow_cluster_block_read(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_IO,
 		 LIBCERROR_IO_ERROR_READ_FAILED,
-		 "%s: unable to read cluster block.",
-		 function );
+		 "%s: unable to read cluster block at offset: %" PRIi64 " (0x%08" PRIx64 ").",
+		 function,
+		 cluster_block_offset,
+		 cluster_block_offset );
 
 		return( -1 );
 	}

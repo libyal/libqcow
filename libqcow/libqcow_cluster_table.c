@@ -313,32 +313,6 @@ int libqcow_cluster_table_read(
 	}
 	cluster_table->number_of_references = (int) ( cluster_table_size / 8 );
 
-#if defined( HAVE_DEBUG_OUTPUT )
-	if( libcnotify_verbose != 0 )
-	{
-		libcnotify_printf(
-		 "%s: reading cluster table at offset: %" PRIi64 " (0x%08" PRIx64 ")\n",
-		 function,
-		 file_offset,
-		 file_offset );
-	}
-#endif
-	if( libbfio_handle_seek_offset(
-	     file_io_handle,
-	     file_offset,
-	     SEEK_SET,
-	     error ) == -1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_IO,
-		 LIBCERROR_IO_ERROR_SEEK_FAILED,
-		 "%s: unable to seek cluster table offset: %" PRIi64 ".",
-		 function,
-		 file_offset );
-
-		goto on_error;
-	}
 	cluster_table_data = (uint8_t *) memory_allocate(
 	                                  cluster_table_size );
 
@@ -353,10 +327,21 @@ int libqcow_cluster_table_read(
 
 		goto on_error;
 	}
-	read_count = libbfio_handle_read_buffer(
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
+	{
+		libcnotify_printf(
+		 "%s: reading cluster table at offset: %" PRIi64 " (0x%08" PRIx64 ")\n",
+		 function,
+		 file_offset,
+		 file_offset );
+	}
+#endif
+	read_count = libbfio_handle_read_buffer_at_offset(
 	              file_io_handle,
 	              cluster_table_data,
 	              cluster_table_size,
+	              file_offset,
 	              error );
 
 	if( read_count != (ssize_t) cluster_table_size )
@@ -365,8 +350,10 @@ int libqcow_cluster_table_read(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_IO,
 		 LIBCERROR_IO_ERROR_READ_FAILED,
-		 "%s: unable to read cluster table.",
-		 function );
+		 "%s: unable to read cluster table at offset: %" PRIi64 " (0x%08" PRIx64 ").",
+		 function,
+		 file_offset,
+		 file_offset );
 
 		goto on_error;
 	}

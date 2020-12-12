@@ -1747,32 +1747,6 @@ int libqcow_internal_file_open_read_backing_filename(
 
 		goto on_error;
 	}
-#if defined( HAVE_DEBUG_OUTPUT )
-	if( libcnotify_verbose != 0 )
-	{
-		libcnotify_printf(
-		 "%s: reading backing filename at offset: %" PRIu64 " (0x%08" PRIx64 ")\n",
-		 function,
-		 backing_filename_offset,
-		 backing_filename_offset );
-	}
-#endif
-	if( libbfio_handle_seek_offset(
-	     file_io_handle,
-	     backing_filename_offset,
-	     SEEK_SET,
-	     error ) == -1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_IO,
-		 LIBCERROR_IO_ERROR_SEEK_FAILED,
-		 "%s: unable to seek file header offset: %" PRIu64 ".",
-		 function,
-		 backing_filename_offset );
-
-		goto on_error;
-	}
 	internal_file->backing_filename = (uint8_t *) memory_allocate(
 	                                               sizeof( uint8_t ) * backing_filename_size );
 
@@ -1789,10 +1763,21 @@ int libqcow_internal_file_open_read_backing_filename(
 	}
 	internal_file->backing_filename_size = (size_t) backing_filename_size;
 
-	read_count = libbfio_handle_read_buffer(
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
+	{
+		libcnotify_printf(
+		 "%s: reading backing filename at offset: %" PRIu64 " (0x%08" PRIx64 ")\n",
+		 function,
+		 backing_filename_offset,
+		 backing_filename_offset );
+	}
+#endif
+	read_count = libbfio_handle_read_buffer_at_offset(
 		      file_io_handle,
 		      internal_file->backing_filename,
 		      (size_t) backing_filename_size,
+		      backing_filename_offset,
 		      error );
 
 	if( read_count != (ssize_t) backing_filename_size )
@@ -1801,8 +1786,10 @@ int libqcow_internal_file_open_read_backing_filename(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_IO,
 		 LIBCERROR_IO_ERROR_READ_FAILED,
-		 "%s: unable to read backing filename data.",
-		 function );
+		 "%s: unable to read backing filename data at offset: %" PRIu64 " (0x%08" PRIx64 ").",
+		 function,
+		 backing_filename_offset,
+		 backing_filename_offset );
 
 		goto on_error;
 	}

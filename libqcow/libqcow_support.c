@@ -346,6 +346,7 @@ int libqcow_check_file_signature_file_io_handle(
 	static char *function      = "libqcow_check_file_signature_file_io_handle";
 	ssize_t read_count         = 0;
 	int file_io_handle_is_open = 0;
+	int result                 = 0;
 
 	if( file_io_handle == NULL )
 	{
@@ -371,7 +372,7 @@ int libqcow_check_file_signature_file_io_handle(
 		 "%s: unable to open file.",
 		 function );
 
-		return( -1 );
+		goto on_error;
 	}
 	else if( file_io_handle_is_open == 0 )
 	{
@@ -387,34 +388,14 @@ int libqcow_check_file_signature_file_io_handle(
 			 "%s: unable to open file.",
 			 function );
 
-			return( -1 );
+			goto on_error;
 		}
 	}
-	if( libbfio_handle_seek_offset(
-	     file_io_handle,
-	     0,
-	     SEEK_SET,
-	     error ) == -1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_IO,
-		 LIBCERROR_IO_ERROR_SEEK_FAILED,
-		 "%s: unable to seek file header offset: 0.",
-		 function );
-
-		if( file_io_handle_is_open == 0 )
-		{
-			libbfio_handle_close(
-			 file_io_handle,
-			 error );
-		}
-		return( -1 );
-	}
-	read_count = libbfio_handle_read_buffer(
+	read_count = libbfio_handle_read_buffer_at_offset(
 	              file_io_handle,
 	              signature,
 	              4,
+	              0,
 	              error );
 
 	if( read_count != 4 )
@@ -423,16 +404,17 @@ int libqcow_check_file_signature_file_io_handle(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_IO,
 		 LIBCERROR_IO_ERROR_READ_FAILED,
-		 "%s: unable to read signature.",
+		 "%s: unable to read signature at offset: 0 (0x00000000).",
 		 function );
 
-		if( file_io_handle_is_open == 0 )
-		{
-			libbfio_handle_close(
-			 file_io_handle,
-			 error );
-		}
-		return( -1 );
+		goto on_error;
+	}
+	if( memory_compare(
+	     qcow_file_signature,
+	     signature,
+	     4 ) == 0 )
+	{
+		result = 1;
 	}
 	if( file_io_handle_is_open == 0 )
 	{
@@ -447,16 +429,18 @@ int libqcow_check_file_signature_file_io_handle(
 			 "%s: unable to close file.",
 			 function );
 
-			return( -1 );
+			goto on_error;
 		}
 	}
-	if( memory_compare(
-	     qcow_file_signature,
-	     signature,
-	     4 ) == 0 )
+	return( result );
+
+on_error:
+	if( file_io_handle_is_open == 0 )
 	{
-		return( 1 );
+		libbfio_handle_close(
+		 file_io_handle,
+		 error );
 	}
-	return( 0 );
+	return( -1 );
 }
 
