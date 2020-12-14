@@ -149,6 +149,7 @@ int libqcow_file_header_read_data(
 	uint64_t compatible_feature_flags   = 0;
 	uint64_t incompatible_feature_flags = 0;
 	uint64_t safe_level1_table_offset   = 0;
+	uint64_t safe_snapshots_offset      = 0;
 	uint64_t supported_feature_flags    = 0;
 	uint32_t file_header_size           = 0;
 
@@ -400,7 +401,7 @@ int libqcow_file_header_read_data(
 
 		byte_stream_copy_to_uint64_big_endian(
 		 ( (qcow_file_header_v2_t *) data )->snapshots_offset,
-		 file_header->snapshots_offset );
+		 safe_snapshots_offset );
 
 #if defined( HAVE_DEBUG_OUTPUT )
 		if( libcnotify_verbose != 0 )
@@ -454,7 +455,7 @@ int libqcow_file_header_read_data(
 			libcnotify_printf(
 			 "%s: snapshots offset\t\t\t\t: 0x%08" PRIx64 "\n",
 			 function,
-			 file_header->snapshots_offset );
+			 safe_snapshots_offset );
 		}
 #endif /* defined( HAVE_DEBUG_OUTPUT ) */
 	}
@@ -589,6 +590,7 @@ int libqcow_file_header_read_data(
 	}
 #endif
 	file_header->level1_table_offset = (off64_t) safe_level1_table_offset;
+	file_header->snapshots_offset    = (off64_t) safe_snapshots_offset;
 
 	return( 1 );
 }
