@@ -23,6 +23,7 @@ MSVSCPP_FILES = \
 	qcow_test_io_handle/qcow_test_io_handle.vcproj \
 	qcow_test_notify/qcow_test_notify.vcproj \
 	qcow_test_support/qcow_test_support.vcproj \
+	qcow_test_tools_info_handle/qcow_test_tools_info_handle.vcproj \
 	qcow_test_tools_output/qcow_test_tools_output.vcproj \
 	qcow_test_tools_signal/qcow_test_tools_signal.vcproj \
 	qcowinfo/qcowinfo.vcproj \
