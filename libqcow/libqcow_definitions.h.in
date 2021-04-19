@@ -92,7 +92,7 @@ enum LIBQCOW_COMPRESSION_LEVELS
 	LIBQCOW_COMPRESSION_LEVEL_BEST				= 2,
 };
 
-/* The maximum number of cache entries defintions
+/* The maximum number of cache entries definitions
  */
 #define LIBQCOW_MAXIMUM_CACHE_ENTRIES_LEVEL2_TABLES		64
 #define LIBQCOW_MAXIMUM_CACHE_ENTRIES_CLUSTER_BLOCKS		128
