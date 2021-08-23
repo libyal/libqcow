@@ -367,6 +367,15 @@ void pyqcow_file_free(
 
 		return;
 	}
+	if( pyqcow_file->file_io_handle != NULL )
+	{
+		if( pyqcow_file_close(
+		     pyqcow_file,
+		     NULL ) == NULL )
+		{
+			return;
+		}
+	}
 	if( pyqcow_file->file != NULL )
 	{
 		Py_BEGIN_ALLOW_THREADS
