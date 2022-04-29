@@ -36,7 +36,6 @@ DPKG_FILES = \
 	dpkg/rules \
 	dpkg/libqcow.install \
 	dpkg/libqcow-dev.install \
-	dpkg/libqcow-python.install \
 	dpkg/libqcow-python3.install \
 	dpkg/libqcow-tools.install \
 	dpkg/source/format
