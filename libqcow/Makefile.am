@@ -24,6 +24,7 @@ lib_LTLIBRARIES = libqcow.la
 
 libqcow_la_SOURCES = \
 	libqcow.c \
+	libqcow_bit_stream.c libqcow_bit_stream.h \
 	libqcow_cluster_block.c libqcow_cluster_block.h \
 	libqcow_cluster_table.c libqcow_cluster_table.h \
 	libqcow_codepage.h \
@@ -36,6 +37,7 @@ libqcow_la_SOURCES = \
 	libqcow_extern.h \
 	libqcow_file.c libqcow_file.h \
 	libqcow_file_header.c libqcow_file_header.h \
+	libqcow_huffman_tree.c libqcow_huffman_tree.h \
 	libqcow_i18n.c libqcow_i18n.h \
 	libqcow_io_handle.c libqcow_io_handle.h \
 	libqcow_libbfio.h \

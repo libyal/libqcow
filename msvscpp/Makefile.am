@@ -14,12 +14,14 @@ MSVSCPP_FILES = \
 	libqcow/libqcow.vcproj \
 	libuna/libuna.vcproj \
 	pyqcow/pyqcow.vcproj \
+	qcow_test_bit_stream/qcow_test_bit_stream.vcproj \
 	qcow_test_cluster_block/qcow_test_cluster_block.vcproj \
 	qcow_test_cluster_table/qcow_test_cluster_table.vcproj \
 	qcow_test_deflate/qcow_test_deflate.vcproj \
 	qcow_test_error/qcow_test_error.vcproj \
 	qcow_test_file/qcow_test_file.vcproj \
 	qcow_test_file_header/qcow_test_file_header.vcproj \
+	qcow_test_huffman_tree/qcow_test_huffman_tree.vcproj \
 	qcow_test_io_handle/qcow_test_io_handle.vcproj \
 	qcow_test_notify/qcow_test_notify.vcproj \
 	qcow_test_support/qcow_test_support.vcproj \

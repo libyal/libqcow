@@ -1,4 +1,4 @@
-libqcow is a library to access the QEMU Copy-On-Write (QCOW) image format.
+libqcow is a library to access the QEMU Copy-On-Write (QCOW) image file format.
 
 Project information:
 

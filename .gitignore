@@ -129,12 +129,14 @@ stamp-h[1-9]
 /qcowtools/qcowmount
 /tests/*.exe
 /tests/input
+/tests/qcow_test_bit_stream
 /tests/qcow_test_cluster_block
 /tests/qcow_test_cluster_table
 /tests/qcow_test_deflate
 /tests/qcow_test_error
 /tests/qcow_test_file
 /tests/qcow_test_file_header
+/tests/qcow_test_huffman_tree
 /tests/qcow_test_io_handle
 /tests/qcow_test_notify
 /tests/qcow_test_support

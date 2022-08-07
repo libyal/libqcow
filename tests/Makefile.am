@@ -46,18 +46,32 @@ EXTRA_DIST = \
 	$(check_SCRIPTS)
 
 check_PROGRAMS = \
+	qcow_test_bit_stream \
 	qcow_test_cluster_block \
 	qcow_test_cluster_table \
 	qcow_test_deflate \
 	qcow_test_error \
 	qcow_test_file \
 	qcow_test_file_header \
+	qcow_test_huffman_tree \
 	qcow_test_io_handle \
 	qcow_test_notify \
 	qcow_test_support \
 	qcow_test_tools_info_handle \
 	qcow_test_tools_output \
 	qcow_test_tools_signal
+
+qcow_test_bit_stream_SOURCES = \
+	qcow_test_bit_stream.c \
+	qcow_test_libcerror.h \
+	qcow_test_libqcow.h \
+	qcow_test_macros.h \
+	qcow_test_memory.c qcow_test_memory.h \
+	qcow_test_unused.h
+
+qcow_test_bit_stream_LDADD = \
+	../libqcow/libqcow.la \
+	@LIBCERROR_LIBADD@
 
 qcow_test_cluster_block_SOURCES = \
 	qcow_test_cluster_block.c \
@@ -153,6 +167,18 @@ qcow_test_file_header_LDADD = \
 	@LIBCNOTIFY_LIBADD@ \
 	@LIBCLOCALE_LIBADD@ \
 	@LIBCDATA_LIBADD@ \
+	../libqcow/libqcow.la \
+	@LIBCERROR_LIBADD@
+
+qcow_test_huffman_tree_SOURCES = \
+	qcow_test_huffman_tree.c \
+	qcow_test_libcerror.h \
+	qcow_test_libqcow.h \
+	qcow_test_macros.h \
+	qcow_test_memory.c qcow_test_memory.h \
+	qcow_test_unused.h
+
+qcow_test_huffman_tree_LDADD = \
 	../libqcow/libqcow.la \
 	@LIBCERROR_LIBADD@
 

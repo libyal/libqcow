@@ -6,7 +6,7 @@ $ExitSuccess = 0
 $ExitFailure = 1
 $ExitIgnore = 77
 
-$LibraryTests = "cluster_block cluster_table deflate error file_header io_handle notify"
+$LibraryTests = "bit_stream cluster_block cluster_table deflate error file_header huffman_tree io_handle notify"
 $LibraryTestsWithInput = "file support"
 $OptionSets = ""
 
