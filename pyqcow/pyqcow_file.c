@@ -398,6 +398,11 @@ void pyqcow_file_free(
 			 &error );
 		}
 	}
+	if( pyqcow_file->parent_file_object != NULL )
+	{
+		Py_DecRef(
+		 (PyObject *) pyqcow_file->parent_file_object );
+	}
 	ob_type->tp_free(
 	 (PyObject*) pyqcow_file );
 }
@@ -1530,6 +1535,11 @@ PyObject *pyqcow_file_set_parent(
 
 		return( NULL );
 	}
+	pyqcow_file->parent_file_object = parent_file;
+
+	Py_IncRef(
+	 pyqcow_file->parent_file_object );
+
 	Py_IncRef(
 	 Py_None );
 

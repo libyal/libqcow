@@ -48,6 +48,10 @@ struct pyqcow_file
 	/* The libbfio file IO handle
 	 */
 	libbfio_handle_t *file_io_handle;
+
+	/* The parent file object
+	 */
+	PyObject *parent_file_object;
 };
 
 extern PyMethodDef pyqcow_file_object_methods[];
