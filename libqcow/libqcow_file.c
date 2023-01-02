@@ -1,7 +1,7 @@
 /*
  * File functions
  *
- * Copyright (C) 2010-2022, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2010-2023, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
@@ -2585,6 +2585,8 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 
 		return( -1 );
 	}
+	internal_file->io_handle->abort = 0;
+
 	if( (size64_t) internal_file->current_offset >= internal_file->file_header->media_size )
 	{
 		return( 0 );

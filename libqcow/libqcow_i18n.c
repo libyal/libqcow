@@ -1,7 +1,7 @@
 /*
  * Internationalization (i18n) functions
  *
- * Copyright (C) 2010-2022, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2010-2023, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
@@ -22,7 +22,7 @@
 #include <common.h>
 #include <types.h>
 
-#if defined( HAVE_LIBINTL_H )
+#if defined( HAVE_LIBINTL_H ) && defined( ENABLE_NLS )
 #include <libintl.h>
 #endif
 
@@ -40,7 +40,7 @@ int libqcow_i18n_initialize(
 
 	if( libqcow_i18n_initialized == 0 )
 	{
-#if defined( HAVE_BINDTEXTDOMAIN )
+#if defined( HAVE_BINDTEXTDOMAIN ) && defined( LOCALEDIR )
 		if( bindtextdomain(
 		     "libqcow",
 		     LOCALEDIR ) == NULL )
@@ -54,7 +54,8 @@ int libqcow_i18n_initialize(
 
 			return( -1 );
 		}
-#endif
+#endif /* defined( HAVE_BINDTEXTDOMAIN ) && defined( LOCALEDIR ) */
+
 		libqcow_i18n_initialized = 1;
 	}
 	return( 1 );

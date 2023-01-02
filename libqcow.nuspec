@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>libqcow</id>
-    <version>20221124</version>
+    <version>20230102</version>
     <authors>Joachim Metz</authors>
     <owners>joachimmetz</owners>
     <license type="expression">LGPL-3.0-or-later</license>
@@ -10,8 +10,8 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <title>libqcow</title>
     <description>Library to access the QEMU Copy-On-Write (QCOW) image file format</description>
-    <releaseNotes>Release of libqcow 20221124</releaseNotes>
-    <copyright>Copyright (C) 2010-2022</copyright>
+    <releaseNotes>Release of libqcow 20230102</releaseNotes>
+    <copyright>Copyright (C) 2010-2023</copyright>
     <tags>native</tags>
   </metadata>
   <files>
