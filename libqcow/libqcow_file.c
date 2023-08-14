@@ -643,12 +643,12 @@ int libqcow_file_open_file_io_handle(
      int access_flags,
      libcerror_error_t **error )
 {
-	libqcow_internal_file_t *internal_file = NULL;
-	static char *function                  = "libqcow_file_open_file_io_handle";
-	int bfio_access_flags                  = 0;
-	int file_io_handle_is_open             = 0;
-	int file_io_handle_opened_in_library   = 0;
-	int result                             = 0;
+	libqcow_internal_file_t *internal_file   = NULL;
+	static char *function                    = "libqcow_file_open_file_io_handle";
+	uint8_t file_io_handle_opened_in_library = 0;
+	int bfio_access_flags                    = 0;
+	int file_io_handle_is_open               = 0;
+	int result                               = 0;
 
 	if( file == NULL )
 	{
@@ -777,7 +777,7 @@ int libqcow_file_open_file_io_handle(
 	else
 	{
 		internal_file->file_io_handle                   = file_io_handle;
-		internal_file->file_io_handle_opened_in_library = (uint8_t) file_io_handle_opened_in_library;
+		internal_file->file_io_handle_opened_in_library = file_io_handle_opened_in_library;
 	}
 #if defined( HAVE_LIBQCOW_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_write(
