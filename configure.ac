@@ -2,7 +2,7 @@ AC_PREREQ([2.71])
 
 AC_INIT(
  [libqcow],
- [20230923],
+ [20231020],
  [joachim.metz@gmail.com])
 
 AC_CONFIG_SRCDIR(
@@ -209,6 +209,7 @@ AC_CONFIG_FILES([dpkg/changelog])
 AC_CONFIG_FILES([libqcow/libqcow.rc])
 AC_CONFIG_FILES([libqcow.pc])
 AC_CONFIG_FILES([libqcow.spec])
+AC_CONFIG_FILES([setup.cfg])
 dnl Generate a source configuration file
 AC_CONFIG_HEADERS([common/config.h])
 
