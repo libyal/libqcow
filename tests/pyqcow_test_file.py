@@ -39,13 +39,15 @@ class FileTypeTests(unittest.TestCase):
 
   def test_open(self):
     """Tests the open function."""
-    test_source = unittest.source
+    test_source = getattr(unittest, "source", None)
     if not test_source:
       raise unittest.SkipTest("missing source")
 
     qcow_file = pyqcow.file()
-    if unittest.password:
-      qcow_file.set_password(unittest.password)
+
+    test_password = getattr(unittest, "password", None)
+    if test_password:
+      qcow_file.set_password(test_password)
 
     qcow_file.open(test_source)
 
@@ -62,7 +64,7 @@ class FileTypeTests(unittest.TestCase):
 
   def test_open_file_object(self):
     """Tests the open_file_object function."""
-    test_source = unittest.source
+    test_source = getattr(unittest, "source", None)
     if not test_source:
       raise unittest.SkipTest("missing source")
 
@@ -70,8 +72,10 @@ class FileTypeTests(unittest.TestCase):
       raise unittest.SkipTest("source not a regular file")
 
     qcow_file = pyqcow.file()
-    if unittest.password:
-      qcow_file.set_password(unittest.password)
+
+    test_password = getattr(unittest, "password", None)
+    if test_password:
+      qcow_file.set_password(test_password)
 
     with open(test_source, "rb") as file_object:
 
@@ -90,26 +94,30 @@ class FileTypeTests(unittest.TestCase):
 
   def test_close(self):
     """Tests the close function."""
-    test_source = unittest.source
+    test_source = getattr(unittest, "source", None)
     if not test_source:
       raise unittest.SkipTest("missing source")
 
     qcow_file = pyqcow.file()
-    if unittest.password:
-      qcow_file.set_password(unittest.password)
+
+    test_password = getattr(unittest, "password", None)
+    if test_password:
+      qcow_file.set_password(test_password)
 
     with self.assertRaises(IOError):
       qcow_file.close()
 
   def test_open_close(self):
     """Tests the open and close functions."""
-    test_source = unittest.source
+    test_source = getattr(unittest, "source", None)
     if not test_source:
       return
 
     qcow_file = pyqcow.file()
-    if unittest.password:
-      qcow_file.set_password(unittest.password)
+
+    test_password = getattr(unittest, "password", None)
+    if test_password:
+      qcow_file.set_password(test_password)
 
     # Test open and close.
     qcow_file.open(test_source)
@@ -137,7 +145,7 @@ class FileTypeTests(unittest.TestCase):
 
   def test_is_locked(self):
     """Tests the is_locked function."""
-    test_source = unittest.source
+    test_source = getattr(unittest, "source", None)
     if not test_source:
       raise unittest.SkipTest("missing source")
 
@@ -151,13 +159,15 @@ class FileTypeTests(unittest.TestCase):
 
   def test_read_buffer(self):
     """Tests the read_buffer function."""
-    test_source = unittest.source
+    test_source = getattr(unittest, "source", None)
     if not test_source:
       raise unittest.SkipTest("missing source")
 
     qcow_file = pyqcow.file()
-    if unittest.password:
-      qcow_file.set_password(unittest.password)
+
+    test_password = getattr(unittest, "password", None)
+    if test_password:
+      qcow_file.set_password(test_password)
 
     qcow_file.open(test_source)
 
@@ -245,7 +255,7 @@ class FileTypeTests(unittest.TestCase):
 
   def test_read_buffer_file_object(self):
     """Tests the read_buffer function on a file-like object."""
-    test_source = unittest.source
+    test_source = getattr(unittest, "source", None)
     if not test_source:
       raise unittest.SkipTest("missing source")
 
@@ -253,8 +263,10 @@ class FileTypeTests(unittest.TestCase):
       raise unittest.SkipTest("source not a regular file")
 
     qcow_file = pyqcow.file()
-    if unittest.password:
-      qcow_file.set_password(unittest.password)
+
+    test_password = getattr(unittest, "password", None)
+    if test_password:
+      qcow_file.set_password(test_password)
 
     with open(test_source, "rb") as file_object:
       qcow_file.open_file_object(file_object)
@@ -284,13 +296,15 @@ class FileTypeTests(unittest.TestCase):
 
   def test_read_buffer_at_offset(self):
     """Tests the read_buffer_at_offset function."""
-    test_source = unittest.source
+    test_source = getattr(unittest, "source", None)
     if not test_source:
       raise unittest.SkipTest("missing source")
 
     qcow_file = pyqcow.file()
-    if unittest.password:
-      qcow_file.set_password(unittest.password)
+
+    test_password = getattr(unittest, "password", None)
+    if test_password:
+      qcow_file.set_password(test_password)
 
     qcow_file.open(test_source)
 
@@ -367,13 +381,15 @@ class FileTypeTests(unittest.TestCase):
 
   def test_seek_offset(self):
     """Tests the seek_offset function."""
-    test_source = unittest.source
+    test_source = getattr(unittest, "source", None)
     if not test_source:
       raise unittest.SkipTest("missing source")
 
     qcow_file = pyqcow.file()
-    if unittest.password:
-      qcow_file.set_password(unittest.password)
+
+    test_password = getattr(unittest, "password", None)
+    if test_password:
+      qcow_file.set_password(test_password)
 
     qcow_file.open(test_source)
 
@@ -442,13 +458,15 @@ class FileTypeTests(unittest.TestCase):
 
   def test_get_offset(self):
     """Tests the get_offset function."""
-    test_source = unittest.source
+    test_source = getattr(unittest, "source", None)
     if not test_source:
       raise unittest.SkipTest("missing source")
 
     qcow_file = pyqcow.file()
-    if unittest.password:
-      qcow_file.set_password(unittest.password)
+
+    test_password = getattr(unittest, "password", None)
+    if test_password:
+      qcow_file.set_password(test_password)
 
     qcow_file.open(test_source)
 
@@ -459,13 +477,15 @@ class FileTypeTests(unittest.TestCase):
 
   def test_get_media_size(self):
     """Tests the get_media_size function and media_size property."""
-    test_source = unittest.source
+    test_source = getattr(unittest, "source", None)
     if not test_source:
       raise unittest.SkipTest("missing source")
 
     qcow_file = pyqcow.file()
-    if unittest.password:
-      qcow_file.set_password(unittest.password)
+
+    test_password = getattr(unittest, "password", None)
+    if test_password:
+      qcow_file.set_password(test_password)
 
     qcow_file.open(test_source)
 
@@ -478,7 +498,7 @@ class FileTypeTests(unittest.TestCase):
 
   def test_get_backing_filename(self):
     """Tests the get_backing_filename function and backing_filename property."""
-    test_source = unittest.source
+    test_source = getattr(unittest, "source", None)
     if not test_source:
       raise unittest.SkipTest("missing source")
 

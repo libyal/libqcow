@@ -85,11 +85,13 @@ MAINTAINERCLEANFILES = \
 	Makefile.in
 
 distclean: clean
-	/bin/rm -f libqcow_definitions.h
-	/bin/rm -f libqcow.rc
-	/bin/rm -f Makefile
+	-rm -f libqcow_definitions.h
+	-rm -f libqcow.rc
+	-rm -f Makefile
 
-splint:
+sources-local: $(BUILT_SOURCES)
+
+splint-local:
 	@echo "Running splint on libqcow ..."
 	-splint -preproc -redef $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(libqcow_la_SOURCES)
 

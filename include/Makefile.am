@@ -19,9 +19,9 @@ MAINTAINERCLEANFILES = \
 	Makefile.in
 
 distclean: clean
-	/bin/rm -f libqcow.h
-	/bin/rm -f libqcow/definitions.h
-	/bin/rm -f libqcow/features.h
-	/bin/rm -f libqcow/types.h
-	/bin/rm -f Makefile
+	-rm -f libqcow.h
+	-rm -f libqcow/definitions.h
+	-rm -f libqcow/features.h
+	-rm -f libqcow/types.h
+	-rm -f Makefile
 
