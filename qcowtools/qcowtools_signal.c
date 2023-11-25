@@ -40,7 +40,7 @@ void (*qcowtools_signal_signal_handler)( qcowtools_signal_t ) = NULL;
 /* Signal handler for Ctrl+C or Ctrl+Break signals
  */
 BOOL WINAPI qcowtools_signal_handler(
-             unsigned long signal )
+             qcowtools_signal_t signal )
 {
 	static char *function = "qcowtools_signal_handler";
 
@@ -112,7 +112,7 @@ int qcowtools_signal_attach(
 	qcowtools_signal_signal_handler = signal_handler;
 
 	if( SetConsoleCtrlHandler(
-	     qcowtools_signal_handler,
+	     (PHANDLER_ROUTINE) qcowtools_signal_handler,
 	     TRUE ) == 0 )
 	{
 		libcerror_error_set(
@@ -179,7 +179,7 @@ int qcowtools_signal_detach(
 	static char *function = "qcowtools_signal_detach";
 
 	if( SetConsoleCtrlHandler(
-	     qcowtools_signal_handler,
+	     (PHANDLER_ROUTINE) qcowtools_signal_handler,
 	     FALSE ) == 0 )
 	{
 		libcerror_error_set(

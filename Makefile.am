@@ -19,8 +19,6 @@ SUBDIRS = \
 	libqcow \
 	qcowtools \
 	pyqcow \
-	pyqcow-python2 \
-	pyqcow-python3 \
 	po \
 	manuals \
 	tests \

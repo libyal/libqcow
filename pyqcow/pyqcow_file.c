@@ -306,8 +306,9 @@ int pyqcow_file_init(
 	}
 	/* Make sure libqcow file is set to NULL
 	 */
-	pyqcow_file->file           = NULL;
-	pyqcow_file->file_io_handle = NULL;
+	pyqcow_file->file               = NULL;
+	pyqcow_file->file_io_handle     = NULL;
+	pyqcow_file->parent_file_object = NULL;
 
 	if( libqcow_file_initialize(
 	     &( pyqcow_file->file ),
@@ -401,7 +402,7 @@ void pyqcow_file_free(
 	if( pyqcow_file->parent_file_object != NULL )
 	{
 		Py_DecRef(
-		 (PyObject *) pyqcow_file->parent_file_object );
+		 pyqcow_file->parent_file_object );
 	}
 	ob_type->tp_free(
 	 (PyObject*) pyqcow_file );
@@ -1546,7 +1547,7 @@ PyObject *pyqcow_file_set_parent(
 
 		return( NULL );
 	}
-	pyqcow_file->parent_file_object = parent_file;
+	pyqcow_file->parent_file_object = (PyObject *) parent_file;
 
 	Py_IncRef(
 	 pyqcow_file->parent_file_object );
