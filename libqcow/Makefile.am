@@ -1,7 +1,7 @@
 AM_CPPFLAGS = \
 	-DLOCALEDIR=\"$(datadir)/locale\" \
-	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/common \
+	-I../include -I$(top_srcdir)/include \
+	-I../common -I$(top_srcdir)/common \
 	@LIBCERROR_CPPFLAGS@ \
 	@LIBCTHREADS_CPPFLAGS@ \
 	@LIBCDATA_CPPFLAGS@ \
@@ -81,13 +81,11 @@ EXTRA_DIST = \
 	libqcow.rc \
 	libqcow.rc.in
 
-MAINTAINERCLEANFILES = \
+DISTCLEANFILES = \
+	libqcow_definitions.h \
+	libqcow.rc \
+	Makefile \
 	Makefile.in
-
-distclean: clean
-	-rm -f libqcow_definitions.h
-	-rm -f libqcow.rc
-	-rm -f Makefile
 
 sources-local: $(BUILT_SOURCES)
 

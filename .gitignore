@@ -133,6 +133,7 @@ stamp-h[1-9]
 /qcowtools/qcowmount
 /tests/*.exe
 /tests/input
+/tests/notify_stream.log
 /tests/qcow_test_bit_stream
 /tests/qcow_test_cluster_block
 /tests/qcow_test_cluster_table

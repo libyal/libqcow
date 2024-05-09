@@ -15,13 +15,11 @@ EXTRA_DIST = \
 	libqcow/features.h.in \
 	libqcow/types.h.in
 
-MAINTAINERCLEANFILES = \
+DISTCLEANFILES = \
+	libqcow.h \
+	libqcow/definitions.h \
+	libqcow/features.h \
+	libqcow/types.h \
+	Makefile \
 	Makefile.in
-
-distclean: clean
-	-rm -f libqcow.h
-	-rm -f libqcow/definitions.h
-	-rm -f libqcow/features.h
-	-rm -f libqcow/types.h
-	-rm -f Makefile
 
