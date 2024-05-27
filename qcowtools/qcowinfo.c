@@ -1,5 +1,5 @@
 /*
- * Shows information obtained from a QEMU Copy-On-Write (QCOW) image file
+ * Shows information obtained from a QEMU Copy-On-Write (QCOW) image file.
  *
  * Copyright (C) 2010-2024, Joachim Metz <joachim.metz@gmail.com>
  *
@@ -52,7 +52,7 @@
 info_handle_t *qcowinfo_info_handle = NULL;
 int qcowinfo_abort                  = 0;
 
-/* Prints the executable usage information
+/* Prints usage information
  */
 void usage_fprint(
       FILE *stream )
@@ -79,7 +79,7 @@ void qcowinfo_signal_handler(
       qcowtools_signal_t signal QCOWTOOLS_ATTRIBUTE_UNUSED )
 {
 	libcerror_error_t *error = NULL;
-	static char *function   = "qcowinfo_signal_handler";
+	static char *function    = "qcowinfo_signal_handler";
 
 	QCOWTOOLS_UNREFERENCED_PARAMETER( signal )
 
@@ -138,7 +138,7 @@ int main( int argc, char * const argv[] )
 	 1 );
 
 	if( libclocale_initialize(
-             "qcowtools",
+	     "qcowtools",
 	     &error ) != 1 )
 	{
 		fprintf(
@@ -147,9 +147,9 @@ int main( int argc, char * const argv[] )
 
 		goto on_error;
 	}
-        if( qcowtools_output_initialize(
-             _IONBF,
-             &error ) != 1 )
+	if( qcowtools_output_initialize(
+	     _IONBF,
+	     &error ) != 1 )
 	{
 		fprintf(
 		 stderr,
