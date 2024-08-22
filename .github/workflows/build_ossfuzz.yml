@@ -1,0 +1,35 @@
+# Build OSSFuzz fuzz targets from source.
+name: build_ossfuzz
+on:
+  push:
+    branches: [main]
+permissions: read-all
+jobs:
+  build_ossfuzz:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        include:
+        - architecture: 'x64'
+          compiler: 'gcc'
+          configure_options: ''
+    steps:
+    - name: Install build dependencies
+      run: |
+        sudo apt-get -y install git
+    - uses: actions/checkout@v4
+      with:
+        repository: google/oss-fuzz
+        path: oss-fuzz
+    - name: Build OSSFuzz fuzz targets
+      working-directory: oss-fuzz
+      run: |
+        mkdir -p projects/libqcow
+        cp projects/libyal/build.sh projects/libqcow/
+        cp projects/libyal/project.yaml projects/libqcow/
+        head -n 20 projects/libyal/Dockerfile > projects/libqcow/Dockerfile
+        echo "RUN git clone --depth 1 https://github.com/libyal/libqcow.git libqcow" >> projects/libqcow/Dockerfile
+        tail -n 3 projects/libyal/Dockerfile >> projects/libqcow/Dockerfile
+        python3 infra/helper.py build_image --pull libqcow
+        python3 infra/helper.py build_fuzzers --sanitizer address libqcow
+        python3 infra/helper.py check_build libqcow
