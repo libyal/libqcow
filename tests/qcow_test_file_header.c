@@ -80,14 +80,14 @@ uint8_t qcow_test_file_header_data1[ 512 ] = {
 int qcow_test_file_header_initialize(
      void )
 {
-	libcerror_error_t *error          = NULL;
+	libcerror_error_t *error           = NULL;
 	libqcow_file_header_t *file_header = NULL;
-	int result                        = 0;
+	int result                         = 0;
 
 #if defined( HAVE_QCOW_TEST_MEMORY )
-	int number_of_malloc_fail_tests   = 1;
-	int number_of_memset_fail_tests   = 1;
-	int test_number                   = 0;
+	int number_of_malloc_fail_tests    = 1;
+	int number_of_memset_fail_tests    = 1;
+	int test_number                    = 0;
 #endif
 
 	/* Test regular cases
@@ -313,9 +313,9 @@ on_error:
 int qcow_test_file_header_read_data(
      void )
 {
-	libcerror_error_t *error          = NULL;
+	libcerror_error_t *error           = NULL;
 	libqcow_file_header_t *file_header = NULL;
-	int result                        = 0;
+	int result                         = 0;
 
 	/* Initialize test
 	 */
@@ -534,10 +534,10 @@ on_error:
 int qcow_test_file_header_read_file_io_handle(
      void )
 {
-	libbfio_handle_t *file_io_handle  = NULL;
-	libcerror_error_t *error          = NULL;
+	libbfio_handle_t *file_io_handle   = NULL;
+	libcerror_error_t *error           = NULL;
 	libqcow_file_header_t *file_header = NULL;
-	int result                        = 0;
+	int result                         = 0;
 
 	/* Initialize test
 	 */
