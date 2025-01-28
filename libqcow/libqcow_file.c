@@ -2692,10 +2692,15 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 		}
 		else if( internal_file->parent_file != NULL )
 		{
+			// Don't read past the end of the cluster block to avoid reading into cow written clusters present in the current layer
+			size_t cluster_end = internal_file->current_offset / internal_file->cluster_block_size * internal_file->cluster_block_size +
+			    internal_file->cluster_block_size;
+			size_t to_read = cluster_end - internal_file->current_offset < buffer_size - buffer_offset ?
+			    cluster_end - internal_file->current_offset : buffer_size - buffer_offset; 
 			read_count = libqcow_file_read_buffer_at_offset(
 				      internal_file->parent_file,
 				      &( ( (uint8_t *) buffer )[ buffer_offset ] ),
-				      buffer_size - buffer_offset,
+						to_read,
 				      internal_file->current_offset,
 				      error );
 
