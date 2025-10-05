@@ -55,7 +55,11 @@ extern mount_handle_t *qcowmount_mount_handle;
  * Returns 1 if successful or -1 on error
  */
 int mount_fuse_set_stat_info(
+#ifdef __APPLE__
+	 struct fuse_darwin_attr *stat_info,
+#else
      struct stat *stat_info,
+#endif
      size64_t size,
      uint16_t file_mode,
      int64_t access_time,
@@ -91,6 +95,34 @@ int mount_fuse_set_stat_info(
 
 		return( -1 );
 	}
+#ifdef __APPLE__
+	stat_info->size  = (off_t) size;
+	stat_info->mode  = file_mode;
+
+	if( ( file_mode & 0x4000 ) != 0 )
+	{
+		stat_info->nlink = 2;
+	}
+	else
+	{
+		stat_info->nlink = 1;
+	}
+#if defined( HAVE_GETEUID )
+	stat_info->uid = geteuid();
+#endif
+#if defined( HAVE_GETEGID )
+	stat_info->gid = getegid();
+#endif
+
+    stat_info->atimespec.tv_sec = access_time / 1000000000;
+    stat_info->atimespec.tv_nsec = access_time % 1000000000;
+
+    stat_info->ctimespec.tv_sec = inode_change_time / 1000000000;
+    stat_info->ctimespec.tv_nsec = inode_change_time % 1000000000;
+
+    stat_info->mtimespec.tv_sec = modification_time / 1000000000;
+    stat_info->mtimespec.tv_nsec = modification_time % 1000000000;
+#else
 	stat_info->st_size  = (off_t) size;
 	stat_info->st_mode  = file_mode;
 
@@ -118,6 +150,7 @@ int mount_fuse_set_stat_info(
 	stat_info->st_ctime_nsec = inode_change_time % 1000000000;
 	stat_info->st_mtime_nsec = modification_time % 1000000000;
 #endif
+#endif
 	return( 1 );
 }
 
@@ -126,9 +159,15 @@ int mount_fuse_set_stat_info(
  */
 int mount_fuse_filldir(
      void *buffer,
+#ifdef __APPLE__
+     fuse_darwin_fill_dir_t filler,
+     const char *name,
+     struct fuse_darwin_attr *stat_info,  // Change parameter type here
+#else
      fuse_fill_dir_t filler,
      const char *name,
      struct stat *stat_info,
+#endif
      mount_file_entry_t *file_entry,
      libcerror_error_t **error )
 {
@@ -668,7 +707,11 @@ on_error:
 int mount_fuse_readdir(
      const char *path,
      void *buffer,
+#ifdef __APPLE__
+     fuse_darwin_fill_dir_t filler,
+#else
      fuse_fill_dir_t filler,
+#endif
      off_t offset QCOWTOOLS_ATTRIBUTE_UNUSED,
      struct fuse_file_info *file_info QCOWTOOLS_ATTRIBUTE_UNUSED,
      enum fuse_readdir_flags flags QCOWTOOLS_ATTRIBUTE_UNUSED )
@@ -676,12 +719,20 @@ int mount_fuse_readdir(
 int mount_fuse_readdir(
      const char *path,
      void *buffer,
+#ifdef __APPLE__
+     fuse_darwin_fill_dir_t filler,
+#else
      fuse_fill_dir_t filler,
+#endif
      off_t offset QCOWTOOLS_ATTRIBUTE_UNUSED,
      struct fuse_file_info *file_info QCOWTOOLS_ATTRIBUTE_UNUSED )
 #endif
 {
+#ifdef __APPLE__
+	struct fuse_darwin_attr *stat_info    = NULL;
+#else
 	struct stat *stat_info                = NULL;
+#endif
 	libcerror_error_t *error              = NULL;
 	mount_file_entry_t *parent_file_entry = NULL;
 	mount_file_entry_t *sub_file_entry    = NULL;
@@ -747,7 +798,11 @@ int mount_fuse_readdir(
 		goto on_error;
 	}
 	stat_info = memory_allocate_structure(
+#ifdef __APPLE__
+	             struct fuse_darwin_attr );
+#else
 	             struct stat );
+#endif
 
 	if( stat_info == NULL )
 	{
@@ -1070,12 +1125,21 @@ on_error:
 #if defined( HAVE_LIBFUSE3 )
 int mount_fuse_getattr(
      const char *path,
+#ifdef __APPLE__
+     struct fuse_darwin_attr *stat_info,
+#else
      struct stat *stat_info,
+#endif
      struct fuse_file_info *file_info QCOWTOOLS_ATTRIBUTE_UNUSED )
 #else
 int mount_fuse_getattr(
      const char *path,
+#ifdef __APPLE__
+     struct fuse_darwin_attr *stat_info,
+     struct fuse_file_info *file_info )
+#else
      struct stat *stat_info )
+#endif
 #endif
 {
 	libcerror_error_t *error       = NULL;
