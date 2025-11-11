@@ -61,7 +61,11 @@ extern "C" {
 #if defined( HAVE_LIBFUSE ) || defined( HAVE_LIBFUSE3 ) || defined( HAVE_LIBOSXFUSE )
 
 int mount_fuse_set_stat_info(
+#ifdef __APPLE__
+     struct fuse_darwin_attr *stat_info,
+#else
      struct stat *stat_info,
+#endif
      size64_t size,
      uint16_t file_mode,
      int64_t access_time,
@@ -71,9 +75,15 @@ int mount_fuse_set_stat_info(
 
 int mount_fuse_filldir(
      void *buffer,
+#ifdef __APPLE__
+     fuse_darwin_fill_dir_t filler,
+     const char *name,
+     struct fuse_darwin_attr *stat_info,
+#else
      fuse_fill_dir_t filler,
      const char *name,
      struct stat *stat_info,
+#endif
      mount_file_entry_t *file_entry,
      libcerror_error_t **error );
 
@@ -100,7 +110,11 @@ int mount_fuse_opendir(
 int mount_fuse_readdir(
      const char *path,
      void *buffer,
+#ifdef __APPLE__
+     fuse_darwin_fill_dir_t filler,
+#else
      fuse_fill_dir_t filler,
+#endif
      off_t offset,
      struct fuse_file_info *file_info,
      enum fuse_readdir_flags flags );
@@ -108,7 +122,11 @@ int mount_fuse_readdir(
 int mount_fuse_readdir(
      const char *path,
      void *buffer,
+#ifdef __APPLE__
+     fuse_darwin_fill_dir_t filler,
+#else
      fuse_fill_dir_t filler,
+#endif
      off_t offset,
      struct fuse_file_info *file_info );
 #endif
@@ -120,12 +138,21 @@ int mount_fuse_releasedir(
 #if defined( HAVE_LIBFUSE3 )
 int mount_fuse_getattr(
      const char *path,
+#ifdef __APPLE__
+     struct fuse_darwin_attr *stat_info,
+#else
      struct stat *stat_info,
+#endif
      struct fuse_file_info *file_info );
 #else
 int mount_fuse_getattr(
      const char *path,
+#ifdef __APPLE__
+     struct fuse_darwin_attr *stat_info,
+     struct fuse_file_info *file_info );
+#else
      struct stat *stat_info );
+#endif
 #endif
 
 void mount_fuse_destroy(
