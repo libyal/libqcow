@@ -150,16 +150,16 @@ int main( int argc, char * const argv[] )
 	struct fuse_operations qcowmount_fuse_operations;
 
 #if defined( HAVE_LIBFUSE3 )
-	/* Need to set this to 1 if there no arguments, otherwise this causes
+	/* Need to set this to 1 even if there no arguments, otherwise this causes
 	 * fuse: empty argv passed to fuse_session_new()
 	 */
-	char *fuse_argv[ 2 ]                      = { program, NULL };
-	struct fuse_args qcowmount_fuse_arguments = FUSE_ARGS_INIT(1, fuse_argv);
+	char *fuse_argv[ 2 ]                        = { program, NULL };
+	struct fuse_args qcowmount_fuse_arguments   = FUSE_ARGS_INIT(1, fuse_argv);
 #else
-	struct fuse_args qcowmount_fuse_arguments = FUSE_ARGS_INIT(0, NULL);
-	struct fuse_chan *qcowmount_fuse_channel  = NULL;
+	struct fuse_args qcowmount_fuse_arguments   = FUSE_ARGS_INIT(0, NULL);
+	struct fuse_chan *qcowmount_fuse_channel    = NULL;
 #endif
-	struct fuse *qcowmount_fuse_handle        = NULL;
+	struct fuse *qcowmount_fuse_handle          = NULL;
 
 #elif defined( HAVE_LIBDOKAN )
 	DOKAN_OPERATIONS qcowmount_dokan_operations;
