@@ -31,14 +31,17 @@
  */
 #if defined( LIBQCOW_DLL_EXPORT )
 #define LIBQCOW_EXTERN __declspec(dllexport)
+#define LIBQCOW_EXTERN_VARIABLE extern __declspec(dllexport)
 
 #elif defined( LIBQCOW_DLL_IMPORT )
-#define LIBQCOW_EXTERN extern __declspec(dllimport)
+#define LIBQCOW_EXTERN __declspec(dllimport)
+#define LIBQCOW_EXTERN_VARIABLE extern __declspec(dllimport)
 
 #else
 #define LIBQCOW_EXTERN extern
+#define LIBQCOW_EXTERN_VARIABLE extern
 
-#endif
+#endif /* defined( LIBQCOW_DLL_EXPORT ) */
 
 #endif /* !defined( _LIBQCOW_EXTERN_H ) */
 

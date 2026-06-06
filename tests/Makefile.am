@@ -21,6 +21,10 @@ AM_CPPFLAGS = \
 	@PTHREAD_CPPFLAGS@ \
 	@LIBQCOW_DLL_IMPORT@
 
+AM_TESTS_ENVIRONMENT = \
+	export PYTHON="@PYTHON@"; \
+	export TESTS_USE_WINAPI="@TESTS_USE_WINAPI@";
+
 if HAVE_PYTHON_TESTS
 TESTS_PYQCOW = \
 	test_python_module.sh
@@ -120,6 +124,7 @@ qcow_test_error_LDADD = \
 	../libqcow/libqcow.la
 
 qcow_test_file_SOURCES = \
+	qcow_test_extern.h \
 	qcow_test_file.c \
 	qcow_test_functions.c qcow_test_functions.h \
 	qcow_test_getopt.c qcow_test_getopt.h \
@@ -254,7 +259,8 @@ qcow_test_tools_output_SOURCES = \
 
 qcow_test_tools_output_LDADD = \
 	../libqcow/libqcow.la \
-	@LIBCERROR_LIBADD@
+	@LIBCERROR_LIBADD@ \
+	@LIBINTL@
 
 qcow_test_tools_signal_SOURCES = \
 	../qcowtools/qcowtools_signal.c ../qcowtools/qcowtools_signal.h \

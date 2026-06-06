@@ -2278,7 +2278,31 @@ int libqcow_internal_file_read_cluster_block(
 		}
 		cluster_block_cache = internal_file->cluster_block_cache;
 	}
-	if( cluster_block_size != 0 )
+	if( cluster_block_size == 0 )
+	{
+		if( libfdata_vector_get_element_value_at_offset(
+		     internal_file->cluster_block_vector,
+		     (intptr_t *) file_io_handle,
+		     (libfdata_cache_t *) cluster_block_cache,
+		     (off64_t) cluster_block_offset,
+		     &element_data_offset,
+		     (intptr_t **) cluster_block,
+		     0,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve cluster block at offset: %" PRIi64 " (0x%08" PRIx64 ").",
+			 function,
+			 cluster_block_offset,
+			 cluster_block_offset );
+
+			goto on_error;
+		}
+	}
+	else
 	{
 /* TODO check cache  */
 		if( libqcow_cluster_block_initialize(
@@ -2312,88 +2336,61 @@ int libqcow_internal_file_read_cluster_block(
 
 			goto on_error;
 		}
-	}
-	else
-	{
-		if( libfdata_vector_get_element_value_at_offset(
-		     internal_file->cluster_block_vector,
-		     (intptr_t *) file_io_handle,
-		     (libfdata_cache_t *) cluster_block_cache,
-		     (off64_t) cluster_block_offset,
-		     &element_data_offset,
-		     (intptr_t **) cluster_block,
-		     0,
-		     error ) != 1 )
+		if( cluster_block_is_compressed != 0 )
 		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve cluster block at offset: %" PRIi64 " (0x%08" PRIx64 ").",
-			 function,
-			 cluster_block_offset,
-			 cluster_block_offset );
+			safe_cluster_block->compressed_data = safe_cluster_block->data;
 
-			goto on_error;
-		}
-	}
-	if( cluster_block_is_compressed != 0 )
-	{
-		safe_cluster_block->compressed_data = safe_cluster_block->data;
+			safe_cluster_block->data = (uint8_t *) memory_allocate(
+			                                        sizeof( uint8_t ) * internal_file->cluster_block_size );
 
-		safe_cluster_block->data = (uint8_t *) memory_allocate(
-		                                        sizeof( uint8_t ) * internal_file->cluster_block_size );
+			if( safe_cluster_block->data == NULL )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_MEMORY,
+				 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
+				 "%s: unable to create cluster block data.",
+				 function );
 
-		if( safe_cluster_block->data == NULL )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_MEMORY,
-			 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
-			 "%s: unable to create cluster block data.",
-			 function );
+				goto on_error;
+			}
+			safe_cluster_block->data_size = internal_file->cluster_block_size;
 
-			goto on_error;
-		}
-		safe_cluster_block->data_size = internal_file->cluster_block_size;
+			safe_cluster_block_data_size = safe_cluster_block->data_size;
 
-		safe_cluster_block_data_size = safe_cluster_block->data_size;
+			if( libqcow_decompress_data(
+			     safe_cluster_block->compressed_data,
+			     cluster_block_size,
+			     LIBQCOW_COMPRESSION_METHOD_DEFLATE,
+			     safe_cluster_block->data,
+			     &safe_cluster_block_data_size,
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_ENCRYPTION,
+				 LIBCERROR_ENCRYPTION_ERROR_GENERIC,
+				 "%s: unable to decompress cluster block data at offset: %" PRIi64 " (0x%08" PRIx64 ").",
+				 function,
+				 cluster_block_offset,
+				 cluster_block_offset );
 
-		if( libqcow_decompress_data(
-		     safe_cluster_block->compressed_data,
-		     cluster_block_size,
-		     LIBQCOW_COMPRESSION_METHOD_DEFLATE,
-		     safe_cluster_block->data,
-		     &safe_cluster_block_data_size,
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_ENCRYPTION,
-			 LIBCERROR_ENCRYPTION_ERROR_GENERIC,
-			 "%s: unable to decompress cluster block data at offset: %" PRIi64 " (0x%08" PRIx64 ").",
-			 function,
-			 cluster_block_offset,
-			 cluster_block_offset );
-
-			goto on_error;
-		}
+				goto on_error;
+			}
 /* TODO check safe_cluster_block_data_size
-		if( safe_cluster_block_data_size != safe_cluster_block->data_size )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-			 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
-			 "%s: invalid cluster block size value out of bounds.",
-			 function );
+			if( safe_cluster_block_data_size != safe_cluster_block->data_size )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+				 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
+				 "%s: invalid cluster block size value out of bounds.",
+				 function );
 
-			goto on_error;
-		}
+				goto on_error;
+			}
 */
-	}
-	if( safe_cluster_block != NULL )
-	{
+		}
 		cache_entry_index = ( cluster_block_offset & internal_file->cluster_block_bit_mask ) % LIBQCOW_MAXIMUM_CACHE_ENTRIES_CLUSTER_BLOCKS;
 
 		if( libfcache_cache_set_value_by_index(
@@ -2418,6 +2415,8 @@ int libqcow_internal_file_read_cluster_block(
 			goto on_error;
 		}
 		*cluster_block = safe_cluster_block;
+
+		safe_cluster_block = NULL;
 	}
 	if( internal_file->encryption_method != LIBQCOW_ENCRYPTION_METHOD_NONE )
 	{

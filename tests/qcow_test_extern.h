@@ -1,5 +1,5 @@
 /*
- * The internal extern definition
+ * Extern definitions
  *
  * Copyright (C) 2010-2026, Joachim Metz <joachim.metz@gmail.com>
  *
@@ -19,35 +19,23 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#if !defined( _LIBQCOW_INTERNAL_EXTERN_H )
-#define _LIBQCOW_INTERNAL_EXTERN_H
+#if !defined( _QCOW_TEST_EXTERN_H )
+#define _QCOW_TEST_EXTERN_H
 
 #include <common.h>
 
 #if !defined( __CYGWIN__ ) && !defined( _WIN32 ) && defined( __has_attribute )
 #if __has_attribute( visibility )
-#define LIBQCOW_INTERNAL	__attribute__((visibility("hidden"))) extern
+#define QCOW_TEST_INTERNAL	__attribute__((visibility("hidden"))) extern
 
 #else
-#define LIBQCOW_INTERNAL	extern
+#define QCOW_TEST_INTERNAL	extern
 
 #endif /* __has_attribute( visibility ) */
 #else
-#define LIBQCOW_INTERNAL	extern
+#define QCOW_TEST_INTERNAL	extern
 
 #endif /* !defined( __CYGWIN__ ) && !defined( _WIN32 ) && defined( __has_attribute ) */
 
-/* Define HAVE_LOCAL_LIBQCOW for local use of libqcow
- */
-#if !defined( HAVE_LOCAL_LIBQCOW )
-
-#include <libqcow/extern.h>
-
-#else
-#define LIBQCOW_EXTERN		/* extern */
-#define LIBQCOW_EXTERN_VARIABLE	LIBQCOW_INTERNAL
-
-#endif /* !defined( HAVE_LOCAL_LIBQCOW ) */
-
-#endif /* !defined( _LIBQCOW_INTERNAL_EXTERN_H ) */
+#endif /* !defined( _QCOW_TEST_EXTERN_H ) */
 

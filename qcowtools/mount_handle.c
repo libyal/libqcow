@@ -513,12 +513,12 @@ int mount_handle_open(
      const system_character_t *filename,
      libcerror_error_t **error )
 {
-	libqcow_file_t *qcow_file        = NULL;
-	system_character_t *basename_end = NULL;
-	static char *function            = "mount_handle_open";
-	size_t basename_length           = 0;
-	size_t filename_length           = 0;
-	int result                       = 0;
+	libqcow_file_t *qcow_file              = NULL;
+	const system_character_t *basename_end = NULL;
+	static char *function                  = "mount_handle_open";
+	size_t basename_length                 = 0;
+	size_t filename_length                 = 0;
+	int result                             = 0;
 
 	if( mount_handle == NULL )
 	{
@@ -821,6 +821,7 @@ int mount_handle_open_parent(
 	libqcow_file_t *parent_qcow_file      = NULL;
 	system_character_t *backing_file_path = NULL;
 	system_character_t *backing_filename  = NULL;
+	system_character_t *parent_file_path  = NULL;
 	static char *function                 = "mount_handle_open_parent";
 	size_t backing_basename_length        = 0;
 	size_t backing_file_path_size         = 0;
@@ -926,8 +927,7 @@ int mount_handle_open_parent(
 	}
 	if( mount_handle->basename == NULL )
 	{
-		backing_file_path      = &( backing_filename[ backing_basename_length ] );
-		backing_file_path_size = backing_filename_size - ( backing_basename_length + 1 );
+		parent_file_path = &( backing_filename[ backing_basename_length ] );
 	}
 	else
 	{
@@ -960,6 +960,7 @@ int mount_handle_open_parent(
 
 			goto on_error;
 		}
+		parent_file_path = backing_file_path;
 	}
 	if( libqcow_file_initialize(
 	     &parent_qcow_file,
@@ -977,13 +978,13 @@ int mount_handle_open_parent(
 #if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 	if( libqcow_file_open_wide(
 	     parent_qcow_file,
-	     backing_file_path,
+	     parent_file_path,
 	     LIBQCOW_OPEN_READ,
 	     error ) != 1 )
 #else
 	if( libqcow_file_open(
 	     parent_qcow_file,
-	     backing_file_path,
+	     parent_file_path,
 	     LIBQCOW_OPEN_READ,
 	     error ) != 1 )
 #endif
@@ -994,7 +995,7 @@ int mount_handle_open_parent(
 		 LIBCERROR_IO_ERROR_OPEN_FAILED,
 		 "%s: unable to open parent file: %" PRIs_SYSTEM ".",
 		 function,
-		 backing_file_path );
+		 parent_file_path );
 
 		goto on_error;
 	}
@@ -1009,9 +1010,9 @@ int mount_handle_open_parent(
 		 LIBCERROR_IO_ERROR_OPEN_FAILED,
 		 "%s: unable to open parent file: %" PRIs_SYSTEM ".",
 		 function,
-		 backing_file_path );
+		 parent_file_path );
 
-		return( -1 );
+		goto on_error;
 	}
 	if( libqcow_file_set_parent_file(
 	     qcow_file,
@@ -1043,11 +1044,9 @@ int mount_handle_open_parent(
 	}
 	if( backing_file_path != NULL )
 	{
-		if( mount_handle->basename != NULL )
-		{
-			memory_free(
-			 backing_file_path );
-		}
+		memory_free(
+		 backing_file_path );
+
 		backing_file_path = NULL;
 	}
 	if( backing_filename != NULL )
@@ -1066,8 +1065,7 @@ on_error:
 		 &parent_qcow_file,
 		 NULL );
 	}
-	if( ( backing_file_path != NULL )
-	 && ( mount_handle->basename != NULL ) )
+	if( backing_file_path != NULL )
 	{
 		memory_free(
 		 backing_file_path );
