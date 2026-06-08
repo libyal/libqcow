@@ -59,38 +59,6 @@
 mount_handle_t *qcowmount_mount_handle = NULL;
 int qcowmount_abort                    = 0;
 
-/* Prints usage information
- */
-void usage_fprint(
-      FILE *stream )
-{
-	if( stream == NULL )
-	{
-		return;
-	}
-	fprintf( stream, "Use qcowmount to mount a QEMU Copy-On-Write (QCOW) image file\n\n" );
-
-#if defined( HAVE_LIBFUSE ) || defined( HAVE_LIBFUSE3 ) || defined( HAVE_LIBOSXFUSE )
-	fprintf( stream, "Usage: qcowmount [ -k keys ] [ -p password ] [ -X extended_options ] [ -hvV ]\n"
-	                 "                 image mount_point\n\n" );
-#else
-	fprintf( stream, "Usage: qcowmount [ -k keys ] [ -p password ] [ -hvV ] image mount_point\n\n" );
-#endif
-	fprintf( stream, "\timage:       a QEMU Copy-On-Write (QCOW) image file\n\n" );
-	fprintf( stream, "\tmount_point: the directory to serve as mount point\n\n" );
-
-	fprintf( stream, "\t-h:          shows this help\n" );
-	fprintf( stream, "\t-k:          specify the key formatted in base16\n" );
-	fprintf( stream, "\t-p:          specify the password/passphrase\n" );
-	fprintf( stream, "\t-v:          verbose output to stderr, while qcowmount will remain running in the\n"
-	                 "\t             foreground\n" );
-	fprintf( stream, "\t-V:          print version\n" );
-
-#if defined( HAVE_LIBFUSE ) || defined( HAVE_LIBFUSE3 ) || defined( HAVE_LIBOSXFUSE )
-	fprintf( stream, "\t-X:          extended options to pass to sub system\n" );
-#endif
-}
-
 /* Signal handler for qcowmount
  */
 void qcowmount_signal_handler(
@@ -143,15 +111,32 @@ int wmain( int argc, wchar_t * const argv[] )
 int main( int argc, char * const argv[] )
 #endif
 {
+	const char *description = \
+		"Use qcowmount to mount a QEMU Copy-On-Write (QCOW) image file.";
+
+	static qcowtools_option_t options[ ] = {
+		{ 'h', NULL, "shows this help" },
+		{ 'k', "keys", "specify the key formatted in base16" },
+		{ 'p', "password", "specify the password/passphrase" },
+		{ 'v', NULL, "verbose output to stderr, while qcowmount will remain running in the foreground" },
+		{ 'V', NULL, "print version" },
+#if defined( HAVE_LIBFUSE ) || defined( HAVE_LIBFUSE3 ) || defined( HAVE_LIBOSXFUSE )
+		{ 'X', "extended_options", "extended options to pass to sub system" },
+#endif
+		{ 0, "image", "a QEMU Copy-On-Write (QCOW) image file" },
+		{ 0, "mount_point", "the directory to serve as mount point" },
+	};
+	system_character_t options_string[ 32 ];
+
 	libqcow_error_t *error                      = NULL;
 	system_character_t *option_keys             = NULL;
 	system_character_t *option_password         = NULL;
-	system_character_t *options                 = NULL;
 	const system_character_t *path_prefix       = NULL;
 	system_character_t *source                  = NULL;
 	char *program                               = "qcowmount";
 	system_integer_t option                     = 0;
 	size_t path_prefix_size                     = 0;
+	int number_of_options                       = (int) ( sizeof( options ) / sizeof( qcowtools_option_t ) );
 	int verbose                                 = 0;
 
 #if defined( HAVE_LIBFUSE ) || defined( HAVE_LIBFUSE3 ) || defined( HAVE_LIBOSXFUSE ) || defined( HAVE_LIBDOKAN )
@@ -216,15 +201,22 @@ int main( int argc, char * const argv[] )
 	 stdout,
 	 program );
 
-#if defined( HAVE_LIBFUSE ) || defined( HAVE_LIBFUSE3 ) || defined( HAVE_LIBOSXFUSE )
-	options = _SYSTEM_STRING( "hk:p:vVX:" );
-#else
-	options = _SYSTEM_STRING( "hk:p:vV" );
-#endif
+	if( qcowtools_getopt_get_options_string(
+	     options,
+	     number_of_options,
+	     options_string,
+	     32 ) != 1 )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to determine options string.\n" );
+
+		goto on_error;
+	}
 	while( ( option = qcowtools_getopt(
 	                   argc,
 	                   argv,
-	                   options ) ) != (system_integer_t) -1 )
+	                   options_string ) ) != (system_integer_t) -1 )
 	{
 		switch( option )
 		{
@@ -235,14 +227,22 @@ int main( int argc, char * const argv[] )
 				 "Invalid argument: %" PRIs_SYSTEM "\n",
 				 argv[ optind - 1 ] );
 
-				usage_fprint(
-				 stdout );
+				qcowtools_getopt_usage_fprint(
+				 stdout,
+				 program,
+				 description,
+				 options,
+				 number_of_options );
 
 				return( EXIT_FAILURE );
 
 			case (system_integer_t) 'h':
-				usage_fprint(
-				 stdout );
+				qcowtools_getopt_usage_fprint(
+				 stdout,
+				 program,
+				 description,
+				 options,
+				 number_of_options );
 
 				return( EXIT_SUCCESS );
 
@@ -281,8 +281,12 @@ int main( int argc, char * const argv[] )
 		 stderr,
 		 "Missing source image.\n" );
 
-		usage_fprint(
-		 stdout );
+		qcowtools_getopt_usage_fprint(
+		 stdout,
+		 program,
+		 description,
+		 options,
+		 number_of_options );
 
 		return( EXIT_FAILURE );
 	}
@@ -294,8 +298,12 @@ int main( int argc, char * const argv[] )
 		 stderr,
 		 "Missing mount point.\n" );
 
-		usage_fprint(
-		 stdout );
+		qcowtools_getopt_usage_fprint(
+		 stdout,
+		 program,
+		 description,
+		 options,
+		 number_of_options );
 
 		return( EXIT_FAILURE );
 	}

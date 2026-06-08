@@ -56,27 +56,6 @@
 info_handle_t *qcowinfo_info_handle = NULL;
 int qcowinfo_abort                  = 0;
 
-/* Prints usage information
- */
-void usage_fprint(
-      FILE *stream )
-{
-	if( stream == NULL )
-	{
-		return;
-	}
-	fprintf( stream, "Use qcowinfo to determine information about a QEMU Copy-On-Write (QCOW)\n"
-	                 "image file.\n\n" );
-
-	fprintf( stream, "Usage: qcowinfo [ -hvV ] source\n\n" );
-
-	fprintf( stream, "\tsource: the source file\n\n" );
-
-	fprintf( stream, "\t-h:     shows this help\n" );
-	fprintf( stream, "\t-v:     verbose output to stderr\n" );
-	fprintf( stream, "\t-V:     print version\n" );
-}
-
 /* Signal handler for qcowinfo
  */
 void qcowinfo_signal_handler(
@@ -129,10 +108,22 @@ int wmain( int argc, wchar_t * const argv[] )
 int main( int argc, char * const argv[] )
 #endif
 {
+	const char *description = \
+		"Use qcowinfo to determine information about a QEMU Copy-On-Write (QCOW) image file.";
+
+	qcowtools_option_t options[ ] = {
+		{ 'h', NULL, "shows this help" },
+		{ 'v', NULL, "verbose output to stderr" },
+		{ 'V', NULL, "print version" },
+		{ 0, "source", "the source file" },
+	};
+	system_character_t options_string[ 32 ];
+
 	libqcow_error_t *error     = NULL;
 	system_character_t *source = NULL;
 	char *program              = "qcowinfo";
 	system_integer_t option    = 0;
+	int number_of_options      = (int) ( sizeof( options ) / sizeof( qcowtools_option_t ) );
 	int verbose                = 0;
 
 #if defined( __MINGW32__ ) && defined( HAVE_MINGW_BINMODE )
@@ -170,10 +161,22 @@ int main( int argc, char * const argv[] )
 	 stdout,
 	 program );
 
+	if( qcowtools_getopt_get_options_string(
+	     options,
+	     number_of_options,
+	     options_string,
+	     32 ) != 1 )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to determine options string.\n" );
+
+		goto on_error;
+	}
 	while( ( option = qcowtools_getopt(
 	                   argc,
 	                   argv,
-	                   _SYSTEM_STRING( "hvV" ) ) ) != (system_integer_t) -1 )
+	                   options_string ) ) != (system_integer_t) -1 )
 	{
 		switch( option )
 		{
@@ -184,14 +187,22 @@ int main( int argc, char * const argv[] )
 				 "Invalid argument: %" PRIs_SYSTEM "\n",
 				 argv[ optind - 1 ] );
 
-				usage_fprint(
-				 stdout );
+				qcowtools_getopt_usage_fprint(
+				 stdout,
+				 program,
+				 description,
+				 options,
+				 number_of_options );
 
 				return( EXIT_FAILURE );
 
 			case (system_integer_t) 'h':
-				usage_fprint(
-				 stdout );
+				qcowtools_getopt_usage_fprint(
+				 stdout,
+				 program,
+				 description,
+				 options,
+				 number_of_options );
 
 				return( EXIT_SUCCESS );
 
@@ -213,8 +224,12 @@ int main( int argc, char * const argv[] )
 		 stderr,
 		 "Missing source file.\n" );
 
-		usage_fprint(
-		 stdout );
+		qcowtools_getopt_usage_fprint(
+		 stdout,
+		 program,
+		 description,
+		 options,
+		 number_of_options );
 
 		return( EXIT_FAILURE );
 	}
