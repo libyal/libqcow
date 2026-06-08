@@ -92,6 +92,19 @@ enum LIBQCOW_COMPRESSION_LEVELS
 	LIBQCOW_COMPRESSION_LEVEL_BEST				= 2,
 };
 
+/* The cluster block flag definitions
+ */
+enum LIBQCOW_CLUSTER_BLOCK_FLAGS
+{
+	/* The cluster block is compressed
+	 */
+        LIBQCOW_CLUSTER_BLOCK_FLAG_IS_COMPRESSED		= 0x00000001UL,
+
+	/* The cluster block is sparse
+	 */
+        LIBQCOW_CLUSTER_BLOCK_FLAG_IS_SPARSE			= 0x00000002UL
+};
+
 /* The maximum number of cache entries definitions
  */
 #define LIBQCOW_MAXIMUM_CACHE_ENTRIES_LEVEL2_TABLES		64

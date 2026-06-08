@@ -25,6 +25,7 @@
 #include <common.h>
 #include <types.h>
 
+#include "libqcow_cluster_block.h"
 #include "libqcow_cluster_table.h"
 #include "libqcow_encryption.h"
 #include "libqcow_extern.h"
@@ -140,6 +141,10 @@ struct libqcow_internal_file
  	 */
 	uint64_t compression_bit_shift;
 
+	/* The sparse flag bit mask
+ 	 */
+	uint64_t sparse_flag_bit_mask;
+
 	/* The cluster block vector
 	 */
 	libfdata_vector_t *cluster_block_vector;
@@ -227,6 +232,24 @@ int libqcow_internal_file_open_read_backing_filename(
 LIBQCOW_EXTERN \
 int libqcow_file_is_locked(
      libqcow_file_t *file,
+     libcerror_error_t **error );
+
+int libqcow_internal_file_get_cluster_block_offset(
+     libqcow_internal_file_t *internal_file,
+     libbfio_handle_t *file_io_handle,
+     off64_t offset,
+     uint64_t *cluster_block_offset,
+     uint64_t *cluster_block_data_offset,
+     uint32_t *cluster_block_flags,
+     libcerror_error_t **error );
+
+int libqcow_internal_file_read_cluster_block(
+     libqcow_internal_file_t *internal_file,
+     libbfio_handle_t *file_io_handle,
+     uint64_t cluster_block_offset,
+     uint64_t cluster_block_data_offset,
+     uint32_t cluster_block_flags,
+     libqcow_cluster_block_t **cluster_block,
      libcerror_error_t **error );
 
 ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(

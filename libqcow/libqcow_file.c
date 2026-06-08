@@ -1280,8 +1280,7 @@ int libqcow_internal_file_open_read(
 		internal_file->compression_flag_bit_mask = (uint64_t) 1UL << 63;
 		internal_file->compression_bit_shift     = 63 - internal_file->file_header->number_of_cluster_block_bits;
 	}
-	else if( ( internal_file->file_header->format_version == 2 )
-	      || ( internal_file->file_header->format_version == 3 ) )
+	else if( internal_file->file_header->format_version == 2 )
 	{
 		if( ( internal_file->file_header->number_of_cluster_block_bits <= 8 )
 		 || ( internal_file->file_header->number_of_cluster_block_bits > 63 ) )
@@ -1300,6 +1299,27 @@ int libqcow_internal_file_open_read(
 		internal_file->offset_bit_mask           = 0x3fffffffffffffffULL;
 		internal_file->compression_flag_bit_mask = (uint64_t) 1UL << 62;
 		internal_file->compression_bit_shift     = 62 - ( internal_file->file_header->number_of_cluster_block_bits - 8 );
+	}
+	else if( internal_file->file_header->format_version == 3 )
+	{
+		if( ( internal_file->file_header->number_of_cluster_block_bits <= 8 )
+		 || ( internal_file->file_header->number_of_cluster_block_bits > 63 ) )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+			 "%s: invalid number of cluster block bits value out of bounds.",
+			 function );
+
+			goto on_error;
+		}
+		number_of_level2_table_bits = internal_file->file_header->number_of_cluster_block_bits - 3;
+
+		internal_file->offset_bit_mask           = 0x3ffffffffffffffeULL;
+		internal_file->compression_flag_bit_mask = (uint64_t) 1UL << 62;
+		internal_file->compression_bit_shift     = 62 - ( internal_file->file_header->number_of_cluster_block_bits - 8 );
+		internal_file->sparse_flag_bit_mask      = 0x0000000000000001ULL;
 	}
 	internal_file->level1_index_bit_shift = internal_file->file_header->number_of_cluster_block_bits + number_of_level2_table_bits;
 
@@ -1888,7 +1908,7 @@ int libqcow_internal_file_get_cluster_block_offset(
      off64_t offset,
      uint64_t *cluster_block_offset,
      uint64_t *cluster_block_data_offset,
-     uint8_t *cluster_block_is_compressed,
+     uint32_t *cluster_block_flags,
      libcerror_error_t **error )
 {
 	libqcow_cluster_table_t *level2_table = NULL;
@@ -1898,7 +1918,7 @@ int libqcow_internal_file_get_cluster_block_offset(
 	uint64_t level2_table_index           = 0;
 	uint64_t level2_table_offset          = 0;
 	uint64_t safe_cluster_block_offset    = 0;
-	uint8_t is_compressed                 = 0;
+	uint32_t safe_cluster_block_flags     = 0;
 
 	if( internal_file == NULL )
 	{
@@ -1955,13 +1975,13 @@ int libqcow_internal_file_get_cluster_block_offset(
 
 		return( -1 );
 	}
-	if( cluster_block_is_compressed == NULL )
+	if( cluster_block_flags == NULL )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
 		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid cluster block is compressed.",
+		 "%s: invalid cluster block flags.",
 		 function );
 
 		return( -1 );
@@ -2118,7 +2138,20 @@ int libqcow_internal_file_get_cluster_block_offset(
 			 function );
 		}
 #endif
-		is_compressed = 1;
+		safe_cluster_block_flags |= LIBQCOW_CLUSTER_BLOCK_FLAG_IS_COMPRESSED;
+	}
+	if( ( internal_file->sparse_flag_bit_mask != 0 )
+	 && ( ( safe_cluster_block_offset & internal_file->sparse_flag_bit_mask ) != 0 ) )
+	{
+#if defined( HAVE_DEBUG_OUTPUT )
+		if( libcnotify_verbose != 0 )
+		{
+			libcnotify_printf(
+			 "%s: is sparse\n",
+			 function );
+		}
+#endif
+		safe_cluster_block_flags |= LIBQCOW_CLUSTER_BLOCK_FLAG_IS_SPARSE;
 	}
 #if defined( HAVE_DEBUG_OUTPUT )
 	if( libcnotify_verbose != 0 )
@@ -2127,9 +2160,9 @@ int libqcow_internal_file_get_cluster_block_offset(
 		 "\n" );
 	}
 #endif
-	*cluster_block_offset        = safe_cluster_block_offset & internal_file->offset_bit_mask;
-	*cluster_block_data_offset   = offset & internal_file->cluster_block_bit_mask;
-	*cluster_block_is_compressed = is_compressed;
+	*cluster_block_offset      = safe_cluster_block_offset & internal_file->offset_bit_mask;
+	*cluster_block_data_offset = offset & internal_file->cluster_block_bit_mask;
+	*cluster_block_flags       = safe_cluster_block_flags;
 
 	return( 1 );
 }
@@ -2142,7 +2175,7 @@ int libqcow_internal_file_read_cluster_block(
      libbfio_handle_t *file_io_handle,
      uint64_t cluster_block_offset,
      uint64_t cluster_block_data_offset,
-     uint8_t cluster_block_is_compressed,
+     uint32_t cluster_block_flags,
      libqcow_cluster_block_t **cluster_block,
      libcerror_error_t **error )
 {
@@ -2200,7 +2233,7 @@ int libqcow_internal_file_read_cluster_block(
 
 		return( -1 );
 	}
-	if( cluster_block_is_compressed != 0 )
+	if( ( cluster_block_flags & LIBQCOW_CLUSTER_BLOCK_FLAG_IS_COMPRESSED ) != 0 )
 	{
 		/* Handle compressed cluster block
 		 */
@@ -2336,7 +2369,7 @@ int libqcow_internal_file_read_cluster_block(
 
 			goto on_error;
 		}
-		if( cluster_block_is_compressed != 0 )
+		if( ( cluster_block_flags & LIBQCOW_CLUSTER_BLOCK_FLAG_IS_COMPRESSED ) != 0 )
 		{
 			safe_cluster_block->compressed_data = safe_cluster_block->data;
 
@@ -2502,7 +2535,7 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 	ssize_t read_count                     = 0;
 	uint64_t cluster_block_data_offset     = 0;
 	uint64_t cluster_block_file_offset     = 0;
-	uint8_t cluster_block_is_compressed    = 0;
+	uint32_t cluster_block_flags           = 0;
 
 	if( internal_file == NULL )
 	{
@@ -2608,7 +2641,7 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 		     internal_file->current_offset,
 		     &cluster_block_file_offset,
 		     &cluster_block_data_offset,
-		     &cluster_block_is_compressed,
+		     &cluster_block_flags,
 		     error ) != 1 )
 		{
 			libcerror_error_set(
@@ -2624,7 +2657,7 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 		}
 		read_size = internal_file->cluster_block_size - (size_t) cluster_block_data_offset;
 
-		if( ( (size64_t) internal_file->current_offset + read_size ) > internal_file->file_header->media_size )
+		if( (size64_t) read_size > ( internal_file->file_header->media_size - internal_file->current_offset ) )
 		{
 			read_size = (size_t) ( internal_file->file_header->media_size - internal_file->current_offset );
 		}
@@ -2632,14 +2665,15 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 		{
 			read_size = buffer_size - buffer_offset;
 		}
-		if( cluster_block_file_offset > 0 )
+		if( ( cluster_block_file_offset > 0 )
+		 && ( ( cluster_block_flags & LIBQCOW_CLUSTER_BLOCK_FLAG_IS_SPARSE ) == 0 ) )
 		{
 			if( libqcow_internal_file_read_cluster_block(
 			     internal_file,
 			     file_io_handle,
 			     cluster_block_file_offset,
 			     cluster_block_data_offset,
-			     cluster_block_is_compressed,
+			     cluster_block_flags,
 			     &cluster_block,
 			     error ) != 1 )
 			{
@@ -2694,11 +2728,11 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 			read_count = libqcow_file_read_buffer_at_offset(
 				      internal_file->parent_file,
 				      &( ( (uint8_t *) buffer )[ buffer_offset ] ),
-				      buffer_size - buffer_offset,
+				      read_size,
 				      internal_file->current_offset,
 				      error );
 
-			if( read_count == -1 )
+			if( read_count != (ssize_t) read_size )
 			{
 				libcerror_error_set(
 				 error,
@@ -2709,7 +2743,6 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 
 				return( -1 );
 			}
-			read_size = (size_t) read_count;
 		}
 		else
 		{
