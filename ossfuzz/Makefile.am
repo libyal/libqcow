@@ -12,7 +12,8 @@ AM_CPPFLAGS = \
 	@LIBBFIO_CPPFLAGS@
 
 bin_PROGRAMS = \
-	file_fuzzer
+	file_fuzzer \
+	read_fuzzer
 
 file_fuzzer_SOURCES = \
 	file_fuzzer.cc \
@@ -20,6 +21,24 @@ file_fuzzer_SOURCES = \
 	ossfuzz_libqcow.h
 
 file_fuzzer_LDADD = \
+	@LIB_FUZZING_ENGINE@ \
+	@LIBBFIO_LIBADD@ \
+	@LIBCPATH_LIBADD@ \
+	@LIBCFILE_LIBADD@ \
+	@LIBUNA_LIBADD@ \
+	@LIBCDATA_LIBADD@ \
+	../libqcow/libqcow.la \
+	@LIBCNOTIFY_LIBADD@ \
+	@LIBCLOCALE_LIBADD@ \
+	@LIBCERROR_LIBADD@ \
+	@LIBINTL@
+
+read_fuzzer_SOURCES = \
+	read_fuzzer.cc \
+	ossfuzz_libbfio.h \
+	ossfuzz_libqcow.h
+
+read_fuzzer_LDADD = \
 	@LIB_FUZZING_ENGINE@ \
 	@LIBBFIO_LIBADD@ \
 	@LIBCPATH_LIBADD@ \
