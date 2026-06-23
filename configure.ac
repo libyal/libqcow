@@ -2,7 +2,7 @@ AC_PREREQ([2.71])
 
 AC_INIT(
   [libqcow],
-  [20260619],
+  [20260623],
   [https://github.com/libyal/libqcow/issues])
 
 AC_CONFIG_SRCDIR(

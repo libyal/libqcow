@@ -1,6 +1,6 @@
-.Dd December 12, 2020
-.Dt qcowinfo
-.Os libqcow
+.Dd June 23, 2026
+.Dt QCOWINFO 1
+.Os
 .Sh NAME
 .Nm qcowinfo
 .Nd determines information about a QEMU Copy-On-Write (QCOW) image file
@@ -10,17 +10,18 @@
 .Ar source
 .Sh DESCRIPTION
 .Nm qcowinfo
-is a utility to determine information about a QEMU Copy-On-Write (QCOW) image file
+is a utility to determine information about a QEMU Copy-On-Write (QCOW) image \
+file
 .Pp
 .Nm qcowinfo
 is part of the
 .Nm libqcow
 package.
 .Nm libqcow
-is a library to access the QEMU Copy-On-Write (QCOW) image format
+is a library to access the QEMU Copy-On-Write (QCOW) image file format
 .Pp
 .Ar source
-is the source file.
+is the source image.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
@@ -37,22 +38,28 @@ None
 None
 .Sh EXAMPLES
 .Bd -literal
-# qcowinfo file.qcow
-qcowinfo 20201112
-
+# qcowinfo file.qcow2
+qcowinfo 20260623
+.sp
 QEMU Copy-On-Write (QCOW) image information:
-        Format		: 2
-.Dl        ...
-
+	Format version		: 2
+	Media size		: 4.0 GiB (4294967296 bytes)
+	Encryption method	: None
+	Number of snapshots	: 0
+.sp
 .Ed
 .Sh DIAGNOSTICS
-Errors, verbose and debug output are printed to stderr when verbose output \-v is enabled.
+Errors, verbose and debug output are printed to stderr when verbose output \
+\-v is enabled.
 Verbose and debug output are only printed when enabled at compilation.
+.Sh AUTHORS
+.An Joachim Metz <joachim.metz@gmail.com>
 .Sh BUGS
-Please report bugs of any kind to <joachim.metz@gmail.com> or on the project website:
-https://github.com/libyal/libqcow/
-.Sh AUTHOR
-These man pages were written by Joachim Metz.
+Please report bugs of any kind on the project issue tracker: \
+https://github.com/libyal/libqcow/issues
 .Sh COPYRIGHT
 Copyright (C) 2010-2026, Joachim Metz <joachim.metz@gmail.com>.
-.Sh SEE ALSO
+.sp
+This is free software; see the source for copying conditions.
+There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A \
+PARTICULAR PURPOSE.
