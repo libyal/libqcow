@@ -116,7 +116,7 @@ int main( int argc, char * const argv[] )
 
 	static qcowtools_option_t options[ ] = {
 		{ 'h', NULL, "shows this help" },
-		{ 'k', "keys", "specify the key formatted in base16" },
+		{ 'k', "keys", "specify the keys formatted in base16" },
 		{ 'p', "password", "specify the password/passphrase" },
 		{ 'v', NULL, "verbose output to stderr, while qcowmount will remain running in the foreground" },
 		{ 'V', NULL, "print version" },

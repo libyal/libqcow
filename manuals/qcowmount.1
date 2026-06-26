@@ -1,19 +1,22 @@
 .Dd June 26, 2026
-.Dt QCOWINFO 1
+.Dt QCOWMOUNT 1
 .Os
 .Sh NAME
-.Nm qcowinfo
-.Nd determines information about a QEMU Copy-On-Write (QCOW) image file
+.Nm qcowmount
+.Nd mounts a QEMU Copy-On-Write (QCOW) image file
 .Sh SYNOPSIS
-.Nm qcowinfo
+.Nm qcowmount
+.Op Fl k Ar keys
+.Op Fl p Ar password
+.Op Fl X Ar extended_options
 .Op Fl hvV
 .Ar source
+.Ar mount_point
 .Sh DESCRIPTION
-.Nm qcowinfo
-is a utility to determine information about a QEMU Copy-On-Write (QCOW) image \
-file
+.Nm qcowmount
+is a utility to mount a QEMU Copy-On-Write (QCOW) image file
 .Pp
-.Nm qcowinfo
+.Nm qcowmount
 is part of the
 .Nm libqcow
 package.
@@ -21,16 +24,24 @@ package.
 is a library to access the QEMU Copy-On-Write (QCOW) image file format
 .Pp
 .Ar source
-is the source image.
+a QEMU Copy-On-Write (QCOW) image file
+.Ar mount_point
+the directory to serve as mount point
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
 .It Fl h
 shows this help
+.It Fl k Ar keys
+specify the keys formatted in base16
+.It Fl p Ar password
+specify the password (or passphrase)
 .It Fl v
-verbose output to stderr
+verbose output to stderr, while qcowmount will remain running in the foreground
 .It Fl V
 print version
+.It Fl X Ar extended_options
+extended options to pass to sub system
 .El
 .Sh ENVIRONMENT
 None
@@ -38,14 +49,8 @@ None
 None
 .Sh EXAMPLES
 .Bd -literal
-# qcowinfo file.qcow2
-qcowinfo 20260623
-.sp
-QEMU Copy-On-Write (QCOW) image information:
-	Format version		: 2
-	Media size		: 4.0 GiB (4294967296 bytes)
-	Encryption method	: None
-	Number of snapshots	: 0
+# vhdimount image.vhd
+vhdimount 20260626
 .sp
 .Ed
 .Sh DIAGNOSTICS
@@ -53,7 +58,7 @@ Errors, verbose and debug output are printed to stderr when verbose output \
 \-v is enabled.
 Verbose and debug output are only printed when enabled at compilation.
 .Sh SEE ALSO
-.Xr qcowmount 1
+.Xr qcowinfo 1
 .Sh AUTHORS
 .An Joachim Metz <joachim.metz@gmail.com>
 .Sh BUGS
