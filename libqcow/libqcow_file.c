@@ -2388,8 +2388,7 @@ int libqcow_internal_file_read_cluster_block(
 				goto on_error;
 			}
 			safe_cluster_block->data_size = internal_file->cluster_block_size;
-
-			safe_cluster_block_data_size = safe_cluster_block->data_size;
+			safe_cluster_block_data_size  = safe_cluster_block->data_size;
 
 			if( libqcow_decompress_data(
 			     safe_cluster_block->compressed_data,
@@ -2661,7 +2660,7 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 		{
 			read_size = (size_t) ( internal_file->file_header->media_size - internal_file->current_offset );
 		}
-		if( ( buffer_offset + read_size ) > buffer_size )
+		if( read_size > ( buffer_size - buffer_offset ) )
 		{
 			read_size = buffer_size - buffer_offset;
 		}
@@ -2707,6 +2706,25 @@ ssize_t libqcow_internal_file_read_buffer_from_file_io_handle(
 				 function );
 
 				return( -1 );
+			}
+			if( cluster_block_data_offset > cluster_block->data_size )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+				 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
+				 "%s: invalid cluster block data offset value out of bounds.",
+				 function );
+
+				return( -1 );
+			}
+			if( read_size > ( cluster_block->data_size - cluster_block_data_offset ) )
+			{
+				read_size = cluster_block->data_size - cluster_block_data_offset;
+			}
+			if( read_size == 0 )
+			{
+				break;
 			}
 			if( memory_copy(
 			     &( ( (uint8_t *) buffer )[ buffer_offset ] ),

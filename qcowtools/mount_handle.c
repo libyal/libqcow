@@ -170,6 +170,11 @@ int mount_handle_free(
 
 			result = -1;
 		}
+		if( ( *mount_handle )->basename != NULL )
+		{
+			memory_free(
+			 ( *mount_handle )->basename );
+		}
 		memory_free(
 		 *mount_handle );
 
@@ -748,7 +753,7 @@ int mount_handle_close(
 		goto on_error;
 	}
 	for( file_index = number_of_files - 1;
-	     file_index > 0;
+	     file_index >= 0;
 	     file_index-- )
 	{
 		if( mount_file_system_get_file_by_index(

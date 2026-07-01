@@ -538,6 +538,9 @@ int main( int argc, char * const argv[] )
 
 		goto on_error;
 	}
+	fuse_unmount(
+	 qcowmount_fuse_handle );
+
 	fuse_destroy(
 	 qcowmount_fuse_handle );
 
