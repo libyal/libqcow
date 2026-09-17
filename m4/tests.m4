@@ -1,6 +1,6 @@
 dnl Functions for testing
 dnl
-dnl Version: 20260702
+dnl Version: 20260703
 
 dnl Function to check if pthread_rwlock_unlock can be hooked for testing
 AC_DEFUN([AX_TESTS_CHECK_CAN_HOOK_PTHREAD_RWLOCK_UNLOCK],
@@ -252,7 +252,7 @@ dnl Function to detect if tests dependencies are available
 AC_DEFUN([AX_TESTS_CHECK_LOCAL],
   [AC_CHECK_HEADERS([dlfcn.h])
 
-  AC_CHECK_FUNCS([fmemopen getopt mkstemp setenv tzset unlink])
+  AC_CHECK_FUNCS([getopt mkstemp setenv tmpfile tzset unlink])
 
   AC_CHECK_LIB(
     dl,
