@@ -2240,6 +2240,17 @@ int libqcow_internal_file_read_cluster_block(
 		cluster_block_size    = (size_t) ( cluster_block_offset >> internal_file->compression_bit_shift );
 		cluster_block_offset &= internal_file->compression_bit_mask;
 
+		if( cluster_block_offset >= internal_file->size )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+			 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
+			 "%s: invalid compressed cluster block offset value out of bounds.",
+			 function );
+
+			goto on_error;
+		}
 		if( ( internal_file->file_header->format_version == 2 )
 		 || ( internal_file->file_header->format_version == 3 ) )
 		{
@@ -2271,7 +2282,7 @@ int libqcow_internal_file_read_cluster_block(
 		if( libcnotify_verbose != 0 )
 		{
 			libcnotify_printf(
-			 "%s: compressed cluster block offset\t\t: 0x%08" PRIx64 "\n",
+			 "%s: compressed cluster block offset\t: 0x%08" PRIx64 "\n",
 			 function,
 			 cluster_block_offset );
 
